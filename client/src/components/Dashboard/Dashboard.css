@@ -40,11 +40,15 @@
     height: 40px;
     font-size: 14px;
     font-family: "Open Sans", sans-serif;
+    background-color: #DADADA; 
   }
 
   .table-header-list {
     font-weight: 400;
-    text-align:center;
+    text-align: center;
+    background-color: #F6F6F6;
+    color: black; 
+    padding: 10px; 
   }
 
   .table-body-list-container {
@@ -133,3 +137,290 @@
     padding-top: 12px;
   }
   
+
+
+
+  .onboarded-dashboard-grid-container {
+    display: flex;
+    gap: 30px; 
+    margin-top: 50px;
+    align-items: flex-start; 
+  }
+  
+  .onboarded-dashboard-grid-large {
+    width: 70%; 
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .onboarded-dashboard-grid-small {
+    width: 30%; 
+    display: flex;
+    flex-direction: column;
+    gap: 10px; 
+  }
+  
+  
+  .onboarded-chart-container {
+    width: 100%;
+    height: auto;
+  }
+  
+  .onboarded-chart-title {
+    font-size: 16px; 
+    font-weight: bold;
+    color: #05004E;
+    margin-bottom: 10px;
+  }
+  
+  .onboarded-custom-legend {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px; 
+    margin-bottom: 5px; 
+  }
+  
+  .onboarded-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px; 
+  }
+  
+  .onboarded-legend-line {
+    width: 8px;
+    height: 1px;
+  }
+  
+  .onboarded-legend-text {
+    font-size: 8px;
+    color: #949494;
+    font-weight: 600;
+  }
+  
+  
+  .project-summary-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start; 
+  }
+  
+  .project-summary-card {
+    background: white;
+    border-radius: 12px;
+    padding: 10px 25px 0;
+
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 245px;
+    height: 129px; 
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .project-summary-header {
+    display: flex;
+    align-items: center;
+    gap: 4px; 
+    justify-content: flex-start;
+    width: 100%;
+  }
+  
+  .project-summary-header svg {
+    width: 20px; 
+    height: 20px;
+  }
+  
+  .project-summary-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .project-summary-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+  
+  .project-summary-info {
+    display: flex;
+    flex-direction: row; 
+    align-items: center;
+    gap: 4px; 
+  }
+  
+  .project-summary-value {
+    font-size: 16px;
+    font-weight: bold;
+    color: black;
+  }
+  
+  .project-summary-total {
+    font-size: 12px;
+    color: #777;
+  }
+  
+  .project-summary-chart {
+    width: 34px; 
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .project-summary-chart svg {
+    transform: scale(1.2); 
+  }
+
+  .CircularProgressbar-text {
+    font-weight: bold;
+    text-anchor: middle !important; 
+    dominant-baseline: central !important;
+  }
+  
+  .project-summary-footer {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: #555;
+    width: 100%;
+  }
+  
+  .growth-icon {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .growth-text {
+    font-size: 10px;
+    color: #555;
+  }
+  
+
+
+  .clickthrough-dashboard-grid-container {
+    display: flex;
+    gap: 30px; 
+    margin-top: 50px;
+    align-items: flex-start;
+  }
+  
+ 
+  .clickthrough-dashboard-grid-small {
+    width: 30%; 
+    display: flex;
+    flex-direction: column;
+    gap: 10px; 
+  }
+  
+
+
+
+.ctr-container {
+  width: 592px;
+  height: 325px;
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.ctr-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #05004E;
+  margin-bottom: 10px;
+}
+
+.ctr-table {
+  width: 100%;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "Poppins", sans-serif;
+  font-size: 12px;
+  color: #555;
+}
+
+table, th, td {
+  border: none;
+}
+
+th {
+  font-weight: 600;
+  text-align: left;
+  padding: 10px;
+}
+
+td {
+  text-align: left;
+  padding: 12px 10px;
+}
+
+.ctr-progress {
+  width: 150px;
+  height: 3px;
+  background: #E3ECFF;
+  border-radius: 5px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ctr-progress-bar {
+  height: 100%;
+  border-radius: 5px;
+}
+
+.ctr-sales {
+  width: 45px;
+  height: 24px;
+  font-size: 12px;
+  color: #0095FF;
+  background: #F0F9FF;
+  border: 1px solid #0095FF;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.handling-response-container {
+  width: 442px;
+  height: 325px;
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  position: relative; /* Enables absolute positioning */
+}
+
+.handling-response-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #05004E;
+  position: absolute;
+  top: 15px;  /* Keep at top */
+  left: 20px; /* Align to the left */
+  margin: 0;
+}
+
+.responsive-chart-container {
+  flex: 1;
+  display: flex;
+  align-items: center; /* Centers vertically */
+  justify-content: center; /* Centers horizontally */
+  margin-top: 40px; /* Adjusts space below title */
+  height: 100%; /* Ensures full container height */
+  padding-top: 30px; /* Pushes chart down slightly */
+}

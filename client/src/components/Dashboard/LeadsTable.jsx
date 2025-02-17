@@ -52,10 +52,10 @@ export default function LeadsTable() {
       <table aria-label="leads table">
         <thead>
           <tr className="table-header-container">
-            <th className='table-header-list'>Lead</th>
+            <th className='table-header-list lead-table'>Lead</th>
             <th className='table-header-list font-geist'>Email</th>
             <th className='table-header-list'>Stage</th>
-            <th className='table-header-list'>Date Contacted</th>
+            <th className='table-header-list date-table'>Date Contacted</th>
           </tr>
         </thead>
         <tbody>
