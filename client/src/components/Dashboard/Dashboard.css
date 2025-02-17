@@ -1,0 +1,52 @@
+@import '../../index.css';
+
+
+/* Basic table styling */
+.table-container {
+    width: 650px;
+    margin: 20px auto;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.875rem;
+  }
+  
+  th, td {
+    border: 1px solid #dae2ed;
+    text-align: left;
+    padding: 8px;
+  }
+  
+  th {
+    background-color: #fff;
+  }
+  
+  /* Pagination styling */
+  .pagination-container {
+    display: flex;
+    justify-content: center;
+    padding: 10px;
+    width: 650px;
+  }
+  
+  .pagination {
+    display: flex;
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .pagination li {
+    margin: 0 5px;
+  }
+  
+  .pagination li.active a {
+    font-weight: bold;
+  }
+  
+  .pagination a {
+    cursor: pointer;
+  }
+  
