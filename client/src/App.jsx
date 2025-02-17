@@ -9,9 +9,7 @@ import Communications from './pages/Communications';
 export default function App() {
   return (
     <BrowserRouter>
-      <div className="flex">
-        <Sidenav /> {/* Include Sidenav */}
-        <div className="ml-64 p-4 w-full"> {/* Add margin to make space for sidenav */}
+        <Sidenav /> 
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/sales-flow" element={<Salesflow />} />
@@ -19,8 +17,6 @@ export default function App() {
             <Route path="/employees" element={<Employees />} />
             <Route path="/communications" element={<Communications />} />
           </Routes>
-        </div>
-      </div>
     </BrowserRouter>
   );
 }

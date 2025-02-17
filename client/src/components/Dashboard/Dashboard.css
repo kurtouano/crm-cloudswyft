@@ -1,52 +1,135 @@
 @import '../../index.css';
 
+.dashboard-header-text {
+  padding-bottom: 20px;
+  font-family: "Open Sans";
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+}
 
-/* Basic table styling */
+.dashboard-page-container {
+  margin-left: 260px;
+  padding: 25px 40px;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-horizontal-alignment {
+  display: flex;
+  flex-direction: row;
+  column-gap: 50px;
+}
+
 .table-container {
-    width: 650px;
-    margin: 20px auto;
+    width: 730px;
+    margin: 20px 0 0 0;
   }
   
   table {
     width: 100%;
     border-collapse: collapse;
+
     font-family: 'IBM Plex Sans', sans-serif;
-    font-size: 0.875rem;
+    font-size: 14px;
+    border: 0.45px solid #DADADA;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .table-header-container {
+    height: 40px;
+    font-size: 14px;
+    font-family: "Open Sans", sans-serif;
+  }
+
+  .table-header-list {
+    font-weight: 400;
+    text-align:center;
+  }
+
+  .table-body-list-container {
+    height: 45px;
+    border-top: 0.45px solid #DADADA;
+  }
+
+  .table-body-list {
+    text-align: center;
+    font-weight: 400;
+  }
+
+  tr {
+    background-color: white;
   }
   
   th, td {
-    border: 1px solid #dae2ed;
+    border: white;
     text-align: left;
-    padding: 8px;
+  }
+
+  td {
+    color: #818181;
   }
   
   th {
     background-color: #fff;
+  }
+
+  .font-geist {
+    font-family: 'Geist', sans-serif;
+    color: #4F4F4F;
+    font-weight: 500;
   }
   
   /* Pagination styling */
   .pagination-container {
     display: flex;
     justify-content: center;
-    padding: 10px;
-    width: 650px;
+    padding-top: 15px;
+    width: 730px;
   }
   
   .pagination {
     display: flex;
     list-style-type: none;
-    padding: 0;
+    column-gap: 8px;
+    font-family: "Poppins";
   }
   
   .pagination li {
-    margin: 0 5px;
+    font-size: 12px;
+  }
+
+  .pagination-container {
+    justify-content: right;
   }
   
   .pagination li.active a {
     font-weight: bold;
+    background-color: #2196F3;
+    color: white;
   }
   
   .pagination a {
+    border-radius: 4px;
+    padding: 3px 8px;
     cursor: pointer;
+    background-color: #F5F5F5;
+    border: 1px solid #EEEEEE;
+    
+    transition: 0.25s all;
+  }
+
+  .pagination a:hover{
+    background-color: #e7e5e5;
+  }
+
+  .circular-chart-container {
+    border-radius: 20px;
+    background-color: white;
+    margin: 20px 0 0 0;
+  }
+
+  .circular-chart-container h3 {
+    padding-top: 12px;
   }
   

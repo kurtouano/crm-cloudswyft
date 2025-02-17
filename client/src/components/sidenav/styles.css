@@ -10,7 +10,7 @@ body {
   width: 260px;
   height: 1024px;
   background-color: #ffffff;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 2px 0 10px rgba(233, 233, 233, 0.1);
   position: fixed;
   top: 0;
   left: 0;
@@ -87,21 +87,23 @@ body {
 }
 
 .notification-container {
-    position: fixed;
-    top: 15px;
-    right: 60px;
-    z-index: 1000;
-  }
-  
-  .notification-icon {
     position: relative;
     background: white;
-    padding: 8px;
-    border-radius: 50%;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 99;
+    margin-left: 250px;
+    box-shadow: 20px 0 10px rgba(190, 190, 190, 0.1);
+    height: 70px;
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+  
+  .notification-icon {
+    position: absolute;
+    top: 25px;
+    right: 60px;
+    z-index: 1000;
+
     cursor: pointer;
   }
   
