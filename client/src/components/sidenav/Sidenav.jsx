@@ -81,11 +81,16 @@ const navItems = [
                 {typeof item.icon === 'string' ? (
                   <img src={item.icon} alt={item.name} className="nav-icon" />
                 ) : (
-                  <div className="nav-icon">{item.icon}</div> // For inline SVG
+                  <div className="nav-icon">{item.icon}</div>
                 )}
                 {item.name}
               </NavLink>
             ))}
+
+            <NavLink to="/" className="nav-link logout-link">
+              <img src="/src/assets/logout-icon.png" alt="Logout" className="nav-icon" />
+              Logout
+            </NavLink>
           </div>
         </div>
       </>

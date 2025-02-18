@@ -88,6 +88,11 @@ body {
   margin-right: 15px; 
 }
 
+.logout-link {
+  margin-top: 500px;
+  font-weight: bold;
+}
+
 .notification-container {
     position: relative;
     background: white;
