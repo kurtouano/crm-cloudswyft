@@ -39,7 +39,7 @@ export default function OnboardedClientsChart() {
       <CustomLegend />
 
       <ResponsiveContainer width="100%" height={350}>
-        <LineChart data={data} margin={{ top: 20, right: 30, left: 30, bottom: 30 }}>
+        <LineChart data={data} margin={{ top: 15, right: 15, left: 0, bottom: 10 }}>
           <CartesianGrid strokeDasharray="0" vertical={false} horizontal={false} />
           <XAxis 
             dataKey="month" 
