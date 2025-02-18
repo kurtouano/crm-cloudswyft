@@ -92,7 +92,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
     padding-top: 20px;
 }
 
@@ -129,14 +129,18 @@
 /* Input Group */
 .input-group {
     width: 364px;
-    height: 52px;
+    height: 32px;
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 14px;
+    padding: 14px 14px;
     border: 1px solid #ccc;
     border-radius: 8px;
     background: #f9f9f9;
+}
+
+.input-group:focus-within {
+    box-shadow: inset 0px 0px 1px 2px #4dafff81;
 }
 
 /* SVG Icons */
@@ -158,8 +162,9 @@
 
 /* Login Button */
 .login-button {
-    width: 364px;
+    width: 395px;
     height: 52px;
+    margin-top: 35px;
     background: #0088ff;
     border: none;
     border-radius: 8px;
@@ -168,7 +173,6 @@
     font-weight: bold;
     cursor: pointer;
     transition: 0.3s;
-    padding: 14px;
 }
 
 .login-button:hover {
