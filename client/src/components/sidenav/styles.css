@@ -7,7 +7,7 @@ body {
 }
 
 .sidenav {
-  width: 260px;
+  width: 17%;
   height: 1024px;
   background-color: #ffffff;
   box-shadow: 2px 0 10px rgba(233, 233, 233, 0.1);
@@ -56,7 +56,8 @@ body {
   font-weight: 400;
   font-size: 18px;
   color: #818181;
-  padding: 10px 20px;
+  padding: 7px 12px;
+  margin: 5px 0;
   text-decoration: none;
   width: 80%; 
   display: flex;
@@ -83,7 +84,7 @@ body {
 .nav-icon {
   width: 24px; 
   height: 24px; 
-  padding-left: 22px;
+  padding-left: 35px;
   margin-right: 15px; 
 }
 
@@ -91,7 +92,6 @@ body {
     position: relative;
     background: white;
     z-index: 99;
-    margin-left: 250px;
     box-shadow: 20px 0 10px rgba(190, 190, 190, 0.1);
     height: 70px;
     display: flex;

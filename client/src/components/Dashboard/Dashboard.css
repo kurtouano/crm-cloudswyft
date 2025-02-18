@@ -3,14 +3,13 @@
 .dashboard-header-text {
   padding-bottom: 20px;
   font-family: "Open Sans";
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 600;
   letter-spacing: -0.4px;
 }
 
 .dashboard-page-container {
-  margin-left: 260px;
-  padding: 25px 40px 50px 40px;
+  padding: 25px 50px 50px 50px;
   display: flex;
   flex-direction: column;
 }
@@ -22,7 +21,7 @@
 }
 
 .table-container {
-    width: 730px;
+    width: 80%;
     margin: 20px 0 0 0;
   }
   
@@ -88,7 +87,7 @@
     display: flex;
     justify-content: center;
     padding-top: 15px;
-    width: 730px;
+    width: 100%;
   }
   
   .pagination {
@@ -127,6 +126,10 @@
   }
 
   .circular-chart-container {
+    width: 30%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     border-radius: 20px;
     background-color: white;
     margin: 20px 0 0 0;
@@ -142,13 +145,14 @@
 
   .onboarded-dashboard-grid-container {
     display: flex;
+    width: 100%;
     gap: 30px; 
-    margin-top: 50px;
+    margin-top: 45px;
     align-items: flex-start; 
   }
   
   .onboarded-dashboard-grid-large {
-    width: 800px;
+    width: 80%;
     background: white;
     padding: 20px;
     border-radius: 12px;
@@ -157,10 +161,10 @@
   
   .onboarded-dashboard-grid-small {
     display: flex;
+    width: 20%;
     flex-direction: column;
     gap: 10px; 
   }
-  
   
   .onboarded-chart-container {
     width: 100%;
@@ -203,7 +207,8 @@
   /* Project Summary */
 
   .project-summary-container {
-    width: 105px;
+    width: 80%;
+    min-width: 170px;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -211,6 +216,8 @@
   }
   
   .project-summary-card {
+    width: 100%;
+    height: 129px; 
     background: white;
     border-radius: 12px;
     padding: 5px 25px 5px 25px;
@@ -218,8 +225,7 @@
     box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.08);
     display: flex;
     flex-direction: column;
-    width: 225px;
-    height: 129px; 
+
     align-items: center;
     justify-content: center;
   }
@@ -320,21 +326,25 @@
 
   .clickthrough-dashboard-grid-container {
     display: flex;
-    gap: 30px; 
-    margin-top: 50px;
-    align-items: flex-start;
+    flex-direction: row;
+    width: 100%;
+    gap: 80px; 
+    margin-top: 45px;
+    justify-content:flex-start;
+  }
+
+  .clickthrough-dashboard-grid-large {
+    width: 60%;
   }
   
   .clickthrough-dashboard-grid-small {
-    width: 30%; 
+    width: 40%; 
     display: flex;
-    flex-direction: column;
-    gap: 10px; 
   }
     
   .ctr-container {
     overflow: hidden;
-    width: 592px;
+    width: 100%;
     height: 315px;
     background: white;
     border-radius: 12px;
@@ -409,7 +419,7 @@
 
 
   .handling-response-container {
-    width: 445px;
+    width: 100%;
     height: 315px;
     background: white;
     border-radius: 12px;
