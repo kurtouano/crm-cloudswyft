@@ -97,10 +97,10 @@ const Sidenav = () => {
                     ))}
 
                     
-                    <NavLink to="/" className="nav-link logout-link" onClick={handleLogout}>
+                    <div className="nav-link logout-link" onClick={handleLogout}>
                       <img src="/src/assets/logout-icon.png" alt="Logout" className="nav-icon" />
                       Logout
-                    </NavLink>
+                    </div>
                 </div>
             </div>
         </>
