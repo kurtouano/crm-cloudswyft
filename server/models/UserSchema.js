@@ -1,23 +1,25 @@
 import mongoose from "mongoose";
 
-//Parameters for user inputs
-const userSchema = new mongoose.Schema ({
+// User Schema for authentication
+const userSchema = new mongoose.Schema(
+  {
     email: {
-        type: String,
-        required: true,
-        unique: true,
+      type: String,
+      required: true,
+      unique: true,
     },
     password: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     role: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
+      enum: ["admin", "employee"], // Only allows admin or employee
     },
+  },
+  { timestamps: true }
+);
 
-}, { timestamps: true });
-
-const User = mongoose.model('User', userSchema); 
-
+const User = mongoose.model("User", userSchema);
 export default User;
