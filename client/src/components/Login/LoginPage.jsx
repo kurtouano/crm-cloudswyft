@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import "./LoginPage.css";
 import logo from "../../assets/Cloudswyft.png";
 import waveImage from "../../assets/Wave.png";
