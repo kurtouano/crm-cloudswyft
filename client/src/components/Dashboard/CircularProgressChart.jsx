@@ -12,7 +12,7 @@ const CircularProgressChart = () => {
       <div className="circular-chart-container" style={{ textAlign: "center" }}>
         <h3 style={{ color: "#0D0D3D" }}>Customer Satisfaction Score</h3>
         <RadialBarChart
-          width={350}
+          width={365}
           height={310}
           cx="50%"
           cy="45%"

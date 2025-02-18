@@ -1,5 +1,3 @@
-import React from "react";
-
 const clickThroughData = [
   { id: 1, service: "Option 1", popularity: 80, sales: 45 },
   { id: 2, service: "Option 2", popularity: 60, sales: 29 },
