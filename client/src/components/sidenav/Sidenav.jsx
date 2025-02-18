@@ -11,9 +11,9 @@ const navItems = [
         <rect x="13" y="13" width="5" height="5" />
       </svg>
     )},
-    { path: "/sales-flow", name: "Project", icon: "/src/assets/kanban.png" },
-    { path: "/accounts", name: "Employee", icon: "/src/assets/accounts.png" },
-    { path: "/employees", name: "Accounts", icon: "/src/assets/employee.png" },
+    { path: "/sales-flow", name: "Salesflow", icon: "/src/assets/kanban.png" },
+    { path: "/employees", name: "Sales Team", icon: "/src/assets/employee.png" },
+    { path: "/accounts", name: "Accounts", icon: "/src/assets/accounts.png" },
     { path: "/communications", name: "Communications", icon: "/src/assets/communications.png" },
   ];
 

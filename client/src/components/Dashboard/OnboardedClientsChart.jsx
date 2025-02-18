@@ -34,7 +34,7 @@ const CustomLegend = () => {
 export default function OnboardedClientsChart() {
   return (
     <div className="onboarded-chart-container">
-      <h3 className="onboarded-chart-title">Yearly Onboarded Clients</h3>
+      <h3 className="onboarded-chart-title">Yearly On-boarded Clients</h3>
 
       <CustomLegend />
 

@@ -13,7 +13,7 @@ const responseData = [
 export default function HandlingResponse() {
   return (
     <div className="handling-response-container">
-      <h3 className="handling-response-title">Handling Response</h3>
+      <h3 className="handling-response-title">Handling Time</h3>
 
       <ResponsiveContainer width="100%" height={250}>
         <BarChart data={responseData} margin={{ top: 10, right: 30, left: 20, bottom: 30 }}>
