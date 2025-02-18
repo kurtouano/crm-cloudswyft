@@ -9,6 +9,7 @@
 }
 
 .dashboard-page-container {
+  margin-left: 17%;
   padding: 25px 50px 50px 50px;
   display: flex;
   flex-direction: column;
@@ -20,12 +21,12 @@
   column-gap: 50px;
 }
 
-.table-container {
+.dashboard-page-container .table-container {
     width: 80%;
     margin: 20px 0 0 0;
   }
   
-  table {
+  .dashboard-page-container table {
     width: 100%;
     border-collapse: collapse;
 
@@ -60,20 +61,20 @@
     font-weight: 400;
   }
 
-  tr {
+  .table-body-list tr {
     background-color: white;
   }
   
-  th, td {
+  .table-body-list th, .table-body-list td {
     border: white;
     text-align: left;
   }
 
-  td {
+  .table-body-list td {
     color: #818181;
   }
   
-  th {
+  .table-body-list th {
     background-color: #fff;
   }
 
