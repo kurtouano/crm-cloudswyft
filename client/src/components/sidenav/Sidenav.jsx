@@ -3,7 +3,7 @@ import { NavLink  } from "react-router-dom";
 import "./styles.css";
 
 const navItems = [
-    { path: "/", name: "Dashboard", icon: (
+    { path: "/dashboard", name: "Dashboard", icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"  fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="dash-icon">
         <rect x="3" y="3" width="5" height="5" />
         <rect x="13" y="3" width="5" height="5" />

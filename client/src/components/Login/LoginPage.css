@@ -1,0 +1,176 @@
+
+.login-page-container {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Password Toggle Button */
+.toggle-password {
+    background: none;
+    border: none;
+    cursor: pointer;
+    outline: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+}
+
+.eye-icon {
+    width: 24px;
+    height: 24px;
+    fill: #555;
+    transition: 0.2s;
+}
+
+.eye-icon:hover {
+    fill: #333;
+}
+
+
+/* Background Decorations */
+.login-background-wave {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 750px;
+    height: auto;
+    z-index: 1;
+}
+
+/* Layered Ellipses in correct order */
+.login-background-ellipse-large {
+    position: absolute;
+    bottom: -100px;
+    left: -130px;
+    width: 624px;
+    height: 624px;
+    z-index: 2;
+}
+
+.login-background-ellipse-white {
+    position: absolute;
+    bottom: -60px;
+    left: -90px;
+    width: 472px;
+    height: 472px;
+    z-index: 2;
+}
+
+.login-background-ellipse-small {
+    position: absolute;
+    bottom: 0px;
+    left: -30px;
+    width: 338px;
+    height: 338px;
+    z-index: 2;
+}
+
+/* Login Card */
+.login-card {
+    width: 526px;
+    height: 493px;
+    background: #f9f9f9;
+    border-radius: 20px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 4;
+}
+
+/* Logo Container */
+.login-logo-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding-top: 20px;
+}
+
+.login-logo {
+    width: 64px;
+    height: 47px;
+}
+
+.login-brand {
+    font-size: 30px;
+    font-weight: bold;
+    font-family: "Quicksand", sans-serif;
+    color: #0F4264;
+}
+
+/* Greeting Text */
+.login-greeting {
+    font-size: 30px;
+    font-weight: bold;
+    font-family: "Open Sans", sans-serif;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+/* Form */
+.login-form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+/* Input Group */
+.input-group {
+    width: 364px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background: #f9f9f9;
+}
+
+/* SVG Icons */
+.input-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    color: #555;
+}
+
+/* Input Fields */
+.login-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 16px;
+    background: transparent;
+}
+
+/* Login Button */
+.login-button {
+    width: 364px;
+    height: 52px;
+    background: #0088ff;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+    padding: 14px;
+}
+
+.login-button:hover {
+    background: #006dcc;
+}
