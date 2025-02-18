@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import "./LoginPage.css";
 import logo from "../../assets/Cloudswyft.png";
 import waveImage from "../../assets/Wave.png";
@@ -7,13 +8,54 @@ import ellipseWhiteImage from "../../assets/Ellipse white.png";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate(); // Initialize useNavigate
+
+  // Handle input changes
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch("http://localhost:3001/server/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Login failed");
+      }
+
+      console.log("Login successful:", data);
+      // Redirect to dashboard
+
+      localStorage.setItem("token", data.token);
+      navigate("/dashboard");
+
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="login-page-container">
       {/* Background Decorations */}
       <img src={waveImage} alt="Wave" className="login-background-wave" />
-      
-      {/* Layered Ellipses */}
       <img src={ellipseImage} alt="Large Blue Ellipse" className="login-background-ellipse-large" />
       <img src={ellipseWhiteImage} alt="White Ellipse" className="login-background-ellipse-white" />
       <img src={ellipseImage} alt="Small Blue Ellipse" className="login-background-ellipse-small" />
@@ -26,17 +68,28 @@ export default function LoginPage() {
         </div>
 
         {/* Greeting */}
-        <h2 className="login-greeting">[GREETING PLACEHOLDER]</h2>
+        <h2 className="login-greeting">Welcome Back!</h2>
+
+        {/* Display error message */}
+        {error && <p className="error-message">{error}</p>}
 
         {/* Login Form */}
-        <form className="login-form">
-          {/* Employee ID */}
+        <form className="login-form" onSubmit={handleSubmit}>
+          {/* Email Field */}
           <div className="input-group">
             <svg className="input-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="12" cy="7" r="5" stroke="#555" strokeWidth="3"/>
               <path d="M4 20C4 16.6863 7.13401 14 11 14H13C16.866 14 20 16.6863 20 20" stroke="#555" strokeWidth="3"/>
             </svg>
-            <input type="text" placeholder="Employee ID" className="login-input" />
+            <input 
+              type="text" 
+              name="email" 
+              value={formData.email} 
+              onChange={handleChange} 
+              placeholder="Employee ID" 
+              className="login-input" 
+              required
+            />
           </div>
 
           {/* Password Field with Eye Icon */}
@@ -47,8 +100,12 @@ export default function LoginPage() {
             </svg>
             <input 
               type={showPassword ? "text" : "password"} 
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
               placeholder="Password" 
-              className="login-input" 
+              className="login-input"
+              required 
             />
             <button 
               type="button" 
@@ -68,7 +125,9 @@ export default function LoginPage() {
           </div>
 
           {/* Login Button */}
-          <button type="submit" className="login-button">Login</button>
+          <button type="submit" className="login-button" disabled={loading}>
+            {loading ? "Logging in..." : "Login"}
+          </button>
         </form>
       </div>
     </div>
