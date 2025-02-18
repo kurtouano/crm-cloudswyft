@@ -89,6 +89,11 @@ body {
 }
 
 .logout-link {
+  width: 250px;
+  position: fixed;
+  bottom: 50px;
+  left: 25px;
+  cursor: pointer;
   margin-top: 500px;
   font-weight: bold;
 }
@@ -166,16 +171,4 @@ body {
     text-align: center;
     color: #888;
   }
-
-
-  
-  .logout-link {
-    width: 200px;
-    position: fixed;
-    bottom: 35px;
-    left: 20px;
-    margin-top: 500px;
-    font-weight: bold;
-  }
-  
 
