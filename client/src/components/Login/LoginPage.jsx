@@ -1,4 +1,4 @@
-import { useState, useEffect  } from "react";
+import { useState, useEffect } from "react";
 import "./LoginPage.css";
 import logo from "../../assets/Cloudswyft.png";
 import waveImage from "../../assets/Wave.png";
@@ -10,6 +10,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState(""); 
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,6 +22,13 @@ export default function LoginPage() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError(""); 
+
+    if (!email || !password) {
+      setError("⚠️ Email and Password are required.");
+      return;
+    }
+
     try {
       const response = await fetch("http://localhost:4000/api/auth/login", {
         method: "POST",
@@ -31,48 +39,42 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.message || "Login failed");
+        setError(data.message || "❌ Invalid credentials. Please try again.");
         return;
       }
 
-      // Store token & role in localStorage
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", data.role);
 
       navigate("/dashboard", { replace: true });
     } catch (error) {
-      alert("Login failed: " + error.message);
+      setError("❌ Server error. Please try again later.");
     }
   };
 
   return (
     <div className="login-page-container">
-      {/* Background Decorations */}
       <img src={waveImage} alt="Wave" className="login-background-wave" />
-
-      {/* Layered Ellipses */}
       <img src={ellipseImage} alt="Large Blue Ellipse" className="login-background-ellipse-large" />
       <img src={ellipseWhiteImage} alt="White Ellipse" className="login-background-ellipse-white" />
       <img src={ellipseImage} alt="Small Blue Ellipse" className="login-background-ellipse-small" />
 
-      {/* Login Box */}
       <div className="login-card">
         <div className="login-logo-container">
           <img src={logo} alt="Cloudswyft" className="login-logo" />
           <span className="login-brand">Cloudswyft</span>
         </div>
 
-        {/* Greeting */}
-        <h2 className="login-greeting">[GREETING PLACEHOLDER]</h2>
+        <h2 className="login-greeting">Welcome Back!</h2>
 
-        {/* Login Form */}
+        {error && <p className="error-message">{error}</p>}
+
         <form className="login-form" onSubmit={handleLogin}>
-          {/* Email Input */}
           <div className="input-group">
-            <svg className="input-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="12" cy="7" r="5" stroke="#555" strokeWidth="3"/>
-              <path d="M4 20C4 16.6863 7.13401 14 11 14H13C16.866 14 20 16.6863 20 20" stroke="#555" strokeWidth="3"/>
-            </svg>
+              <svg className="input-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="7" r="5" stroke="#555" strokeWidth="3"/>
+                <path d="M4 20C4 16.6863 7.13401 14 11 14H13C16.866 14 20 16.6863 20 20" stroke="#555" strokeWidth="3"/>
+              </svg>
             <input 
               type="email" 
               placeholder="Email" 
@@ -83,9 +85,8 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* Password Input */}
           <div className="input-group">
-            <svg className="input-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg className="input-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect x="5" y="10" width="14" height="10" rx="2" stroke="#555" strokeWidth="3"/>
               <path d="M7 10V7C7 4.23858 9.23858 2 12 2C14.7614 2 17 4.23858 17 7V10" stroke="#555" strokeWidth="3"/>
             </svg>
@@ -97,7 +98,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)} 
               required
             />
-             <button 
+           <button 
               type="button" 
               className="toggle-password" 
               onClick={() => setShowPassword(!showPassword)}
@@ -114,7 +115,6 @@ export default function LoginPage() {
             </button>
           </div>
 
-          {/* Login Button */}
           <button type="submit" className="login-button">Login</button>
         </form>
       </div>
