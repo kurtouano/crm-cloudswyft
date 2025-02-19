@@ -9,8 +9,7 @@
 .kanban-container {
     margin-left: 17%;
     padding: 25px 50px 50px 50px;
-    width: 1500px;
-    overflow-x: scroll;
+    user-select: none;
 }
 
 .kanban-column-container {
@@ -26,6 +25,9 @@
     display: flex;
     column-gap: 30px;
     row-gap: 20px;
+    width: 100%;
+    padding-bottom: 20px;
+    overflow-x: scroll;
 }
 
 .kanban-column-title-container {
@@ -47,9 +49,9 @@
 .kanban-column-item-counter {
     padding: 0 5px;
     font-size: 12px;
-    color: #727272;
+    color: #5a5656;
     margin-left: 16px;
-    background-color: rgba(109, 166, 209, 0.447);
+    background-color: rgba(168, 209, 240, 0.152);
     border-radius: 50%;
     font-weight: 400;
 }
@@ -81,8 +83,8 @@
 }
 
 .kanban-item-description {
-    font-size: 11.5px;
-    padding-bottom: 45px;
+    font-size: 11px;
+    padding-bottom: 40px;
 }
 
 .kanban-item-divider {
@@ -100,13 +102,12 @@
     column-gap: 6px;
     position: absolute;
     right: 15px;
-    top: 80px;
+    bottom: 55px;
 }
 
 .kanban-item-employee-name {
     font-size: 9.5px;
     margin-bottom: 1px;
-
 }
 
 .kanban-item-employee-avatar {

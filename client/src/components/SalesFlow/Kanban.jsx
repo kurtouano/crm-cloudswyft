@@ -14,11 +14,11 @@ const INITIAL_COLUMN_ORDER = [
 ];
 
 const INITIAL_COL_DATA = {
-  "lead": { id: "lead", title: "LEAD", itemsOrder: ["item-1", "item-2"] },
-  "discovery-call": { id: "discovery-call", title: "DISCOVERY CALL", itemsOrder: ["item-3"] },
+  "lead": { id: "lead", title: "LEAD", itemsOrder: ["item-1","item-5"] },
+  "discovery-call": { id: "discovery-call", title: "DISCOVERY CALL", itemsOrder: ["item-6", "item-2"] },
   "quote": { id: "quote", title: "QUOTE", itemsOrder: [] },
-  "provision": { id: "provision", title: "PROVISION", itemsOrder: [] },
-  "proposal": { id: "proposal", title: "PROPOSAL", itemsOrder: [] },
+  "provision": { id: "provision", title: "PROVISION", itemsOrder: ["item-4"] },
+  "proposal": { id: "proposal", title: "PROPOSAL", itemsOrder: [ "item-3"] },
   "negotiation": { id: "negotiation", title: "NEGOTIATION", itemsOrder: [] },
   "onboarding": { id: "onboarding", title: "ON-BOARDING", itemsOrder: [] },
 };
@@ -44,6 +44,27 @@ const ITEMS = {
     description: "Looking for a custom solution.",
     employee: "Alice Johnson",
     timeStarted: "February 15",
+  },
+  "item-4": {
+    id: "item-4",
+    title: "Lead 4",
+    description: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
+    employee: "John Doe",
+    timeStarted: "April 1",
+  },
+  "item-5": {
+    id: "item-5",
+    title: "Lead 1",
+    description: "Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for 'lorem ipsum' will uncover many web sites still in their infancy. Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).",
+    employee: "Alice Johnson",
+    timeStarted: "April 6",
+  },
+  "item-6": {
+    id: "item-6",
+    title: "Lead 6",
+    description: "If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing hidden in the middle of text.",
+    employee: "Jane Smith",
+    timeStarted: "December 7",
   },
 };
 
