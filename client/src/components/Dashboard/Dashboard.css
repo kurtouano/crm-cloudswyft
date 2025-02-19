@@ -1,52 +1,447 @@
 @import '../../index.css';
 
+.dashboard-header-text {
+  padding-bottom: 20px;
+  font-family: "Open Sans";
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+}
 
-/* Basic table styling */
-.table-container {
-    width: 650px;
-    margin: 20px auto;
+.dashboard-page-container {
+  margin-left: 17%;
+  padding: 25px 50px 50px 50px;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-horizontal-alignment {
+  display: flex;
+  flex-direction: row;
+  column-gap: 50px;
+}
+
+.dashboard-page-container .table-container {
+    width: 80%;
+    margin: 20px 0 0 0;
   }
   
-  table {
+  .dashboard-page-container table {
     width: 100%;
     border-collapse: collapse;
+
     font-family: 'IBM Plex Sans', sans-serif;
-    font-size: 0.875rem;
+    font-size: 14px;
+    border: 0.45px solid #DADADA;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .table-header-container {
+    height: 40px;
+    font-size: 14px;
+    font-family: "Open Sans", sans-serif;
+    background-color: #DADADA; 
+  }
+
+  .table-header-list {
+    font-weight: 400;
+    text-align: center;
+    background-color: #F6F6F6;
+    color: black; 
+    padding: 10px; 
+  }
+
+  .table-body-list-container {
+    height: 45px;
+    border-top: 0.45px solid #DADADA;
+  }
+
+  .table-body-list {
+    text-align: center;
+    font-weight: 400;
+  }
+
+  .table-body-list tr {
+    background-color: white;
   }
   
-  th, td {
-    border: 1px solid #dae2ed;
+  .table-body-list th, .table-body-list td {
+    border: white;
     text-align: left;
-    padding: 8px;
+  }
+
+  .table-body-list td {
+    color: #818181;
   }
   
-  th {
+  .table-body-list th {
     background-color: #fff;
   }
+
+  .font-geist {
+    font-family: 'Geist', sans-serif;
+    color: #4F4F4F;
+    font-weight: 500;
+  }
   
-  /* Pagination styling */
   .pagination-container {
     display: flex;
     justify-content: center;
-    padding: 10px;
-    width: 650px;
+    padding-top: 15px;
+    width: 100%;
   }
   
   .pagination {
     display: flex;
     list-style-type: none;
-    padding: 0;
+    column-gap: 8px;
+    font-family: "Poppins";
   }
   
   .pagination li {
-    margin: 0 5px;
+    font-size: 12px;
+  }
+
+  .pagination-container {
+    justify-content: right;
   }
   
   .pagination li.active a {
     font-weight: bold;
+    background-color: #2196F3;
+    color: white;
   }
   
   .pagination a {
+    border-radius: 4px;
+    padding: 3px 8px;
     cursor: pointer;
+    background-color: #F5F5F5;
+    border: 1px solid #EEEEEE;
+    
+    transition: 0.25s all;
+  }
+
+  .pagination a:hover{
+    background-color: #e7e5e5;
+  }
+
+  .circular-chart-container {
+    width: 30%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-radius: 20px;
+    background-color: white;
+    margin: 20px 0 0 0;
+    box-shadow: 0px 4px 6px rgba(15, 15, 15, 0.037);
+  }
+
+  .circular-chart-container h3 {
+    padding-top: 12px;
   }
   
+
+  /* On Boarded Clients */
+
+  .onboarded-dashboard-grid-container {
+    display: flex;
+    width: 100%;
+    gap: 30px; 
+    margin-top: 45px;
+    align-items: flex-start; 
+  }
+  
+  .onboarded-dashboard-grid-large {
+    width: 80%;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .onboarded-dashboard-grid-small {
+    display: flex;
+    width: 20%;
+    flex-direction: column;
+    gap: 10px; 
+  }
+  
+  .onboarded-chart-container {
+    width: 100%;
+    height: auto;
+  }
+  
+  .onboarded-chart-title {
+    font-size: 16px; 
+    font-weight: bold;
+    color: #05004E;
+    margin-bottom: 10px;
+  }
+  
+  .onboarded-custom-legend {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px; 
+    margin-bottom: 15px; 
+    margin-top: -10px;
+    margin-right: 25px;
+  }
+  
+  .onboarded-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px; 
+  }
+  
+  .onboarded-legend-line {
+    width: 8px;
+    height: 1px;
+  }
+  
+  .onboarded-legend-text {
+    font-size: 8px;
+    color: #949494;
+    font-weight: 600;
+  }
+  
+  /* Project Summary */
+
+  .project-summary-container {
+    width: 80%;
+    min-width: 170px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start; 
+  }
+  
+  .project-summary-card {
+    width: 100%;
+    height: 129px; 
+    background: white;
+    border-radius: 12px;
+    padding: 5px 25px 5px 25px;
+
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .project-summary-header {
+    display: flex;
+    align-items: center;
+    gap: 8px; 
+    justify-content: flex-start;
+    width: 100%;
+    padding-bottom: 22px;
+  }
+  
+  .project-summary-header svg {
+    width: 26px; 
+    height: 26px;
+  }
+  
+  .project-summary-title {
+    font-family: "Geist";
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+  }
+
+  .project-summary-content {
+    display: flex;
+    position: relative;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 5px;
+    width: 100%;
+    border-bottom: 1px solid rgba(33, 33, 33, 0.064);
+  }
+
+  .project-summary-footer {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding-top: 7px;
+    font-size: 10px;
+    color: #555;
+    width: 100%;
+  }
+  
+  .project-summary-info {
+    display: flex;
+    flex-direction: row; 
+    align-items: center;
+    gap: 4px; 
+  }
+  
+  .project-summary-value {
+    font-size: 16px;
+    font-weight: bold;
+    color: black;
+  }
+  
+  .project-summary-total {
+    font-size: 12px;
+    color: #777;
+  }
+  
+  .project-summary-chart {
+    position: absolute;
+    right: 0;
+    top: -20px;
+    right: 0;
+    width: 34px; 
+    height: 34px;
+    display: flex;
+    align-items: top;
+    justify-content: center;
+  }
+
+  .project-summary-chart svg {
+    transform: scale(1.2); 
+  }
+
+  .CircularProgressbar-text {
+    font-family: 'Geist';
+    font-weight: bold;
+    text-anchor: middle !important; 
+    dominant-baseline: central !important;
+  }
+  
+  .growth-icon {
+    width: 10px;
+    height: 10px;
+  }
+  
+  .growth-text {
+    font-size: 10px;
+    color: #555555b8;
+  }
+  
+  /* Click Through Rate */
+
+  .clickthrough-dashboard-grid-container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    gap: 80px; 
+    margin-top: 45px;
+    justify-content:flex-start;
+  }
+
+  .clickthrough-dashboard-grid-large {
+    width: 60%;
+  }
+  
+  .clickthrough-dashboard-grid-small {
+    width: 40%; 
+    display: flex;
+  }
+    
+  .ctr-container {
+    overflow: hidden;
+    width: 100%;
+    height: 315px;
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.08);
+  }
+
+  .ctr-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #05004E;
+    margin-bottom: 10px;
+  }
+
+  .ctr-table {
+    width: 100%;
+  }
+
+  .ctr-container table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: "Poppins", sans-serif;
+    font-size: 12px;
+    color: #555;
+    height: 305px;
+    border: none;
+  }
+
+  .ctr-container table, .ctr-container table th, .ctr-container table td {
+    border-bottom: 0.7px solid #96a5b83c;
+  }
+
+  .ctr-container table th {
+    font-weight: 600;
+    text-align: left;
+    padding: 10px;
+  }
+
+  .ctr-container table td {
+    text-align: left;
+    padding: 12px 10px;
+  }
+
+  .ctr-progress {
+    width: 150px;
+    height: 3px;
+    background: #E3ECFF;
+    border-radius: 5px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ctr-progress-bar {
+    height: 100%;
+    border-radius: 5px;
+  }
+
+  .ctr-sales {
+    width: 45px;
+    height: 24px;
+    font-size: 12px;
+    color: #0095FF;
+    background: #F0F9FF;
+    border: 1px solid #0095FF;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Handling Response */
+
+
+  .handling-response-container {
+    width: 100%;
+    height: 315px;
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    position: relative; /* Enables absolute positioning */
+  }
+
+  .handling-response-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #05004E;
+    position: absolute;
+    top: 20px;  /* Keep at top */
+    left: 20px; /* Align to the left */
+    margin: 0;
+  }
+
+  .handling-response-container .recharts-wrapper {
+    padding-top: 20px;
+  }
+
