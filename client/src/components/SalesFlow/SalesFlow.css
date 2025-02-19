@@ -1,0 +1,121 @@
+.kanban-header-text {
+    padding-bottom: 20px;
+    font-family: "Open Sans";
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.4px;
+}
+
+.kanban-container {
+    margin-left: 17%;
+    padding: 25px 50px 50px 50px;
+    width: 1500px;
+    overflow-x: scroll;
+}
+
+.kanban-column-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 200px;
+    min-width: 300px;
+    padding: 4px;
+}
+
+.kanban-container-inner {
+    display: flex;
+    column-gap: 30px;
+    row-gap: 20px;
+}
+
+.kanban-column-title-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    padding: 10px 0 15px 0;
+    width: 100%;
+    border-bottom: 2px solid #90CAF9;
+}
+
+.kanban-column-title {
+    font-size: 15px;
+    font-weight: bold;
+    letter-spacing: 3px;
+}
+
+.kanban-column-item-counter {
+    padding: 0 5px;
+    font-size: 12px;
+    color: #727272;
+    margin-left: 16px;
+    background-color: rgba(109, 166, 209, 0.447);
+    border-radius: 50%;
+    font-weight: 400;
+}
+
+.kanban-column-body-container {
+    display: flex;
+    flex-direction:column;
+}
+
+.kanban-column-body-no-item {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+.kanban-draggable-items {
+    position: relative;
+    border-radius: 5px;
+    background-color: white;
+    margin-top: 20px;
+    box-shadow: 1px 0 3px rgba(84, 84, 84, 0.339);
+    border: 1px solid #90CAF9;
+    padding: 13px;
+}
+
+.kanban-item-title {
+    font-size: 22px;
+    padding-bottom: 10px;
+}
+
+.kanban-item-description {
+    font-size: 11.5px;
+    padding-bottom: 45px;
+}
+
+.kanban-item-divider {
+    display: flex;
+    flex-direction: row;
+    column-gap: 5px;
+    border-top: 1px solid #90CAF9;
+    padding: 10px 0 5px 0;
+}
+
+.kanban-item-employee-container {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    column-gap: 6px;
+    position: absolute;
+    right: 15px;
+    top: 80px;
+}
+
+.kanban-item-employee-name {
+    font-size: 9.5px;
+    margin-bottom: 1px;
+
+}
+
+.kanban-item-employee-avatar {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+}
+
+.kanban-item-start-time {
+    font-size: 12px;
+    color: #bfbfc2;
+}

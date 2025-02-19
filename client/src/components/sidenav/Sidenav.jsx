@@ -11,7 +11,7 @@ const navItems = [
         <rect x="13" y="13" width="5" height="5" />
       </svg>
     )},
-    { path: "/sales-flow", name: "Salesflow", icon: "/src/assets/kanban.png" },
+    { path: "/sales-flow", name: "Sales Flow", icon: "/src/assets/kanban.png" },
     { path: "/employees", name: "Sales Team", icon: "/src/assets/employee.png" },
     { path: "/accounts", name: "Accounts", icon: "/src/assets/accounts.png" },
     { path: "/communications", name: "Communications", icon: "/src/assets/communications.png" },
@@ -27,7 +27,7 @@ const Sidenav = () => {
 
     const navigate = useNavigate();
 
-    // 🔴 Logout Function
+    // Logout Function
     const handleLogout = () => {
         localStorage.removeItem("token"); // Remove JWT Token
         localStorage.removeItem("role");  // Remove User Role
@@ -95,12 +95,11 @@ const Sidenav = () => {
                             {item.name}
                         </NavLink>
                     ))}
-
-                    
                     <div className="nav-link logout-link" onClick={handleLogout}>
                       <img src="/src/assets/logout-icon.png" alt="Logout" className="nav-icon" />
                       Logout
                     </div>
+
                 </div>
             </div>
         </>
