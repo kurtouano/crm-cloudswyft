@@ -27,7 +27,6 @@ const Sidenav = () => {
 
     const navigate = useNavigate();
 
-    // 🔴 Logout Function
     const handleLogout = () => {
         localStorage.removeItem("token"); // Remove JWT Token
         localStorage.removeItem("role");  // Remove User Role
