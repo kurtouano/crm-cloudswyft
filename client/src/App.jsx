@@ -4,6 +4,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Salesflow from "./pages/Salesflow";
 import Accounts from "./pages/Accounts";
+import LeadProfile from "./pages/LeadProfile";
 import Employees from "./pages/Employees";
 import Communications from "./pages/Communications";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -35,6 +36,7 @@ function MainLayout() {
         <Route path="/accounts" element={<ProtectedRoute><Accounts /></ProtectedRoute>} />
         <Route path="/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />
         <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
+        <Route path="/lead-profile" element={<ProtectedRoute><LeadProfile /></ProtectedRoute>} />
 
         {/* ✅ Redirect unknown routes to login */}
         <Route path="*" element={<Navigate to="/" replace />} />
