@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
+import leadRoutes from "./routes/leadRoutes.js"; 
 
 dotenv.config();
 const app = express();
@@ -10,16 +11,18 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+// ✅ Remove deprecated options
 mongoose
-  .connect(process.env.MONGO)
+  .connect(process.env.MONGO) // Simply pass the connection string
   .then(() => console.log("✅ Connected to MongoDB"))
   .catch((err) => console.log("❌ MongoDB connection error:", err));
 
-app.use("/api/auth", authRoutes); // Authentication routes
+app.use("/api/auth", authRoutes);
+app.use("/api/leads", leadRoutes);
 
-// ✅ Add Default Route
 app.get("/", (req, res) => {
   res.send("Welcome to the CRM CloudSwyft API!");
 });
 
-app.listen(4000, () => console.log("✅ Server running on http://localhost:4000"));
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));

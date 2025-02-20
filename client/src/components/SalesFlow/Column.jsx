@@ -3,7 +3,7 @@ import CalendarIcon from "../../assets/kanban-item-calendar-icon.svg";
 import "./SalesFlow.css";
 
 // Import employee images
-import DefaultAvatar from "../../assets/employees/Default-Avatar.svg"; // A fallback image
+import DefaultAvatar from "../../assets/employees/Default-Avatar.svg";
 import JohnDoeImg from "../../assets/employees/John-Doe.svg";
 import JaneSmithImg from "../../assets/employees/Jane-Smith.svg";
 import AliceJohnsonImg from "../../assets/employees/Alice-Johnson.svg";
@@ -36,7 +36,15 @@ const Column = ({ itemsOrder, id, title, ITEMS }) => {
 
             {itemsOrder.map((item_id, index) => {
               const item = ITEMS[item_id];
-              const employeeImg = employeeImages[item.employee] || DefaultAvatar; // Use fallback if not found
+
+              // ✅ Ensure item exists before rendering
+              if (!item) {
+                console.warn(`Item not found: ${item_id}`);
+                return null;
+              }
+
+              const employeeName = item.employee || "Unknown";
+              const employeeImg = employeeImages[employeeName] || DefaultAvatar;
 
               return (
                 <Draggable draggableId={item.id} index={index} key={item.id}>
@@ -49,10 +57,10 @@ const Column = ({ itemsOrder, id, title, ITEMS }) => {
                     >
                       <p className="kanban-item-title">{item.title}</p>
                       <p className="kanban-item-description">{item.description}</p>
-                      
+
                       <div className="kanban-item-employee-container">
-                        <span className="kanban-item-employee-name">{item.employee}</span>
-                        <img className="kanban-item-employee-avatar" src={employeeImg} alt={item.employee} />
+                        <span className="kanban-item-employee-name">{employeeName}</span>
+                        <img className="kanban-item-employee-avatar" src={employeeImg} alt={employeeName} />
                       </div>
 
                       <div className="kanban-item-divider">
