@@ -1,5 +1,5 @@
 .accounts-container {
-    margin-top: 30px; 
+    margin-top: 20px; 
     display: flex;
     flex-direction: column;
     gap: 32px;  
@@ -8,6 +8,7 @@
 }
 
 .cards-wrapper {
+    width: 100%;
     display: flex;
     gap: 25px;
     flex-wrap: wrap;
@@ -15,7 +16,7 @@
 
 .account-card {
     width: 292px;  
-    height: 100px;
+    height: 80px;
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -126,8 +127,6 @@
     height: 16px;
 }
 
-
-
 .lead-cards-container {
     display: grid;
     grid-template-columns: repeat(5, 1fr); 
@@ -136,13 +135,13 @@
     align-items: center;
     width: 100%;
     max-width: 1200px; 
-    margin-left: 105px;
+    margin-left: 120px;
     margin-top: 20px;
 }
 
 
 .lead-card {
-    width: 200px;
+    width: 205px;
     height: 177px;
     background: #FFFFFF;
     border-radius: 12px;
@@ -154,7 +153,7 @@
     text-align: center; 
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.05);
     position: relative;
-    cursor: pointer;
+    cursor: default;
     transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
@@ -162,7 +161,6 @@
     transform: translateY(-5px); /* Slight lift effect */
     box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.1);
 }
-
 
 
 .options-icon {
@@ -239,9 +237,9 @@
 }
 
 .user-icon {
-    width: 39.46px;  
-    height: 26.55px; 
-    background: #F4F4F4; 
+    width: 39.46px; 
+    height: 26.55px;
+    background: #F4F8FF; 
     border-radius: 15.36px; 
     display: flex;
     align-items: center;
@@ -257,8 +255,6 @@
     background-color: rgba(0, 0, 0, 0.05);
 }
 
-
-
 .pagination-container {
     display: flex;
     justify-content: flex-end; 
@@ -266,8 +262,6 @@
     max-width: 1200px;  
     margin: -10px 50px 0 auto; 
 }
-
-
 
 .pagination {
     display: flex;
@@ -294,3 +288,236 @@
 .pagination a:hover {
     background-color: #e7e5e5;
 }
+
+
+/* Lead Profile */
+
+.lead-profile-container {
+    margin-top: 20px; 
+    display: flex;
+    flex-direction: column; 
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+
+.lead-profile-header-text {
+    display: flex;
+    flex-direction: row;
+    font-size: 26px;
+    column-gap: 5px;
+    font-weight: 600;
+    padding-bottom: 20px;
+}
+
+.lead-profile-back-button {
+    cursor: pointer;
+}
+
+.lead-profile-container-row {
+    display: flex;
+    flex-direction: column;
+    row-gap: 32px;
+    margin-bottom: 40px;
+}
+
+.lead-profile-details-container {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    column-gap: 25px;
+}
+
+.lead-profile-name-container {
+    border-radius: 12px;
+    box-shadow: 0 0 1px 1px rgba(174, 174, 174, 0.205);
+    width: 342px;
+    height: 250px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    row-gap: 10px;
+}
+
+.lead-profile-icon {
+    width: 60px;
+    height: 60px;
+    padding: 25px;
+    background-color: #EFF8FF;
+    border-radius: 50%;
+}
+
+.lead-profile-name {
+    font-family: "Geist";
+    color: #575757;
+    font-weight: 500;
+}
+
+.lead-profile-basic-information {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: start;
+    width: 522px;
+    height: 250px;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 0 1px 1px rgba(174, 174, 174, 0.205);
+}
+
+.profile-basic-title-container {
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    width: 100%;
+    background-color: #F9F9F9;
+    box-shadow: 0 0 1px 1px rgba(174, 174, 174, 0.205);
+}
+
+.profile-basic-title {
+    width: 100%;
+    font-family: "Open Sans";
+    font-weight: 500;
+    font-size: 20px;
+    color: #575757;
+    padding: 10px 15px;
+}
+
+.profile-body-list {
+    padding: 0 15px; 
+}
+
+.profile-body {
+    font-size: 14px;
+    margin-top: 16px;
+    color: #818181;
+}
+
+.interaction-header-title {
+    font-size: 26px;
+    font-weight: 500;
+    margin-bottom: 25px;
+}
+
+.interaction-history-buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 200px;
+}
+
+.interaction-history-buttons button {
+    padding: 10px 20px;
+    margin-bottom: 30px;
+    cursor: pointer;
+    border: none;
+    color: #575757;
+    font-size: 16px;
+    background-color: transparent;
+    font-weight: 500;
+    font-family: "Geist";
+
+    transition: all 0.15s;
+}
+
+.interaction-history-buttons button.active {
+    color: #2196F3;
+    background-color: #FFFFFF;
+    border-radius: 10px;
+    box-shadow: 1px 3px 4px rgba(0, 0, 0, 0.1);
+}
+
+.interaction-history-container {
+    display: flex;
+    width: 1420px;
+    flex-direction: column;
+    padding: 10px 10px;
+    background-color: white;
+    row-gap: 10px;
+}
+
+.interaction-history-item {
+    width: 99%;
+    position: relative;
+    font-family: "Roboto";
+    display: flex;
+    flex-direction: row;
+    padding: 10px 5px 10px 10px;
+    background-color: #F5F7F7;
+    column-gap: 6px;
+    align-items: center;
+}
+
+.interaction-history-icon {
+    padding-right: 5px;
+}
+
+.interaction-history-title {
+    padding-right: 100px;
+}
+
+.interaction-history-type {
+    color: #0D3B44;
+    background-color: #1BB9F4;
+    padding: 2px 10px;
+    font-weight: 500;
+    font-size: 14px;
+    border-radius: 5px;
+}
+
+.interaction-history-description {
+    color: #0000007d;
+    max-width: 1000px;
+}
+
+.interaction-history-date {
+    color: #0000007d;
+    position: absolute;
+    right: 15px;
+    font-weight: 600;
+}
+
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    padding-top: 35px;
+    margin-right: -2px;
+    width: 100%;
+  }
+  
+  .pagination {
+    display: flex;
+    list-style-type: none;
+    column-gap: 8px;
+    font-family: "Poppins";
+  }
+  
+  .pagination li {
+    font-size: 12px;
+  }
+
+  .pagination-container {
+    justify-content: right;
+  }
+  
+  .pagination li.active a {
+    font-weight: bold;
+    background-color: hsl(207, 90%, 54%);
+    color: white;
+  }
+  
+  .pagination a {
+    border-radius: 4px;
+    padding: 3px 8px;
+    cursor: pointer;
+    background-color: #F5F5F5;
+    border: 1px solid #EEEEEE;
+    
+    transition: 0.25s all;
+  }
+
+  .pagination a:hover{
+    background-color: #e7e5e5;
+  }
+
+

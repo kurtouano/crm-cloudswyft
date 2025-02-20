@@ -1,8 +1,6 @@
 import '../components/Accounts/Accounts.css';
 import AccountPage from '../components/Accounts/AccountPage';
 
-
-
 export default function Accounts() {
   return (
     <div className='dashboard-page-container'>
