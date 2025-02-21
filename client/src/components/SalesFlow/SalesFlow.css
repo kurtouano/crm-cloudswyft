@@ -75,6 +75,7 @@
     box-shadow: 1px 0 3px rgba(84, 84, 84, 0.339);
     border: 1px solid #90CAF9;
     padding: 13px;
+    font-family: "Geist";
 }
 
 .kanban-item-title {

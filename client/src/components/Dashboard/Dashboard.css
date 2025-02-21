@@ -34,13 +34,14 @@
     font-size: 14px;
     border: 0.45px solid #DADADA;
     border-radius: 8px 8px 0 0;
+    background-color: white;
   }
 
   .table-header-container {
     height: 40px;
     font-size: 14px;
     font-family: "Open Sans", sans-serif;
-    background-color: #DADADA; 
+    background-color: #d0cfcf; 
   }
 
   .table-header-list {
@@ -131,7 +132,7 @@
   }
 
   .circular-chart-container {
-    width: 30%;
+    width: 33%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -150,8 +151,8 @@
 
   .onboarded-dashboard-grid-container {
     display: flex;
-    width: 100%;
-    gap: 30px; 
+    width: 99%;
+    gap: 40px; 
     margin-top: 45px;
     align-items: flex-start; 
   }
@@ -212,7 +213,7 @@
   /* Project Summary */
 
   .project-summary-container {
-    width: 80%;
+    width: 87%;
     min-width: 170px;
     display: flex;
     flex-direction: column;
@@ -241,12 +242,26 @@
     gap: 8px; 
     justify-content: flex-start;
     width: 100%;
-    padding-bottom: 22px;
+    padding-bottom: 15px;
+  }
+
+  .project-summary-header img {
+    width: 18px; 
+    height: 18px;
+    padding: 5px;
+    border-radius: 4px;
   }
   
-  .project-summary-header svg {
-    width: 26px; 
-    height: 26px;
+  .project-summary-header .active-icon {
+    background-color: #1BB9F4;
+  }
+
+  .project-summary-header .complete-icon {
+    background-color: #10387B;
+  }
+
+  .project-summary-header .net-icon {
+    background-color: #1976D2;
   }
   
   .project-summary-title {
@@ -261,7 +276,7 @@
     position: relative;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 5px;
+    padding-bottom: 10px;
     width: 100%;
     border-bottom: 1px solid rgba(33, 33, 33, 0.064);
   }
@@ -271,7 +286,6 @@
     align-items: center;
     gap: 7px;
     padding-top: 7px;
-    font-size: 10px;
     color: #555;
     width: 100%;
   }
@@ -290,17 +304,17 @@
   }
   
   .project-summary-total {
-    font-size: 12px;
+    font-size: 12.5px;
     color: #777;
   }
   
   .project-summary-chart {
     position: absolute;
     right: 0;
-    top: -20px;
+    top: -12px;
     right: 0;
-    width: 34px; 
-    height: 34px;
+    width: 32px; 
+    height: 32px;
     display: flex;
     align-items: top;
     justify-content: center;
@@ -323,7 +337,7 @@
   }
   
   .growth-text {
-    font-size: 10px;
+    font-size: 11px;
     color: #555555b8;
   }
   
@@ -339,7 +353,7 @@
   }
 
   .clickthrough-dashboard-grid-large {
-    width: 60%;
+    width: 55%;
   }
   
   .clickthrough-dashboard-grid-small {
