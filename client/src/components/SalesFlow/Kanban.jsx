@@ -5,13 +5,13 @@ import "./SalesFlow.css";
 import Column from "./Column.jsx";
 
 const COLUMN_ORDER = [
-  "lead",
-  "discovery-call",
-  "quote",
-  "provision",
-  "proposal",
-  "negotiation",
-  "onboarding",
+  "Lead",
+  "Discovery Call",
+  "Quote",
+  "Provision",
+  "Proposal",
+  "Negotiation",
+  "On-boarding"
 ];
 
 export default function Kanban() {
@@ -26,14 +26,14 @@ export default function Kanban() {
 
         // ✅ Map stage names to column IDs
         const stageMapping = {
-          lead: "lead",
-          "discovery-call": "discovery-call",
-          quote: "quote",
-          provision: "provision",
-          proposal: "proposal",
-          negotiation: "negotiation",
-          onboarding: "onboarding",
-        };
+          Lead: "Lead",
+          "Discovery Call": "Discovery Call",
+          Quote: "Quote",
+          Provision: "Provision",
+          Proposal: "Proposal",
+          Negotiation: "Negotiation",
+          "On-boarding": "On-boarding",
+        };        
 
         // ✅ Generate items dynamically
         const fetchedItems = {};

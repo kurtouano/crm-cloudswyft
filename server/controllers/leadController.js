@@ -4,7 +4,15 @@ import Lead from "../models/LeadSchema.js";
 export const getLeads = async (req, res) => {
   try {
     const leads = await Lead.find();
-    res.status(200).json(leads);
+
+    // Format date fields before sending response
+    const formattedLeads = leads.map((lead) => ({
+      ...lead._doc, // Keep all other properties
+      joinDate: lead.joinDate.toISOString().split("T")[0], // Format YYYY-MM-DD
+      date: lead.date.toISOString().split("T")[0], // Format YYYY-MM-DD
+    }));
+
+    res.status(200).json(formattedLeads);
   } catch (error) {
     res.status(500).json({ message: "Error fetching leads", error });
   }
@@ -29,13 +37,13 @@ export const updateLeadStage = async (req, res) => {
 
     // Check if the stage is valid
     const validStages = [
-      "lead",
-      "discovery-call",
-      "quote",
-      "provision",
-      "proposal",
-      "negotiation",
-      "onboarding"
+      "Lead",
+      "Discovery Call",
+      "Quote",
+      "Provision",
+      "Proposal",
+      "Negotiation",
+      "On-boarding"
     ];
 
     if (!validStages.includes(stage)) {

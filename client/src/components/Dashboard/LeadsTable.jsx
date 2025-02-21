@@ -45,7 +45,7 @@ export default function LeadsTable() {
             <tr className='table-body-list-container' key={index}>
               <td className='table-body-list'>{lead.lead}</td>
               <td className='table-body-list font-geist'>{lead.email}</td>
-              <td className='table-body-list'>{lead.stage}</td>
+              <td className='table-body-list lead-stage'>{lead.stage}</td>
               <td className='table-body-list'>{lead.date}</td>
             </tr>
           ))}

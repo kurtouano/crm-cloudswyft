@@ -61,6 +61,10 @@
     font-weight: 400;
   }
 
+  .lead-stage {
+    text-transform: capitalize;
+  }
+
   .table-body-list tr {
     background-color: white;
   }

@@ -14,8 +14,8 @@ app.use(cors());
 // ✅ Remove deprecated options
 mongoose
   .connect(process.env.MONGO) // Simply pass the connection string
-  .then(() => console.log("✅ Connected to MongoDB"))
-  .catch((err) => console.log("❌ MongoDB connection error:", err));
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((err) => console.log("MongoDB connection error:", err));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/leads", leadRoutes);
