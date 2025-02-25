@@ -89,7 +89,7 @@ const Sidenav = () => {
                         </NavLink>
                     ))}
                     <div className="nav-link logout-link" onClick={handleLogout}>
-                      <FiLogOut className="nav-react-icons" />
+                      <FiLogOut className="nav-react-icons logout-icon" />
                       Logout
                     </div>
 

@@ -95,13 +95,17 @@ body {
 }
 
 .logout-link {
-  width: 250px;
+  width: 200px;
   position: fixed;
   bottom: 50px;
-  left: 25px;
+  padding-left: 60px;
   cursor: pointer;
   margin-top: 500px;
   font-weight: bold;
+}
+
+.logout-icon {
+  margin-right: 15px;
 }
 
 .notification-container {
