@@ -1,19 +1,7 @@
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
-import activeIcon from "../../assets/active-project-icon.svg";
-import completeIcon from "../../assets/complete-project-icon.svg";
-import netIcon from "../../assets/net-promoter-icon.svg";
-
-const ActiveProjectIcon = () => (
-    <img className="active-icon" src={activeIcon}></img>
-);
-
-const CompleteProjectIcon = () => (
-  <img className="complete-icon" src={completeIcon}></img>
-);
-
-const NetPromoterScoreIcon = () => (
-  <img className="net-icon" src={netIcon}></img>
-);
+import { FiFileText } from "react-icons/fi";
+import { FiAward } from "react-icons/fi";
+import { AiOutlineCheckCircle } from "react-icons/ai";
 
 // Sample data (Ready for backend integration)
 const projectData = [
@@ -23,7 +11,7 @@ const projectData = [
     total: 5378,
     percentage: 15,
     color: "#1BB9F4",
-    icon: <ActiveProjectIcon />,
+    icon: <FiFileText className="summary-cards-react-icon card-icon-1"/>,
     growth: "3.45%",
     image: "/src/assets/proj-summary-up-icon-1.svg",
   },
@@ -33,7 +21,7 @@ const projectData = [
     total: 3378,
     percentage: 75,
     color: "#10387B",
-    icon: <CompleteProjectIcon />,
+    icon: <AiOutlineCheckCircle className="summary-cards-react-icon card-icon-2"/>,
     growth: "1.3%",
     image: "/src/assets/proj-summary-up-icon-2.svg",
   },
@@ -43,7 +31,7 @@ const projectData = [
     total: 1000,
     percentage: 65,
     color: "#1976D2",
-    icon: <NetPromoterScoreIcon />,
+    icon: <FiAward className="summary-cards-react-icon card-icon-3"/>,
     growth: "1.3%",
     image: "/src/assets/proj-summary-up-icon-3.svg",
   },
@@ -71,7 +59,7 @@ export default function ProjectSummaryCards() {
                 pathColor: project.color, // Darker progress color
                 trailColor: "#E0E0E0", // Lighter background
                 textColor: "#333",
-                textSize: "25px", // Increase text size
+                textSize: "24px", // Increase text size
                 textAlign: "center", // Ensures text is centered
               })}
             />

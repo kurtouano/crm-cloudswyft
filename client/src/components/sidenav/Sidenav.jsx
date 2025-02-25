@@ -1,20 +1,14 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import "./styles.css";
+import { FiGrid, FiCheckSquare, FiUsers, FiBookOpen, FiMail, FiLogOut } from "react-icons/fi";  // Sidenav Icons
 
 const navItems = [
-    { path: "/dashboard", name: "Dashboard", icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"  fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="dash-icon">
-        <rect x="3" y="3" width="5" height="5" />
-        <rect x="13" y="3" width="5" height="5" />
-        <rect x="3" y="13" width="5" height="5" />
-        <rect x="13" y="13" width="5" height="5" />
-      </svg>
-    )},
-    { path: "/sales-flow", name: "Sales Flow", icon: "/src/assets/kanban.png" },
-    { path: "/employees", name: "Sales Team", icon: "/src/assets/employee.png" },
-    { path: "/accounts", name: "Accounts", icon: "/src/assets/accounts.png" },
-    { path: "/communications", name: "Communications", icon: "/src/assets/communications.png" },
+    { path: "/dashboard", name: "Dashboard", icon: <FiGrid className="nav-react-icons"/>},
+    { path: "/sales-flow", name: "Sales Flow", icon: <FiCheckSquare className="nav-react-icons"/> },
+    { path: "/employees", name: "Sales Team", icon: <FiUsers className="nav-react-icons"/> },
+    { path: "/accounts", name: "Accounts", icon: <FiBookOpen className="nav-react-icons"/> },
+    { path: "/communications", name: "Communications", icon: <FiMail className="nav-react-icons"/> },
 ];
 
 const Sidenav = () => {
@@ -87,7 +81,7 @@ const Sidenav = () => {
                             className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}
                         >
                             {typeof item.icon === "string" ? (
-                                <img src={item.icon} alt={item.name} className="nav-icon" />
+                                <img src={item.icon} alt={item.name} className="nav-react-icons" />
                             ) : (
                                 <div className="nav-icon">{item.icon}</div>
                             )}
@@ -95,7 +89,7 @@ const Sidenav = () => {
                         </NavLink>
                     ))}
                     <div className="nav-link logout-link" onClick={handleLogout}>
-                      <img src="/src/assets/logout-icon.png" alt="Logout" className="nav-icon" />
+                      <FiLogOut className="nav-react-icons" />
                       Logout
                     </div>
 

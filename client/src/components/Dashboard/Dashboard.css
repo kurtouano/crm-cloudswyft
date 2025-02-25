@@ -251,16 +251,24 @@
     padding: 5px;
     border-radius: 4px;
   }
-  
-  .project-summary-header .active-icon {
+
+  .summary-cards-react-icon {
+    padding: 5px;
+    color: white;
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+  }
+
+  .card-icon-1 {
     background-color: #1BB9F4;
   }
 
-  .project-summary-header .complete-icon {
+  .card-icon-2 {
     background-color: #10387B;
   }
-
-  .project-summary-header .net-icon {
+  
+  .card-icon-3 {
     background-color: #1976D2;
   }
   

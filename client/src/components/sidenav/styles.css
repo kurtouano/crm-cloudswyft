@@ -82,10 +82,16 @@ body {
 }
 
 .nav-icon {
-  width: 24px; 
-  height: 24px; 
+  width: 23px; 
+  height: 23px; 
   padding-left: 35px;
   margin-right: 15px; 
+}
+
+.nav-react-icons {
+  stroke-width: 1.6px;
+  width: 23px; 
+  height: 23px; 
 }
 
 .logout-link {
