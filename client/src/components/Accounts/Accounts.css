@@ -61,8 +61,17 @@
     margin: 4px 0 0 0;
 }
 
-.search-container {
+.search-container-row {
+    position: relative;
+    width: 100%;
     margin-top: 24px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.search-container {
     width: 540px;
     height: 54px;
     display: flex;
@@ -125,6 +134,29 @@
 .search-icon {
     width: 16px;
     height: 16px;
+}
+
+.import-error-display {
+    position: absolute;
+    right: 120px;
+    font-size: 14px;
+    color: rgba(220, 40, 40, 0.917);
+}
+
+.accounts-import-btn {  
+    padding: 9px 35px;
+    background-color: white;
+    border: 1px solid rgba(187, 187, 187, 0.506);
+    border-radius: 5px;
+    color: rgb(38, 38, 38);
+    font-size: 16px;
+    cursor: pointer;
+
+    transition: all 0.25s;
+}
+
+.accounts-import-btn:hover {
+    background-color: rgba(234, 234, 234, 0.285);
 }
 
 .lead-cards-container {

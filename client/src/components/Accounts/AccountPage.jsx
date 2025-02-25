@@ -3,6 +3,7 @@ import ReactPaginate from "react-paginate";
 import { useNavigate } from "react-router-dom";
 import axios from "axios"; // For API requests
 import Fuse from "fuse.js";
+import Papa from "papaparse";
 import "./Accounts.css";
 
 // Import icons
@@ -14,6 +15,7 @@ import searchIcon from "../../assets/search.png";
 import arrowRightIcon from "../../assets/arrow-right.png";
 import chatIcon from "../../assets/bubble-chat.png"; 
 import userIcon from "../../assets/user-circle.png";
+import { FiDownload } from "react-icons/fi";
 
 const cardData = [
   { title: "Total Number of Leads", value: "50", bgColor: "#2196F3", icon: usersIcon },
@@ -32,6 +34,7 @@ export default function AccountPage() {
   const [error, setError] = useState(null);
   const [filteredLeads, setFilteredLeads] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const displayedLeads = filteredLeads.slice(page * rowsPerPage, (page + 1) * rowsPerPage);
 
   // Fetch leads from the backend
   useEffect(() => {
@@ -74,9 +77,59 @@ export default function AccountPage() {
   const handlePageClick = (event) => {
     setPage(event.selected);
   };
-
-  const displayedLeads = filteredLeads.slice(page * rowsPerPage, (page + 1) * rowsPerPage);
-
+  
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+  
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (result) => {
+        const requiredHeaders = [
+          "lead", "email", "stage", "date", "name", "company", "leadID", 
+          "joinDate", "jobTitle", "industry", "location", "phone", "social"
+        ];
+  
+        const fileHeaders = Object.keys(result.data[0] || {}).map(h => h.trim()); // Trim spaces
+        console.log("Extracted Headers:", fileHeaders); // Debugging step
+  
+        const isValid = requiredHeaders.every(header => fileHeaders.includes(header));
+  
+        if (!isValid) {
+          document.querySelector(".import-error-display").textContent = 
+            `CSV file does not have the correct headers! Found: ${fileHeaders.join(", ")}`;
+          return;
+        }
+  
+        document.querySelector(".import-error-display").textContent = ""; // Clear previous errors
+  
+        console.log("CSV data:", result.data);
+  
+        try {
+          await axios.post("http://localhost:4000/api/leads/upload", { leads: result.data });
+          alert("Leads imported successfully!");
+  
+          // Fetch updated leads after import
+          const response = await axios.get("http://localhost:4000/api/leads");
+          setLeads(response.data);
+          setFilteredLeads(response.data);
+  
+        } catch (err) {
+          console.error("Error uploading leads:", err);
+  
+          // Display specific error message from backend
+          if (err.response && err.response.data) {
+            document.querySelector(".import-error-display").textContent = 
+              err.response.data.error || "Unknown error occurred.";
+          } else {
+            document.querySelector(".import-error-display").textContent = "Failed to upload leads.";
+          }
+        }
+      }
+    });
+  };  
+  
   return (
     <div className="accounts-container">
       {/* Cards Section */}
@@ -95,28 +148,39 @@ export default function AccountPage() {
       </div>
 
             {/* Search Filter Section */}
-            <div className="search-container">
-        <input 
-          type="text" 
-          placeholder="Search leads..." 
-          className="search-input"
-          value={searchQuery}
-          onChange={handleSearch} 
-        />
+      <div className="search-container-row">
 
-        <div className="dropdown-container">
-          <select className="search-dropdown">
-            <option value="">Select Status</option>
-            <option value="new">New</option>
-            <option value="in-progress">In Progress</option>
-            <option value="closed">Closed</option>
-          </select>
-          <img src={arrowRightIcon} alt="Dropdown Icon" className="dropdown-icon" />
+        <div className="search-container">
+          <input 
+            type="text" 
+            placeholder="Search leads..." 
+            className="search-input"
+            value={searchQuery}
+            onChange={handleSearch} 
+          />
+
+          <div className="dropdown-container">
+            <select className="search-dropdown">
+              <option value="">Select Status</option>
+              <option value="new">New</option>
+              <option value="in-progress">In Progress</option>
+              <option value="closed">Closed</option>
+            </select>
+            <img src={arrowRightIcon} alt="Dropdown Icon" className="dropdown-icon" />
+          </div>
+
+          <button className="search-button">
+            <img src={searchIcon} alt="Search" className="search-icon" />
+          </button>
         </div>
+        
+        <p className="import-error-display"></p>
 
-        <button className="search-button">
-          <img src={searchIcon} alt="Search" className="search-icon" />
-        </button>
+        <label className="accounts-import-btn">
+          <FiDownload />
+          <input type="file" accept=".csv" onChange={handleFileUpload} style={{ display: "none" }} />
+        </label>
+
       </div>
 
       {/* Loading & Error Handling */}
