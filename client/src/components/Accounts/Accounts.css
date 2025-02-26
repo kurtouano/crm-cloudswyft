@@ -420,9 +420,14 @@
 }
 
 .profile-body {
+    font-family: "Geist";
     font-size: 14px;
-    margin-top: 16px;
+    margin-top: 11.5px;
     color: #818181;
+}
+
+.profile-body span{
+    color: #c2c2c2;
 }
 
 .interaction-header-title {

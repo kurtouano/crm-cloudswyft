@@ -1,6 +1,7 @@
 import { Droppable, Draggable } from "@hello-pangea/dnd";
 import CalendarIcon from "../../assets/kanban-item-calendar-icon.svg";
 import "./SalesFlow.css";
+import PropTypes from 'prop-types';
 
 // Import employee images
 import DefaultAvatar from "../../assets/employees/Default-Avatar.svg";
@@ -78,6 +79,20 @@ const Column = ({ itemsOrder, id, title, ITEMS }) => {
       </Droppable>
     </div>
   );
+};
+Column.propTypes = {
+  itemsOrder: PropTypes.arrayOf(PropTypes.string).isRequired,
+  id: PropTypes.string.isRequired,
+  title: PropTypes.string.isRequired,
+  ITEMS: PropTypes.objectOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      title: PropTypes.string.isRequired,
+      description: PropTypes.string,
+      employee: PropTypes.string,
+      timeStarted: PropTypes.string,
+    })
+  ).isRequired,
 };
 
 export default Column;

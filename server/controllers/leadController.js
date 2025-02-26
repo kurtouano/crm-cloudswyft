@@ -5,11 +5,10 @@ export const getLeads = async (req, res) => {
   try {
     const leads = await Lead.find();
 
-    // Format date fields before sending response
     const formattedLeads = leads.map((lead) => ({
-      ...lead._doc, // Keep all other properties
-      joinDate: lead.joinDate.toISOString().split("T")[0], // Format YYYY-MM-DD
-      date: lead.date.toISOString().split("T")[0], // Format YYYY-MM-DD
+      ...lead._doc, // Keep all other fields
+      leadID: `LID-${String(lead.leadID).padStart(3, "0")}`, // Ensure formatted leadID
+      importDate: lead.importDate ? lead.importDate.toISOString().split("T")[0] : null, // Ensure correct date format
     }));
 
     res.status(200).json(formattedLeads);
@@ -18,10 +17,14 @@ export const getLeads = async (req, res) => {
   }
 };
 
-// 🔵 Add a new lead (For initial testing)
+// 🔵 Add a new lead
 export const addLead = async (req, res) => {
   try {
-    const newLead = new Lead(req.body);
+    const newLead = new Lead({
+      ...req.body,
+      importDate: new Date(), // Automatically set importDate
+    });
+
     await newLead.save();
     res.status(201).json({ message: "Lead added successfully!" });
   } catch (error) {
@@ -35,62 +38,58 @@ export const importLead = async (req, res) => {
 
     console.log("Received Leads:", leads); // Debugging log
 
-    // Validate input
     if (!Array.isArray(leads) || leads.length === 0) {
       return res.status(400).json({ error: "Invalid data format or empty file." });
     }
 
-    // Check if required fields exist in each lead
+    // Trim headers and remove empty spaces
     const requiredFields = [
-      "lead", "email", "stage", "date", "name", "company", "leadID", 
-      "joinDate", "jobTitle", "industry", "location", "phone", "social"
+      "leadName", "bestEmail", "nameOfPresident", "nameOfHrHead", "company",
+      "industry", "companyAddress", "phone", "website", "social"
     ];
 
-    const invalidLeads = leads.filter(lead =>
-      !requiredFields.every(field => Object.keys(lead).includes(field) && lead[field]?.trim())
+    // Remove empty rows (where required fields are missing or empty)
+    const validLeads = leads.filter(lead =>
+      requiredFields.every(field => lead[field] && lead[field].trim())
     );
 
-    if (invalidLeads.length > 0) {
-      return res.status(400).json({
-        error: "Some leads are missing required fields.",
-        invalidLeads, // Return faulty leads for debugging
-      });
+    if (validLeads.length === 0) {
+      return res.status(400).json({ error: "All rows are empty or missing required fields." });
     }
 
-    // Ensure no duplicate lead IDs or emails before inserting
-    const leadIDs = leads.map(lead => lead.leadID);
-    const emails = leads.map(lead => lead.email);
+    console.log(`Valid Leads Count: ${validLeads.length}`);
 
-    const existingLeads = await Lead.find({ 
-      $or: [{ leadID: { $in: leadIDs } }, { email: { $in: emails } }] 
-    });
+    // Check for duplicate emails
+    const emails = validLeads.map(lead => lead.bestEmail);
+    const existingLeads = await Lead.find({ bestEmail: { $in: emails } });
 
     if (existingLeads.length > 0) {
       return res.status(400).json({
-        error: "Duplicate lead IDs or emails detected.",
-        duplicateLeads: existingLeads.map(lead => ({
-          leadID: lead.leadID,
-          email: lead.email
-        })),
+        error: "Duplicate emails detected.",
+        duplicateEmails: existingLeads.map(lead => lead.bestEmail),
       });
     }
 
-    // Insert leads into the database
-    await Lead.insertMany(leads);
+    // Insert leads one by one to maintain auto-increment behavior
+    const insertedLeads = [];
+    for (const lead of validLeads) {
+      const newLead = new Lead({
+        ...lead,
+        importDate: new Date(), // Auto-set import date
+      });
+      await newLead.save();
+      insertedLeads.push(newLead);
+    }
 
-    res.status(201).json({ message: "Leads uploaded successfully!", insertedCount: leads.length });
+    console.log(`Inserted Leads Count: ${insertedLeads.length}`);
+
+    res.status(201).json({
+      message: "Leads uploaded successfully!",
+      insertedCount: insertedLeads.length
+    });
+
   } catch (error) {
     console.error("Error saving leads:", error);
-
-    if (error.code === 11000) {
-      // MongoDB duplicate key error
-      return res.status(400).json({ error: "Duplicate email or lead ID found." });
-    }
-
-    if (error.name === "ValidationError") {
-      return res.status(400).json({ error: "Invalid lead data format.", details: error.errors });
-    }
-
     res.status(500).json({ error: "Failed to save leads." });
   }
 };

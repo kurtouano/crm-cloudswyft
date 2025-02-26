@@ -40,10 +40,10 @@ export default function Kanban() {
         leads.forEach((lead) => {
           fetchedItems[lead._id] = {
             id: lead._id, 
-            title: lead.lead, 
+            title: lead.leadName, 
             description: "Description placeholder",
             employee: "John Doe",
-            timeStarted: lead.date,
+            timeStarted: lead.importDate,
           };
         });
 
@@ -57,7 +57,7 @@ export default function Kanban() {
 
         // ✅ Assign leads to correct columns based on `stage`
         leads.forEach((lead) => {
-          const stageKey = stageMapping[lead.stage] || "lead";
+          const stageKey = stageMapping[lead.stage] || "Lead";
           initialColumns[stageKey].itemsOrder.push(lead._id); // ✅ Use MongoDB ID
         });
 

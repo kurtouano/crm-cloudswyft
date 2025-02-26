@@ -81,46 +81,54 @@ export default function AccountPage() {
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (!file) return;
-  
+
+    const requiredHeaders = [
+      "leadName", "bestEmail", "nameOfPresident", "nameOfHrHead", "company",
+      "industry", "companyAddress", "phone", "website", "social"
+    ];
+
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
       complete: async (result) => {
-        const requiredHeaders = [
-          "lead", "email", "stage", "date", "name", "company", "leadID", 
-          "joinDate", "jobTitle", "industry", "location", "phone", "social"
-        ];
-  
-        const fileHeaders = Object.keys(result.data[0] || {}).map(h => h.trim()); // Trim spaces
-        console.log("Extracted Headers:", fileHeaders); // Debugging step
-  
+        const fileHeaders = Object.keys(result.data[0] || {}).map(h => h.trim());
+        console.log("Extracted Headers:", fileHeaders);
+
         const isValid = requiredHeaders.every(header => fileHeaders.includes(header));
-  
+
         if (!isValid) {
-          document.querySelector(".import-error-display").textContent = 
+          document.querySelector(".import-error-display").textContent =
             `CSV file does not have the correct headers! Found: ${fileHeaders.join(", ")}`;
           return;
         }
-  
-        document.querySelector(".import-error-display").textContent = ""; // Clear previous errors
-  
-        console.log("CSV data:", result.data);
-  
+
+        document.querySelector(".import-error-display").textContent = "";
+
+        const formattedData = result.data
+          .map(lead => ({
+            ...lead,
+            importDate: new Date().toISOString().split("T")[0], // Ensure correct date format
+          }))
+          .filter(lead => 
+            Object.values(lead).some(value => value?.trim()) // Keep only non-empty rows
+          );
+
+        console.log("Filtered Data Before Upload:", formattedData);
+
+
+        console.log("Formatted CSV Data:", formattedData);
+
         try {
-          await axios.post("http://localhost:4000/api/leads/upload", { leads: result.data });
+          await axios.post("http://localhost:4000/api/leads/upload", { leads: formattedData });
           alert("Leads imported successfully!");
-  
-          // Fetch updated leads after import
+
           const response = await axios.get("http://localhost:4000/api/leads");
           setLeads(response.data);
           setFilteredLeads(response.data);
-  
         } catch (err) {
           console.error("Error uploading leads:", err);
-  
-          // Display specific error message from backend
           if (err.response && err.response.data) {
-            document.querySelector(".import-error-display").textContent = 
+            document.querySelector(".import-error-display").textContent =
               err.response.data.error || "Unknown error occurred.";
           } else {
             document.querySelector(".import-error-display").textContent = "Failed to upload leads.";
@@ -128,7 +136,8 @@ export default function AccountPage() {
         }
       }
     });
-  };  
+  };
+  
   
   return (
     <div className="accounts-container">
@@ -197,7 +206,7 @@ export default function AccountPage() {
             <div className="options-icon">⋮</div>
 
             <div className="lead-info">
-              <h3 className="lead-name">{lead.name}</h3>
+              <h3 className="lead-name">{lead.leadName}</h3>
               <span className="company-badge">{lead.company}</span>
 
               <div className="lead-details">
@@ -206,7 +215,9 @@ export default function AccountPage() {
               </div>
               <div className="lead-details">
                 <p>Join Date</p>
-                <p className="lead-value">{lead.joinDate}</p>
+                <p className="lead-value">
+                  {lead.importDate ? lead.importDate.split("T")[0] : "N/A"}
+                </p>
               </div>
             </div>
 
@@ -240,7 +251,7 @@ export default function AccountPage() {
           onPageChange={handlePageClick}
           pageRangeDisplayed={4}
           marginPagesDisplayed={1}
-          pageCount={Math.ceil(leads.length / rowsPerPage)}
+          pageCount={Math.ceil(filteredLeads.length / rowsPerPage)}
           previousLabel="<"
           containerClassName="pagination"
           activeClassName="active"

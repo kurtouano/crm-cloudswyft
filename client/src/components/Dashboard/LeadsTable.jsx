@@ -8,21 +8,17 @@ export default function LeadsTable() {
   const [page, setPage] = useState(0);
   const rowsPerPage = 6; 
 
-  // ✅ Function to Fetch Leads
-  const fetchLeads = async () => {
-    try {
-      const response = await axios.get("http://localhost:4000/api/leads");
-      setLeads(response.data);
-    } catch (error) {
-      console.error("Error fetching leads:", error);
-    }
-  };
-
-  // ✅ Fetch Leads on Initial Load & Auto-Refresh Every 5 Seconds
   useEffect(() => {
-    fetchLeads(); // Initial Fetch
-    const interval = setInterval(fetchLeads, 5000); // Auto-refresh every 5 sec
-    return () => clearInterval(interval); // Cleanup interval on unmount
+    const fetchLeads = async () => {
+      try {
+        const response = await axios.get("http://localhost:4000/api/leads");
+        setLeads(response.data);
+      } catch (error) {
+        console.error("Error fetching leads:", error);
+      }
+    };
+
+    fetchLeads();
   }, []);
 
   const handlePageClick = (event) => {
@@ -43,10 +39,10 @@ export default function LeadsTable() {
         <tbody>
           {leads.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((lead, index) => (
             <tr className='table-body-list-container' key={index}>
-              <td className='table-body-list'>{lead.lead}</td>
-              <td className='table-body-list font-geist'>{lead.email}</td>
+              <td className='table-body-list'>{lead.leadName}</td>
+              <td className='table-body-list font-geist'>{lead.bestEmail}</td>
               <td className='table-body-list lead-stage'>{lead.stage}</td>
-              <td className='table-body-list'>{lead.date}</td>
+              <td className='table-body-list'>{lead.importDate}</td>
             </tr>
           ))}
         </tbody>
