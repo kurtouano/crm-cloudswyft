@@ -102,36 +102,33 @@ export default function AccountPage() {
     }
   };
   
-  
-  
-  
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (!file) return;
-
+  
     const requiredHeaders = [
       "leadName", "bestEmail", "nameOfPresident", "nameOfHrHead", "company",
       "industry", "companyAddress", "phone", "website", "social"
     ];
-
+  
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
       complete: async (result) => {
         const fileHeaders = Object.keys(result.data[0] || {}).map(h => h.trim());
         console.log("Extracted Headers:", fileHeaders);
-
+  
         const isValid = requiredHeaders.every(header => fileHeaders.includes(header));
-
+  
         if (!isValid) {
           document.querySelector(".import-error-display").textContent =
             `CSV file does not have the correct headers! Found: ${fileHeaders.join(", ")}`;
           return;
         }
-
+  
         document.querySelector(".import-error-display").textContent = "";
-
+  
         const formattedData = result.data
           .map(lead => ({
             ...lead,
@@ -140,27 +137,25 @@ export default function AccountPage() {
           .filter(lead => 
             Object.values(lead).some(value => value?.trim()) // Keep only non-empty rows
           );
-
+  
         console.log("Filtered Data Before Upload:", formattedData);
-
-
-        console.log("Formatted CSV Data:", formattedData);
-
+  
         try {
-          await axios.post("http://localhost:4000/api/leads/upload", { leads: formattedData });
-          alert("Leads imported successfully!");
-
-          const response = await axios.get("http://localhost:4000/api/leads");
-          setLeads(response.data);
-          setFilteredLeads(response.data);
+          const response = await axios.post("http://localhost:4000/api/leads/upload", { leads: formattedData });
+        
+          alert(`${response.data.insertedCount} new leads added! ${response.data.skippedCount} duplicates skipped.`);
+  
+          const updatedLeads = await axios.get("http://localhost:4000/api/leads");
+          setLeads(updatedLeads.data);
+          setFilteredLeads(updatedLeads.data);
+  
+          // **Reset the file input**
+          event.target.value = "";
+          
         } catch (err) {
           console.error("Error uploading leads:", err);
-          if (err.response && err.response.data) {
-            document.querySelector(".import-error-display").textContent =
-              err.response.data.error || "Unknown error occurred.";
-          } else {
-            document.querySelector(".import-error-display").textContent = "Failed to upload leads.";
-          }
+          document.querySelector(".import-error-display").textContent =
+            err.response?.data?.error || "Failed to upload leads.";
         }
       }
     });

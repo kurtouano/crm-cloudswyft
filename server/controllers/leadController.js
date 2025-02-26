@@ -36,19 +36,17 @@ export const importLead = async (req, res) => {
   try {
     const { leads } = req.body;
 
-    console.log("Received Leads:", leads); // Debugging log
-
     if (!Array.isArray(leads) || leads.length === 0) {
       return res.status(400).json({ error: "Invalid data format or empty file." });
     }
 
-    // Trim headers and remove empty spaces
+    // Required fields
     const requiredFields = [
       "leadName", "bestEmail", "nameOfPresident", "nameOfHrHead", "company",
       "industry", "companyAddress", "phone", "website", "social"
     ];
 
-    // Remove empty rows (where required fields are missing or empty)
+    // Remove empty or incomplete rows
     const validLeads = leads.filter(lead =>
       requiredFields.every(field => lead[field] && lead[field].trim())
     );
@@ -57,35 +55,47 @@ export const importLead = async (req, res) => {
       return res.status(400).json({ error: "All rows are empty or missing required fields." });
     }
 
-    console.log(`Valid Leads Count: ${validLeads.length}`);
+    // Fetch existing leads based on email & company
+    const existingLeads = await Lead.find({
+      $or: validLeads.map(lead => ({
+        bestEmail: lead.bestEmail,
+        company: lead.company
+      }))
+    });
 
-    // Check for duplicate emails
-    const emails = validLeads.map(lead => lead.bestEmail);
-    const existingLeads = await Lead.find({ bestEmail: { $in: emails } });
+    // Convert existing leads into a Set for quick lookup
+    const existingLeadSet = new Set(
+      existingLeads.map(lead => `${lead.bestEmail}-${lead.company}`)
+    );
 
-    if (existingLeads.length > 0) {
-      return res.status(400).json({
-        error: "Duplicate emails detected.",
-        duplicateEmails: existingLeads.map(lead => lead.bestEmail),
+    // Filter out duplicates based on email & company
+    const newLeads = validLeads.filter(lead =>
+      !existingLeadSet.has(`${lead.bestEmail}-${lead.company}`)
+    );
+
+    if (newLeads.length === 0) {
+      return res.status(200).json({
+        message: "No new leads added. All entries already exist.",
+        skippedCount: validLeads.length
       });
     }
 
-    // Insert leads one by one to maintain auto-increment behavior
+    // Save each lead individually to trigger auto-incremented `leadID`
     const insertedLeads = [];
-    for (const lead of validLeads) {
+    for (const lead of newLeads) {
       const newLead = new Lead({
-        ...lead,
-        importDate: new Date(), // Auto-set import date
+        ...lead, 
+        importDate: new Date(), // Ensure import date is set
       });
-      await newLead.save();
-      insertedLeads.push(newLead);
-    }
 
-    console.log(`Inserted Leads Count: ${insertedLeads.length}`);
+      const savedLead = await newLead.save();
+      insertedLeads.push(savedLead);
+    }
 
     res.status(201).json({
       message: "Leads uploaded successfully!",
-      insertedCount: insertedLeads.length
+      insertedCount: insertedLeads.length,
+      insertedLeads
     });
 
   } catch (error) {
@@ -93,6 +103,7 @@ export const importLead = async (req, res) => {
     res.status(500).json({ error: "Failed to save leads." });
   }
 };
+
 
 
 // 🟡 Update lead stage when moved in Kanban
