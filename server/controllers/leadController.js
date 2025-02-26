@@ -131,3 +131,26 @@ export const updateLeadStage = async (req, res) => {
     res.status(500).json({ message: "Error updating lead stage", error });
   }
 };
+
+export const deleteLead = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Convert `id` to number if it's in `LID-001` format
+    const leadIdNumber = parseInt(id.replace("LID-", ""), 10);
+
+    // Find and delete lead by `leadID`
+    const deletedLead = await Lead.findOneAndDelete({ leadID: leadIdNumber });
+
+    if (!deletedLead) {
+      return res.status(404).json({ message: "Lead not found." });
+    }
+
+    res.status(200).json({ message: "Lead deleted successfully!" });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting lead", error });
+  }
+};
+
+
+

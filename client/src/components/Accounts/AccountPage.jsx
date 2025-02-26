@@ -33,6 +33,8 @@ export default function AccountPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filteredLeads, setFilteredLeads] = useState([]);
+  const [selectedLead, setSelectedLead] = useState(null);
+  const [deleteModal, setDeleteModal] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const displayedLeads = filteredLeads.slice(page * rowsPerPage, (page + 1) * rowsPerPage);
 
@@ -78,6 +80,32 @@ export default function AccountPage() {
     setPage(event.selected);
   };
   
+  const openDeleteModal = (lead) => {
+    setDeleteModal(lead);
+  };
+
+  const handleDeleteLead = async () => {
+    if (!deleteModal) return;
+
+    try {
+      const leadIdNumber = parseInt(deleteModal.leadID.replace("LID-", ""), 10);
+      await axios.delete(`http://localhost:4000/api/leads/leadID/${leadIdNumber}`);
+
+      // ✅ Remove lead from UI instantly
+      setLeads((prevLeads) => prevLeads.filter((lead) => lead.leadID !== deleteModal.leadID));
+      setFilteredLeads((prevLeads) => prevLeads.filter((lead) => lead.leadID !== deleteModal.leadID));
+
+      // ✅ Close Modal
+      setDeleteModal(null);
+    } catch (error) {
+      console.error("Error deleting lead:", error);
+    }
+  };
+  
+  
+  
+  
+
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -203,45 +231,79 @@ export default function AccountPage() {
       <div className="lead-cards-container">
         {displayedLeads.map((lead, index) => (
           <div key={index} className="lead-card">
-            <div className="options-icon">⋮</div>
-
-            <div className="lead-info">
-              <h3 className="lead-name">{lead.leadName}</h3>
-              <span className="company-badge">{lead.company}</span>
-
-              <div className="lead-details">
-                <p>Lead ID</p>
-                <p className="lead-value">{lead.leadID}</p>
+          {/* Three-dot menu */}
+          <div 
+            className="options-icon clickable"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedLead(selectedLead === lead.leadID ? null : lead.leadID);
+            }}
+          >
+            ⋮
+          </div>
+        
+            {selectedLead === lead.leadID && (
+              <div className="lead-dropdown-menu">
+                <button 
+                  className="delete-lead-btn" 
+                  onClick={() => openDeleteModal(lead)} // ✅ Open delete modal
+                >
+                  Delete Lead
+                </button>
               </div>
-              <div className="lead-details">
-                <p>Join Date</p>
-                <p className="lead-value">
-                  {lead.importDate ? lead.importDate.split("T")[0] : "N/A"}
-                </p>
-              </div>
+            )}
+
+        
+          {/* Lead Details */}
+          <div className="lead-info">
+            <h3 className="lead-name">{lead.leadName}</h3>
+            <span className="company-badge">{lead.company}</span>
+            
+            <div className="lead-details">
+              <p>Lead ID</p>
+              <p className="lead-value">{lead.leadID}</p>
             </div>
-
-            {/* Action Icons */}
-            <div className="lead-actions">
-              <div 
-                className="chat-icon clickable"
-                onClick={(e) => { e.stopPropagation(); console.log("Chat Clicked"); }}
-              >
-                <img src={chatIcon} alt="Chat" />
-              </div>
-              <div 
-                className="user-icon clickable"
-                onClick={(e) => { 
-                  e.stopPropagation(); 
-                  navigate("/lead-profile", { state: { lead } });
-                }} 
-              >
-                <img src={userIcon} alt="Profile" />
-              </div>
+            <div className="lead-details">
+              <p>Join Date</p>
+              <p className="lead-value">
+                {lead.importDate ? lead.importDate.split("T")[0] : "N/A"}
+              </p>
             </div>
           </div>
+        
+          {/* Action Icons */}
+          <div className="lead-actions">
+            <div className="chat-icon clickable">
+              <img src={chatIcon} alt="Chat" />
+            </div>
+            <div 
+              className="user-icon clickable"
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                navigate("/lead-profile", { state: { lead } });
+              }} 
+            >
+              <img src={userIcon} alt="Profile" />
+            </div>
+          </div>
+        </div>
+        
         ))}
       </div>
+
+      {/* Floating Delete Confirmation Modal */}
+      {deleteModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Delete Lead</h3>
+            <p>Are you sure you want to delete <strong>{deleteModal.leadName}</strong>?</p>
+            <div className="modal-buttons">
+              <button className="cancel-btn" onClick={() => setDeleteModal(null)}>Cancel</button>
+              <button className="delete-btn" onClick={handleDeleteLead}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Pagination */}
       <div className="pagination-container">
