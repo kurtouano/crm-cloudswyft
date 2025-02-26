@@ -5,6 +5,7 @@ import axios from "axios"; // For API requests
 import Fuse from "fuse.js";
 import Papa from "papaparse";
 import "./Accounts.css";
+import * as XLSX from "xlsx";
 
 // Import icons
 import usersIcon from "../../assets/users.png";
@@ -107,58 +108,80 @@ export default function AccountPage() {
     const file = event.target.files[0];
     if (!file) return;
   
+    const fileExtension = file.name.split(".").pop().toLowerCase();
     const requiredHeaders = [
       "leadName", "bestEmail", "nameOfPresident", "nameOfHrHead", "company",
       "industry", "companyAddress", "phone", "website", "social"
     ];
   
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: async (result) => {
-        const fileHeaders = Object.keys(result.data[0] || {}).map(h => h.trim());
-        console.log("Extracted Headers:", fileHeaders);
+    if (fileExtension === "csv") {
+      // Handle CSV File
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: async (result) => processFileData(result.data, requiredHeaders, event),
+      });
+    } else if (fileExtension === "xlsx") {
+      // Handle Excel (.xlsx) File
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheetName = workbook.SheetNames[0]; // Assuming first sheet
+        const sheet = workbook.Sheets[sheetName];
+        const parsedData = XLSX.utils.sheet_to_json(sheet, { defval: "" }); // Ensure empty values are handled
   
-        const isValid = requiredHeaders.every(header => fileHeaders.includes(header));
+        processFileData(parsedData, requiredHeaders, event);
+      };
+      reader.readAsArrayBuffer(file);
+    } else {
+      document.querySelector(".import-error-display").textContent =
+        "Unsupported file format. Please upload a CSV or XLSX file.";
+    }
+  };
   
-        if (!isValid) {
-          document.querySelector(".import-error-display").textContent =
-            `CSV file does not have the correct headers! Found: ${fileHeaders.join(", ")}`;
-          return;
-        }
+  // Helper function to process file data
+  const processFileData = async (data, requiredHeaders, event) => {
+    const fileHeaders = Object.keys(data[0] || {}).map((h) => h.trim());
+    console.log("Extracted Headers:", fileHeaders);
   
-        document.querySelector(".import-error-display").textContent = "";
+    const isValid = requiredHeaders.every((header) => fileHeaders.includes(header));
   
-        const formattedData = result.data
-          .map(lead => ({
-            ...lead,
-            importDate: new Date().toISOString().split("T")[0], // Ensure correct date format
-          }))
-          .filter(lead => 
-            Object.values(lead).some(value => value?.trim()) // Keep only non-empty rows
-          );
+    if (!isValid) {
+      document.querySelector(".import-error-display").textContent =
+        `File does not have the correct headers! Found: ${fileHeaders.join(", ")}`;
+      return;
+    }
   
-        console.log("Filtered Data Before Upload:", formattedData);
+    document.querySelector(".import-error-display").textContent = "";
   
-        try {
-          const response = await axios.post("http://localhost:4000/api/leads/upload", { leads: formattedData });
-        
-          alert(`${response.data.insertedCount} new leads added! ${response.data.skippedCount} duplicates skipped.`);
+    const formattedData = data
+      .map((lead) => ({
+        ...lead,
+        importDate: new Date().toISOString().split("T")[0],
+      }))
+      .filter((lead) =>
+        Object.values(lead).some((value) => value?.toString().trim()) // Keep only non-empty rows
+      );
   
-          const updatedLeads = await axios.get("http://localhost:4000/api/leads");
-          setLeads(updatedLeads.data);
-          setFilteredLeads(updatedLeads.data);
+    console.log("Filtered Data Before Upload:", formattedData);
   
-          // **Reset the file input**
-          event.target.value = "";
-          
-        } catch (err) {
-          console.error("Error uploading leads:", err);
-          document.querySelector(".import-error-display").textContent =
-            err.response?.data?.error || "Failed to upload leads.";
-        }
-      }
-    });
+    try {
+      const response = await axios.post("http://localhost:4000/api/leads/upload", { leads: formattedData });
+  
+      alert(`${response.data.insertedCount} new leads added! ${response.data.skippedCount} duplicates skipped.`);
+  
+      const updatedLeads = await axios.get("http://localhost:4000/api/leads");
+      setLeads(updatedLeads.data);
+      setFilteredLeads(updatedLeads.data);
+  
+      // **Reset the file input**
+      event.target.value = "";
+    } catch (err) {
+      console.error("Error uploading leads:", err);
+      document.querySelector(".import-error-display").textContent =
+        err.response?.data?.error || "Failed to upload leads.";
+    }
   };
   
   
@@ -210,7 +233,7 @@ export default function AccountPage() {
 
         <label className="accounts-import-btn">
           <FiDownload />
-          <input type="file" accept=".csv" onChange={handleFileUpload} style={{ display: "none" }} />
+          <input type="file" accept=".csv, .xlsx" onChange={handleFileUpload} style={{ display: "none" }} />
         </label>
 
       </div>
