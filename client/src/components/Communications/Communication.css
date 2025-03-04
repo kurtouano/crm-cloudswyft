@@ -1,0 +1,229 @@
+/* 🔵 Main Panel Container */
+.messaging-panel {
+    display: flex;
+    background: #f8f9fb;
+    width: 100%;
+}
+
+/* 📜 Sidebar */
+.sidebar-panel {
+    width: 349px;
+    height: 730px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+/* 🔎 Search Bar */
+.panel-search-container {
+    display: flex;
+    align-items: center;
+    padding-top: 30px;
+    padding-bottom: 20px;
+    position: relative;
+    width: 100%;
+}
+
+.panel-search-container input {
+    width: 71%;
+    padding-left: 20px;
+    border: none;
+    background: transparent;
+    font-size: 16px;
+    color: #000000;
+    outline: none;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Search Icon */
+.panel-search-icon {
+    color: #888;
+    height: 20px;
+    width: 20px;
+    font-size: 14px;
+    padding-left: 20px;
+    flex-shrink: 0;
+}
+
+/* 📏 Search Underline */
+.panel-search-underline {
+    width: 240px;
+    height: 2px;
+    background: #888;
+    margin: -2px auto 10px auto;
+}
+
+/* 🟢 Leads List */
+.panel-leads-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-top: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* 📩 Lead Item */
+.panel-lead-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 220px;
+    height: 101px;
+    background: white;
+    border-radius: 10px;
+    margin: 10px auto;
+    padding: 15px;
+    cursor: pointer;
+    transition: 0.2s;
+    position: relative;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    color: black;
+}
+
+/* 🟦 Selected (Active) Lead */
+.panel-lead-item.active {
+    background: #2196f3;
+    color: white !important;
+}
+
+/* 📏 Underline for Each Lead */
+.panel-lead-item::after {
+    content: "";
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: #ddd;
+}
+
+/* ❌ Remove Underline for Last Lead */
+.panel-lead-item:last-child::after {
+    display: none;
+}
+
+/* 🖼️ Avatar Icon */
+.panel-lead-icon {
+    font-size: 40px;
+    color: black;
+    margin-right: 10px;
+    padding-bottom: 60px;
+}
+
+/* Change icon to white when selected */
+.panel-lead-item.active .panel-lead-icon {
+    color: white;
+}
+    
+.panel-lead-info {
+    flex-grow: 1;
+}
+
+.panel-lead-info h4 {
+    font-size: 15px;
+    font-weight: bold;
+    margin: 5px 0;
+}
+
+.panel-lead-info p {
+    font-size: 13px;
+    color: #888;
+}
+
+/* When lead is selected, change text color */
+.panel-lead-item.active .panel-lead-info h4,
+.panel-lead-item.active .panel-lead-info p,
+.panel-lead-item.active .panel-lead-status,
+.panel-lead-item.active .panel-message-time {
+    color: white;
+}
+
+/* 🟢 Status */
+.panel-lead-status {
+    font-size: 12px;
+    color: #666;
+}
+
+/* 🟢 Green Dot */
+.panel-status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: green;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+/* 🕒 Message Time */
+.panel-message-time {
+    font-size: 12px;
+    color: #777;
+    align-self: flex-end;
+}
+
+/* 📨 Message Box */
+.message-panel {
+    width: 100%;
+    height: 730px;
+    flex-grow: 1;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+    margin-left: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 🟢 Chat Header */
+.message-header-panel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+    border-bottom: 1px solid #ddd;
+    font-weight: bold;
+    font-size: 16px;
+    color: #666;
+}
+
+/* 📝 Chat Area */
+.message-chat-area {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+/* 🖊️ Message Input */
+.message-input-box {
+    display: flex;
+    align-items: center;
+    height: 50px;
+    padding: 10px;
+    border-top: 1px solid #ddd;
+    background: #f8f9fb;
+}
+
+.message-text-input {
+    flex-grow: 1;
+    border: none;
+    background: transparent;
+    padding: 10px;
+    font-size: 17px;
+    color: #666;
+    outline: none;
+}
+
+.message-input-icon {
+    height: 20px;
+    width: 20px;
+    padding: 5px;
+    font-size: 18px;
+    color: #aaa;
+    margin-right: 10px;
+    cursor: pointer;
+}
