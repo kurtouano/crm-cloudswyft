@@ -40,10 +40,10 @@ export const importLead = async (req, res) => {
       return res.status(400).json({ error: "Invalid data format or empty file." });
     }
 
-    // Required fields
+    // Required fields for individual rows (REMOVED name of HR, Social, and Website)
     const requiredFields = [
-      "leadName", "bestEmail", "nameOfPresident", "nameOfHrHead", "company",
-      "industry", "companyAddress", "phone", "website", "social"
+      "leadName", "bestEmail", "nameOfPresident", "company",
+      "industry", "companyAddress", "phone"
     ];
 
     // Remove empty or incomplete rows
@@ -73,19 +73,20 @@ export const importLead = async (req, res) => {
       !existingLeadSet.has(`${lead.bestEmail}-${lead.company}`)
     );
 
+    const skippedCount = validLeads.length - newLeads.length;
+
     if (newLeads.length === 0) {
       return res.status(200).json({
         message: "No new leads added. All entries already exist.",
-        skippedCount: validLeads.length
+        insertedCount: 0,
+        skippedCount: skippedCount
       });
     }
 
     // Save each lead individually to trigger auto-incremented `leadID`
     const insertedLeads = [];
     for (const lead of newLeads) {
-      const newLead = new Lead({
-        ...lead, 
-        importDate: new Date(), // Ensure import date is set
+      const newLead = new Lead({ ...lead, importDate: new Date(), // Ensure import date is set
       });
 
       const savedLead = await newLead.save();
@@ -95,6 +96,7 @@ export const importLead = async (req, res) => {
     res.status(201).json({
       message: "Leads uploaded successfully!",
       insertedCount: insertedLeads.length,
+      skippedCount: skippedCount, // Now always present
       insertedLeads
     });
 

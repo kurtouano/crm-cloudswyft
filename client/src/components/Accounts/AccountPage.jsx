@@ -168,8 +168,11 @@ export default function AccountPage() {
   
     try {
       const response = await axios.post("http://localhost:4000/api/leads/upload", { leads: formattedData });
+
+      const insertedCount = response.data.insertedCount || 0;
+      const skippedCount = response.data.skippedCount || 0;
   
-      alert(`${response.data.insertedCount} new leads added! ${response.data.skippedCount} duplicates skipped.`);
+      alert(`${insertedCount} new leads added! ${skippedCount} duplicates skipped.`);
   
       const updatedLeads = await axios.get("http://localhost:4000/api/leads");
       setLeads(updatedLeads.data);
