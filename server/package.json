@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon server/index.js",
-    "start": "node server/index.js"
+    "start": "node server/index.js",
+    "web": "ngrok http --domain=ideally-square-cod.ngrok-free.app 4000"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +21,7 @@
     "mongodb": "^6.13.0",
     "mongoose": "^8.10.1",
     "mongoose-sequence": "^6.0.1",
+    "ngrok": "^5.0.0-beta.2",
     "nodemon": "^3.1.9",
     "xlsx": "^0.18.5"
   }

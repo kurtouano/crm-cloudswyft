@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
 import leadRoutes from "./routes/leadRoutes.js"; 
+import emailRoutes from "./routes/emailRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -19,6 +20,7 @@ mongoose
 
 app.use("/api/auth", authRoutes);
 app.use("/api/leads", leadRoutes);
+app.use("/api/emails", emailRoutes);
 
 app.get("/", (req, res) => {
   res.send("Welcome to the CRM CloudSwyft API!");

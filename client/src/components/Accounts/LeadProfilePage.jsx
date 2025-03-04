@@ -107,9 +107,10 @@ const interactionData = {
               <p className="profile-basic-title">Contact Information</p>
             </div>
             <div className="profile-body-list">
-              <p className="profile-body"><span>Email: </span>{lead.bestEmail}</p>
+              <p className="profile-body"><span>Best Email: </span>{lead.bestEmail}</p>
               <p className="profile-body"><span>Phone: </span>{lead.phone}</p>
               <p className="profile-body"><span>Social Media: </span>{lead.social}</p>
+              <p className="profile-body"><span>Website: </span>{lead.website}</p>
             </div>
           </div>
           
