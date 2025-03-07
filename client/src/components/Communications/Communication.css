@@ -7,13 +7,14 @@
 
 /* 📜 Sidebar */
 .sidebar-panel {
-    width: 349px;
-    height: 730px;
+    width: 350px;
+    height: 710px;
     background: white;
     border-radius: 15px;
     box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
+    padding: 10px;
 }
 
 /* 🔎 Search Bar */
@@ -61,28 +62,22 @@
     flex-grow: 1;
     overflow-y: auto;
     padding-top: 5px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
 }
 
 /* 📩 Lead Item */
 .panel-lead-item {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    width: 220px;
-    height: 101px;
+    height: 100px;
     background: white;
     border-radius: 10px;
-    margin: 10px auto;
-    padding: 15px;
+    margin: 5px 0;
+    padding: 10px;
+    padding-bottom: 30px;
     cursor: pointer;
     transition: 0.2s;
     position: relative;
-    text-align: left;
     border-bottom: 1px solid #ddd;
-    color: black;
 }
 
 /* 🟦 Selected (Active) Lead */
@@ -107,12 +102,13 @@
     display: none;
 }
 
-/* 🖼️ Avatar Icon */
+/* 🖼️ Smaller Avatar Icon */
 .panel-lead-icon {
-    font-size: 40px;
+    font-size: 25px;
     color: black;
     margin-right: 10px;
-    padding-bottom: 60px;
+    align-self: flex-start; /* Moves icon higher */
+    margin-top: 5px;
 }
 
 /* Change icon to white when selected */
@@ -122,18 +118,32 @@
     
 .panel-lead-info {
     flex-grow: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 2px; /* Ensures consistent spacing */
+    align-items: flex-start;
 }
 
-.panel-lead-info h4 {
-    font-size: 15px;
+ .panel-lead-info h4 {
+    font-size: 16px;
     font-weight: bold;
-    margin: 5px 0;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .panel-lead-info p {
-    font-size: 13px;
+    font-size: 12px;
+    font-weight: bold;
     color: #888;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
+
 
 /* When lead is selected, change text color */
 .panel-lead-item.active .panel-lead-info h4,
@@ -147,7 +157,10 @@
 .panel-lead-status {
     font-size: 12px;
     color: #666;
+    display: flex;
+    align-items: center;
 }
+
 
 /* 🟢 Green Dot */
 .panel-status-dot {

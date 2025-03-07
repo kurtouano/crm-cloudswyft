@@ -6,32 +6,42 @@ import { useNavigate } from "react-router-dom";
 
 export default function CommunicationPage() {
   const [selectedIndex, setSelectedIndex] = useState(null);
-  const [selectedTab, setSelectedTab] = useState("messages"); // Track active tab
   const [formData, setFormData] = useState({ to: "", subject: "", text: "" });
   const [sentEmails, setSentEmails] = useState([]);
   const [loading, setLoading] = useState(false);
   const [microsoftAccessToken, setMicrosoftAccessToken] = useState("");
+  const [leads, setLeads] = useState([]);
+  const [leadsLoading, setLeadsLoading] = useState(true);
+  const [leadsError, setLeadsError] = useState(null);
   const navigate = useNavigate();
 
-  const leads = [
-    { name: "Robert King", status: "Online", lastMessage: "Adwords Keyword Research For Beginners", time: "12:45" },
-    { name: "Nhick Fabian", status: "Online", lastMessage: "Adwords Keyword Research For Beginners", time: "12:45" },
-    { name: "Kurt Ouano", status: "Online", lastMessage: "Adwords Keyword Research For Beginners", time: "12:45" },
-    { name: "Vincent Mendoza", status: "Online", lastMessage: "Adwords Keyword Research For Beginners", time: "12:45" },
-  ];
+  useEffect(() => {
+    // Check if the access token is stored in localStorage
+    const storedToken = localStorage.getItem("microsoftAccessToken");
 
-  const handleMicrosoftLogin = () => {
-    window.location.href = "http://localhost:4000/api/emails/microsoft-login"; // Backend API to initiate Microsoft OAuth login
-  };
+    if (storedToken) {
+        setMicrosoftAccessToken(storedToken);
+    } else {
+        // Automatically trigger Microsoft login if token is missing
+        window.location.href = "http://localhost:4000/api/emails/microsoft-login";
+    }
+}, []);
 
   useEffect(() => {
-    fetchSentEmails();
-    
-    // Check if access token is available in localStorage (or wherever you are storing it)
-    const storedToken = localStorage.getItem("microsoftAccessToken");
-    if (storedToken) {
-      setMicrosoftAccessToken(storedToken);
-    }
+    const fetchLeads = async () => {
+      try {
+        const response = await fetch("http://localhost:4000/api/leads");
+        const data = await response.json();
+        setLeads(data);
+      } catch (error) {
+        console.error("Error fetching leads:", error);
+        setLeadsError("Failed to fetch leads.");
+      } finally {
+        setLeadsLoading(false);
+      }
+    };
+
+    fetchLeads();
   }, []);
 
   const fetchSentEmails = async () => {
@@ -44,8 +54,12 @@ export default function CommunicationPage() {
     }
   };
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleLeadSelection = (index) => {
+    setSelectedIndex(index);
+    setFormData((prev) => ({
+      ...prev,
+      to: leads[index]?.bestEmail || "", // Auto-fill recipient email
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -100,7 +114,7 @@ export default function CommunicationPage() {
       navigate("/communications"); // Redirect to communications if needed
     }
   }, [navigate]);
-  
+
   return (
     <div className="messaging-panel">
       {/* Sidebar */}
@@ -112,32 +126,30 @@ export default function CommunicationPage() {
         </div>
         <div className="panel-search-underline"></div>
 
-        {/* Display Content Based on Selected Tab */}
-        {selectedTab === "messages" && (
-          <div className="panel-leads-list">
-            {leads.map((lead, index) => (
+        {/* Display Leads */}
+        <div className="panel-leads-list">
+          {leadsLoading && <p>Loading leads...</p>}
+          {leadsError && <p className="error">{leadsError}</p>}
+          {!leadsLoading && !leadsError && leads.length === 0 && <p>No leads available.</p>}
+          {!leadsLoading &&
+            !leadsError &&
+            leads.map((lead, index) => (
               <div
                 key={index}
                 className={`panel-lead-item ${selectedIndex === index ? "active" : ""}`}
-                onClick={() => setSelectedIndex(index)}
+                onClick={() => handleLeadSelection(index)}
               >
                 <FaUserFriends className="panel-lead-icon" />
                 <div className="panel-lead-info">
                   <div className="panel-lead-status">
-                    <span className="panel-status-dot"></span> {lead.status}
+                    <span className="panel-status-dot"></span> Online
                   </div>
-                  <h4>{lead.name}</h4>
-                  <p>{lead.lastMessage}</p>
+                  <h4>{lead.leadName}</h4>
+                  <p>{lead.company}</p>
                 </div>
-                <span className="panel-message-time">{lead.time}</span>
               </div>
             ))}
-          </div>
-        )}
-
-        {/* Placeholder for Other Tabs */}
-        {selectedTab === "calls" && <div className="panel-tab-content">📞 Call Logs</div>}
-        {selectedTab === "settings" && <div className="panel-tab-content">⚙️ Settings</div>}
+        </div>
       </div>
 
       {/* 📨 Message Box */}
@@ -145,7 +157,7 @@ export default function CommunicationPage() {
         {/* Header */}
         {selectedIndex !== null && (
           <div className="message-header-panel">
-            <span className="panel-status-dot"></span> {leads[selectedIndex].name}
+            <span className="panel-status-dot"></span> {leads[selectedIndex]?.leadName}
           </div>
         )}
 
@@ -157,16 +169,15 @@ export default function CommunicationPage() {
               name="to"
               placeholder="Recipient Email"
               value={formData.to}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              required
+              className="w-full p-2 border rounded bg-gray-100 cursor-not-allowed"
+              readOnly
             />
             <input
               type="text"
               name="subject"
               placeholder="Subject"
               value={formData.subject}
-              onChange={handleChange}
+              onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
               className="w-full p-2 border rounded"
               required
             />
@@ -174,7 +185,7 @@ export default function CommunicationPage() {
               name="text"
               placeholder="Message"
               value={formData.text}
-              onChange={handleChange}
+              onChange={(e) => setFormData({ ...formData, text: e.target.value })}
               className="w-full p-2 border rounded"
               required
             ></textarea>
@@ -189,18 +200,12 @@ export default function CommunicationPage() {
         </div>
 
         {/* Message Input */}
-        <button
-          className="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600"
-          onClick={handleMicrosoftLogin}
-        >
-          Log in with Microsoft
-        </button>
         <div className="message-input-box">
           <FaPaperclip className="message-input-icon" />
           <FaImage className="message-input-icon" />
           <input type="text" placeholder="Type Message" className="message-text-input" />
           <button onClick={handleSubmit} className="send-email-btn">
-            <LiaPaperPlaneSolid className="send-email-btn-icon"/>
+            <LiaPaperPlaneSolid className="send-email-btn-icon" />
           </button>
         </div>
       </div>

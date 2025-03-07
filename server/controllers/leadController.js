@@ -46,14 +46,24 @@ export const importLead = async (req, res) => {
       "industry", "companyAddress", "phone"
     ];
 
-    // Remove empty or incomplete rows
+    // Remove empty or incomplete rows, ensuring numbers are accepted
     const validLeads = leads.filter(lead =>
-      requiredFields.every(field => lead[field] && lead[field].trim())
+      requiredFields.every(field =>
+        lead[field] !== undefined && lead[field] !== null && 
+        (typeof lead[field] === "string" ? lead[field].trim() !== "" : true)
+      )
     );
 
     if (validLeads.length === 0) {
       return res.status(400).json({ error: "All rows are empty or missing required fields." });
     }
+
+    // Convert phone numbers to strings before inserting into DB
+    validLeads.forEach(lead => {
+      if (typeof lead.phone !== "string") {
+        lead.phone = String(lead.phone);
+      }
+    });
 
     // Fetch existing leads based on email & company
     const existingLeads = await Lead.find({
@@ -86,7 +96,9 @@ export const importLead = async (req, res) => {
     // Save each lead individually to trigger auto-incremented `leadID`
     const insertedLeads = [];
     for (const lead of newLeads) {
-      const newLead = new Lead({ ...lead, importDate: new Date(), // Ensure import date is set
+      const newLead = new Lead({
+        ...lead,
+        importDate: new Date(), // Ensure import date is set
       });
 
       const savedLead = await newLead.save();
