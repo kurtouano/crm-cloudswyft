@@ -101,8 +101,6 @@ export default function CommunicationPage() {
     }
   }, [navigate]);
   
-
-
   return (
     <div className="messaging-panel">
       {/* Sidebar */}
