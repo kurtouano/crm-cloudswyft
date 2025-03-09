@@ -37,38 +37,27 @@ export async function handleOAuthRedirect(req, res) {
     if (!code) return res.status(400).json({ error: "Authorization code missing" });
 
     try {
-        // Acquire token by the authorization code
         const tokenResponse = await cca.acquireTokenByCode({
             code,
-            scopes: ["Mail.Send", "User.Read"],  // Scopes to request access to the user's email
-            redirectUri: process.env.REDIRECT_URI,  // Ensure this matches the one in your Azure registration
+            scopes: ["Mail.Send", "User.Read"],
+            redirectUri: process.env.REDIRECT_URI,
         });
 
-        // Check if we got the access token
         if (tokenResponse && tokenResponse.accessToken) {
             const accessToken = tokenResponse.accessToken;
-            // Log the access token and URL to ensure it's working
-            console.log("Redirecting to:", `${process.env.FRONTEND_URL}/callback?accessToken=${accessToken}`);
-        
-            return res.redirect(`${process.env.FRONTEND_URL}/communications?accessToken=${accessToken}`);
+            const expiresIn = tokenResponse.expires_in * 1000; // Convert seconds to milliseconds
+            const expiryTime = new Date().getTime() + expiresIn;
+
+            return res.redirect(`${process.env.FRONTEND_URL}/communications?accessToken=${accessToken}&expiry=${expiryTime}`);
         } else {
             return res.status(400).json({ error: "Token response is invalid or empty" });
         }
-        
     } catch (error) {
         console.error("OAuth Error:", error);
-        
-        if (error.errorCode === 'invalid_grant') {
-            return res.status(400).json({ error: "Authorization code has expired. Please try logging in again." });
-        }
-
-        if (error.errorCode === 'invalid_client') {
-            return res.status(400).json({ error: "Client configuration issue. Ensure correct settings in Azure" });
-        }
-
         return res.status(500).json({ error: "OAuth authentication failed. Please try again." });
     }
 }
+
 
 
 // Route to send an email using Microsoft Graph API

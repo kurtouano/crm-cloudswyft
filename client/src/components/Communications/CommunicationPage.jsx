@@ -16,16 +16,35 @@ export default function CommunicationPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if the access token is stored in localStorage
-    const storedToken = localStorage.getItem("microsoftAccessToken");
+    const params = new URLSearchParams(window.location.search);
+    const accessToken = params.get("accessToken");
+    const expiryTime = params.get("expiry"); // Capture expiry from URL
 
-    if (storedToken) {
-        setMicrosoftAccessToken(storedToken);
+    if (accessToken && expiryTime) {
+      // Store token and expiry time in localStorage
+      localStorage.setItem("microsoftAccessToken", accessToken);
+      localStorage.setItem("tokenExpiry", expiryTime);
+      setMicrosoftAccessToken(accessToken);
+
+      // Remove token from URL after storing it
+      window.history.replaceState({}, document.title, "/communications");
     } else {
-        // Automatically trigger Microsoft login if token is missing
+      // If no new token in URL, check existing stored token
+      const storedToken = localStorage.getItem("microsoftAccessToken");
+      const tokenExpiry = localStorage.getItem("tokenExpiry");
+
+      if (!storedToken || !tokenExpiry || new Date().getTime() > tokenExpiry) {
+        // Remove old token if expired
+        localStorage.removeItem("microsoftAccessToken");
+        localStorage.removeItem("tokenExpiry");
+
+        // Redirect only if there's no valid token
         window.location.href = "http://localhost:4000/api/emails/microsoft-login";
+      } else {
+        setMicrosoftAccessToken(storedToken);
+      }
     }
-}, []);
+  }, []);
 
   useEffect(() => {
     const fetchLeads = async () => {
