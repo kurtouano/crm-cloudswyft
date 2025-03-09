@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import "./Communication.css";
 import { LiaPaperPlaneSolid } from "react-icons/lia";
 import { FaUserFriends, FaSearch, FaPaperclip, FaImage } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
 
 export default function CommunicationPage() {
   const [selectedIndex, setSelectedIndex] = useState(null);
@@ -13,32 +12,25 @@ export default function CommunicationPage() {
   const [leads, setLeads] = useState([]);
   const [leadsLoading, setLeadsLoading] = useState(true);
   const [leadsError, setLeadsError] = useState(null);
-  const navigate = useNavigate();
+  const [attachment, setAttachment] = useState(null); // Store selected file
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const accessToken = params.get("accessToken");
-    const expiryTime = params.get("expiry"); // Capture expiry from URL
+    const expiryTime = params.get("expiry");
 
     if (accessToken && expiryTime) {
-      // Store token and expiry time in localStorage
       localStorage.setItem("microsoftAccessToken", accessToken);
       localStorage.setItem("tokenExpiry", expiryTime);
       setMicrosoftAccessToken(accessToken);
-
-      // Remove token from URL after storing it
       window.history.replaceState({}, document.title, "/communications");
     } else {
-      // If no new token in URL, check existing stored token
       const storedToken = localStorage.getItem("microsoftAccessToken");
       const tokenExpiry = localStorage.getItem("tokenExpiry");
 
       if (!storedToken || !tokenExpiry || new Date().getTime() > tokenExpiry) {
-        // Remove old token if expired
         localStorage.removeItem("microsoftAccessToken");
         localStorage.removeItem("tokenExpiry");
-
-        // Redirect only if there's no valid token
         window.location.href = "http://localhost:4000/api/emails/microsoft-login";
       } else {
         setMicrosoftAccessToken(storedToken);
@@ -77,13 +69,27 @@ export default function CommunicationPage() {
     setSelectedIndex(index);
     setFormData((prev) => ({
       ...prev,
-      to: leads[index]?.bestEmail || "", // Auto-fill recipient email
+      to: leads[index]?.bestEmail || "",
     }));
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        setAttachment({
+          fileName: file.name,
+          mimeType: file.type,
+          contentBytes: reader.result.split(",")[1], // Extract Base64 data
+        });
+      };
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const microsoftAccessToken = localStorage.getItem("microsoftAccessToken");
 
     if (!microsoftAccessToken) {
@@ -101,7 +107,8 @@ export default function CommunicationPage() {
           to: formData.to,
           subject: formData.subject,
           content: formData.text,
-          token: microsoftAccessToken, // Add token here
+          token: microsoftAccessToken,
+          attachments: attachment ? [attachment] : [], // Include attachment if available
         }),
       });
 
@@ -110,6 +117,7 @@ export default function CommunicationPage() {
       if (res.ok) {
         alert("Email sent successfully!");
         setFormData({ to: "", subject: "", text: "" });
+        setAttachment(null); // Clear attachment after sending
         fetchSentEmails();
       } else {
         alert(data.error || "Failed to send email");
@@ -195,6 +203,11 @@ export default function CommunicationPage() {
               className="w-full p-2 border rounded"
               required
             ></textarea>
+
+            {/* File Input for Attachments */}
+            <input type="file" onChange={handleFileChange} className="w-full p-2 border rounded" />
+            {attachment && <p>📎 {attachment.fileName}</p>}
+
             <button
               type="submit"
               className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
@@ -214,6 +227,7 @@ export default function CommunicationPage() {
             <LiaPaperPlaneSolid className="send-email-btn-icon" />
           </button>
         </div>
+
       </div>
     </div>
   );

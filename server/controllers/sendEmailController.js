@@ -1,6 +1,7 @@
 import axios from "axios";
 import dotenv from "dotenv";
 import { ConfidentialClientApplication } from "@azure/msal-node";  // Use ConfidentialClientApplication for client secret
+import { SentEmail } from "../models/EmailSchema.js";  
 
 dotenv.config();
 
@@ -59,23 +60,43 @@ export async function handleOAuthRedirect(req, res) {
 // Route to send an email using Microsoft Graph API
 export async function sendEmail(req, res) {
     try {
-        const { to, subject, content, token } = req.body;
+        const { to, subject, content, token, attachments } = req.body;
         if (!to || !subject || !content || !token) {
             return res.status(400).json({ error: "Missing fields or authentication token" });
         }
+
+        // Format attachments for Microsoft Graph API
+        const formattedAttachments = attachments?.map((file) => ({
+            "@odata.type": "#microsoft.graph.fileAttachment",
+            name: file.fileName,
+            contentType: file.mimeType,
+            contentBytes: file.contentBytes, // Base64 encoded content
+        })) || [];
 
         const emailData = {
             message: {
                 subject,
                 body: { contentType: "Text", content },
                 toRecipients: [{ emailAddress: { address: to } }],
+                attachments: formattedAttachments // Attachments included here
             },
         };
 
-        // Send the email via Microsoft Graph API
+        // Send email via Microsoft Graph API
         await axios.post("https://graph.microsoft.com/v1.0/me/sendMail", emailData, {
             headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         });
+
+        // Save email to database
+        const sentEmail = new SentEmail({
+            to,
+            subject,
+            content,
+            sentAt: new Date(),
+            attachments
+        });
+
+        await sentEmail.save();
 
         res.status(200).json({ success: true, message: "Email sent successfully!" });
     } catch (error) {
@@ -83,3 +104,4 @@ export async function sendEmail(req, res) {
         res.status(500).json({ error: "Failed to send email" });
     }
 }
+
