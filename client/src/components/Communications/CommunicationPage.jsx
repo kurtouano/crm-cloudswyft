@@ -85,7 +85,6 @@ export default function CommunicationPage() {
     e.preventDefault();
 
     const microsoftAccessToken = localStorage.getItem("microsoftAccessToken");
-    console.log(microsoftAccessToken);
 
     if (!microsoftAccessToken) {
       alert("Please log in via Microsoft first.");
@@ -121,18 +120,6 @@ export default function CommunicationPage() {
 
     setLoading(false);
   };
-
-  useEffect(() => {
-    // Check the URL for the access token after redirect from Microsoft OAuth
-    const params = new URLSearchParams(window.location.search);
-    const accessToken = params.get("accessToken");
-  
-    if (accessToken) {
-      setMicrosoftAccessToken(accessToken);
-      localStorage.setItem("microsoftAccessToken", accessToken); // Store token in local storage
-      navigate("/communications"); // Redirect to communications if needed
-    }
-  }, [navigate]);
 
   return (
     <div className="messaging-panel">

@@ -21,7 +21,6 @@ export async function handleMicrosoftLogin(req, res) {
         const authUrl = await cca.getAuthCodeUrl({
             scopes: ["openid", "email", "profile", "Mail.Send"], // Scopes for personal account login
             redirectUri: process.env.REDIRECT_URI,
-            state: "12345", // Optional for CSRF protection
         });
 
         // Redirect the user to the Microsoft login page
@@ -43,12 +42,11 @@ export async function handleOAuthRedirect(req, res) {
             redirectUri: process.env.REDIRECT_URI,
         });
 
-        if (tokenResponse && tokenResponse.accessToken) {
-            const accessToken = tokenResponse.accessToken;
-            const expiresIn = tokenResponse.expires_in * 1000; // Convert seconds to milliseconds
-            const expiryTime = new Date().getTime() + expiresIn;
+         if (tokenResponse?.accessToken) {
+            return res.redirect(
+                `${process.env.FRONTEND_URL}/communications?accessToken=${tokenResponse.accessToken}&expiry=${tokenResponse.expiresOnTimestamp}`
+            );
 
-            return res.redirect(`${process.env.FRONTEND_URL}/communications?accessToken=${accessToken}&expiry=${expiryTime}`);
         } else {
             return res.status(400).json({ error: "Token response is invalid or empty" });
         }
@@ -57,8 +55,6 @@ export async function handleOAuthRedirect(req, res) {
         return res.status(500).json({ error: "OAuth authentication failed. Please try again." });
     }
 }
-
-
 
 // Route to send an email using Microsoft Graph API
 export async function sendEmail(req, res) {
@@ -72,9 +68,8 @@ export async function sendEmail(req, res) {
             message: {
                 subject,
                 body: { contentType: "Text", content },
-                toRecipients: [{ emailAddress: { address: to } }], // Recipient's email
+                toRecipients: [{ emailAddress: { address: to } }],
             },
-            saveToSentItems: "true", // Save the sent email in Sent Items
         };
 
         // Send the email via Microsoft Graph API
