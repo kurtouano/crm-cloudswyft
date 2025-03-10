@@ -4,16 +4,14 @@ import { LiaPaperPlaneSolid } from "react-icons/lia";
 import { FaUserFriends, FaSearch, FaPaperclip, FaImage } from "react-icons/fa";
 
 export default function CommunicationPage() {
+  const [microsoftAccessToken, setMicrosoftAccessToken] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [formData, setFormData] = useState({ to: "", subject: "", text: "" });
-  const [sentEmails, setSentEmails] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [microsoftAccessToken, setMicrosoftAccessToken] = useState("");
   const [leads, setLeads] = useState([]);
   const [leadsLoading, setLeadsLoading] = useState(true);
   const [leadsError, setLeadsError] = useState(null);
-  const [attachment, setAttachment] = useState(null); // Store selected file
-  
+  const [attachment, setAttachment] = useState(null); // Store selected file  
   const [emails, setEmails] = useState([]);
   const [receiveloading, receiveSetLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -97,21 +95,11 @@ export default function CommunicationPage() {
     };
 
       fetchEmails();
-      
+
       const interval = setInterval(fetchEmails, 10000);  // Set interval to fetch emails every 5 seconds (TO BE CHANGED INTO)
 
       return () => clearInterval(interval); // Cleanup when component unmounts
   }, []);
-
-  const fetchSentEmails = async () => {
-    try {
-      const res = await fetch("http://localhost:4000/api/emails/sent");
-      const data = await res.json();
-      setSentEmails(data);
-    } catch (error) {
-      console.error("Failed to fetch sent emails", error);
-    }
-  };
 
   const handleLeadSelection = (index) => {
     setSelectedIndex(index);
@@ -167,7 +155,6 @@ export default function CommunicationPage() {
         alert("Email sent successfully!");
         setFormData({ to: "", subject: "", text: "" });
         setAttachment(null); // Clear attachment after sending
-        fetchSentEmails();
       } else {
         alert(data.error || "Failed to send email");
       }
