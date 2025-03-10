@@ -13,6 +13,10 @@ export default function CommunicationPage() {
   const [leadsLoading, setLeadsLoading] = useState(true);
   const [leadsError, setLeadsError] = useState(null);
   const [attachment, setAttachment] = useState(null); // Store selected file
+  
+  const [emails, setEmails] = useState([]);
+  const [receiveloading, receiveSetLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -55,6 +59,50 @@ export default function CommunicationPage() {
     fetchLeads();
   }, []);
 
+  useEffect(() => {
+    const fetchEmails = async () => {
+        try {
+            const token = localStorage.getItem("microsoftAccessToken");
+
+            console.log("Fetched Email Token from localStorage:", token); // Debugging log
+
+            if (!token) {
+                throw new Error("Access token is missing from localStorage.");
+            }
+
+            const response = await fetch("http://localhost:4000/api/emails/received", {
+              method: "GET",
+              headers: {
+                  "Authorization": `Bearer ${token}`,  // Ensure "Bearer " is added
+                  "Content-Type": "application/json"
+              }
+          });
+
+            console.log("Response Status:", response.status); // Debugging log
+
+            const data = await response.json();
+            console.log("Response Data:", data); // Debugging log
+
+            if (response.ok) {
+                setEmails(data.emails);
+            } else {
+                throw new Error(data.error || "Failed to fetch emails.");
+            }
+        } catch (err) {
+            console.error("Fetch Emails Error:", err.message); // Debugging log
+            setError(err.message);
+        } finally {
+            receiveSetLoading(false);
+        }
+    };
+
+      fetchEmails();
+      
+      const interval = setInterval(fetchEmails, 10000);  // Set interval to fetch emails every 5 seconds (TO BE CHANGED INTO)
+
+      return () => clearInterval(interval); // Cleanup when component unmounts
+  }, []);
+
   const fetchSentEmails = async () => {
     try {
       const res = await fetch("http://localhost:4000/api/emails/sent");
@@ -91,6 +139,7 @@ export default function CommunicationPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const microsoftAccessToken = localStorage.getItem("microsoftAccessToken");
+    console.log("Send Email Token", microsoftAccessToken);
 
     if (!microsoftAccessToken) {
       alert("Please log in via Microsoft first.");
