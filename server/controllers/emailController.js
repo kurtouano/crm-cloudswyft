@@ -1,28 +1,176 @@
-import { ReceivedEmail } from "../models/EmailSchema.js";
+import axios from "axios";
+import dotenv from "dotenv";
+import { ConfidentialClientApplication } from "@azure/msal-node";  // Use ConfidentialClientApplication for client secret
+import { SentEmail, ReceivedEmail  } from "../models/EmailSchema.js";  
+import Lead from "../models/LeadSchema.js";
 
-export const createEmail = async (req, res) => {
-    const { subject, sender, message } = req.body;
+dotenv.config();
 
-    if (!subject || !sender || !message) {
-        return res.status(400).json({ error: "Missing fields" });
-    }
-
-    try {
-        const emailData = new ReceivedEmail({ subject, sender, message });
-        await emailData.save();
-        res.status(201).json({ success: true, data: emailData });
-    } catch (error) {
-        console.error("Error saving received email:", error);
-        res.status(500).json({ error: "Server error", details: error.message });
-    }
+const msalConfig = {
+    auth: {
+        clientId: process.env.CLIENT_ID,               // Your client ID
+        clientSecret: process.env.CLIENT_SECRET,       // Your client secret
+        authority: "https://login.microsoftonline.com/common",  // Use common for personal accounts
+        redirectUri: process.env.REDIRECT_URI,         // Your redirect URI
+    },
 };
 
-export const getEmails = async (req, res) => {
+const cca = new ConfidentialClientApplication(msalConfig);  // Using ConfidentialClientApplication
+
+// Route for triggering Microsoft OAuth flow
+export async function handleMicrosoftLogin(req, res) {
     try {
-        const emails = await ReceivedEmail.find().sort({ timestamp: -1 }); // Sort by latest
-        res.json(emails);
+        const authUrl = await cca.getAuthCodeUrl({
+            scopes: ["Mail.ReadWrite", "openid", "email", "profile"], // Scopes for personal account login
+            redirectUri: process.env.REDIRECT_URI,
+        });
+
+        // Redirect the user to the Microsoft login page
+        res.redirect(authUrl);
     } catch (error) {
-        console.error("Error fetching received emails:", error);
-        res.status(500).json({ error: "Server error", details: error.message });
+        console.error("Error generating auth URL:", error);
+        res.status(500).json({ error: "Failed to initiate Microsoft login." });
     }
-};
+}
+
+export async function handleOAuthRedirect(req, res) {
+    const code = req.query.code;
+    if (!code) return res.status(400).json({ error: "Authorization code missing" });
+
+    try {
+        const tokenResponse = await cca.acquireTokenByCode({
+            code,
+            scopes: ["Mail.ReadWrite", "openid", "email", "profile"],
+            redirectUri: process.env.REDIRECT_URI,
+        });
+
+         if (tokenResponse?.accessToken) {
+            return res.redirect(
+                `${process.env.FRONTEND_URL}/communications?accessToken=${tokenResponse.accessToken}&expiry=${tokenResponse.expiresOnTimestamp}`
+            );
+
+        } else {
+            return res.status(400).json({ error: "Token response is invalid or empty" });
+        }
+    } catch (error) {
+        console.error("OAuth Error:", error);
+        return res.status(500).json({ error: "OAuth authentication failed. Please try again." });
+    }
+}
+
+// Route to send an email using Microsoft Graph API
+export async function sendEmail(req, res) {
+    try {
+        const { to, subject, content, token, attachments } = req.body;
+        if (!to || !subject || !content || !token) {
+            return res.status(400).json({ error: "Missing fields or authentication token" });
+        }
+
+        // Format attachments for Microsoft Graph API
+        const formattedAttachments = attachments?.map((file) => ({
+            "@odata.type": "#microsoft.graph.fileAttachment",
+            name: file.fileName,
+            contentType: file.mimeType,
+            contentBytes: file.contentBytes, // Base64 encoded content
+        })) || [];
+
+        const emailData = {
+            message: {
+                subject,
+                body: { contentType: "Text", content },
+                toRecipients: [{ emailAddress: { address: to } }],
+                attachments: formattedAttachments // Attachments included here
+            },
+        };
+
+        // Send email via Microsoft Graph API
+        await axios.post("https://graph.microsoft.com/v1.0/me/sendMail", emailData, {
+            headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        });
+
+        // Save email to database
+        const sentEmail = new SentEmail({
+            to,
+            subject,
+            content,
+            sentAt: new Date(),
+            attachments
+        });
+
+        await sentEmail.save();
+
+        res.status(200).json({ success: true, message: "Email sent successfully!" });
+    } catch (error) {
+        console.error("Error sending email:", error.response?.data || error.message);
+        res.status(500).json({ error: "Failed to send email" });
+    }
+}
+
+export async function fetchReceivedEmails(req, res) {
+    try {
+        // Get Microsoft Access Token from headers
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            console.error("Authorization header is missing or invalid");
+            return res.status(401).json({ error: "Unauthorized - Access token is required" });
+        }
+
+        const accessToken = authHeader.slice(7); // Extract token after "Bearer "
+
+        // Fetch emails from Microsoft Graph API
+        const graphResponse = await axios.get(
+            "https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages",
+            { headers: { Authorization: `Bearer ${accessToken}` } }
+        );
+
+        const emails = graphResponse.data.value || [];
+        console.log(`Fetched ${emails.length} emails from Microsoft`);
+
+        if (emails.length === 0) {
+            return res.status(200).json({ success: true, emails: [] });
+        }
+
+        // Fetch leads from the database
+        const leads = await Lead.find({}, "bestEmail");
+        const leadEmails = new Set(leads.map(lead => lead.bestEmail.toLowerCase()));
+
+        // Filter emails based on lead emails
+        const filteredEmails = emails.filter(email =>
+            email.from &&
+            email.from.emailAddress &&
+            leadEmails.has(email.from.emailAddress.address.toLowerCase())
+        );
+
+        console.log(`Filtered ${filteredEmails.length} emails matching leads`);
+
+        // Save filtered emails to MongoDB
+        const savedEmails = await Promise.all(
+            filteredEmails.map(async (email) => {
+                try {
+                    return await ReceivedEmail.findOneAndUpdate(
+                        { subject: email.subject, sender: email.from.emailAddress.address },
+                        {
+                            subject: email.subject,
+                            sender: email.from.emailAddress.address,
+                            message: email.body.content
+                        },
+                        { upsert: true, new: true }
+                    );
+                } catch (dbError) {
+                    console.error("Error saving email to MongoDB:", dbError);
+                    return null;
+                }
+            })
+        );
+
+        const successfullySavedEmails = savedEmails.filter(email => email !== null);
+        console.log(`Saved ${successfullySavedEmails.length} emails to MongoDB`);
+
+        res.status(200).json({ success: true, emails: successfullySavedEmails });
+    } catch (error) {
+        console.error("Error fetching emails:", error.response?.data || error.message);
+        res.status(500).json({ error: "Failed to fetch received emails" });
+    }
+}
+
+

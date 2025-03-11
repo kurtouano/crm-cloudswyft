@@ -22,8 +22,11 @@ const Sidenav = () => {
     const navigate = useNavigate();
 
     const handleLogout = () => {
-        localStorage.removeItem("token"); // Remove JWT Token
+        localStorage.removeItem("token"); // Remove CRM JWT Token
         localStorage.removeItem("role");  // Remove User Role
+        localStorage.removeItem("microsoftAccessToken"); // Remove Microsoft Token
+        localStorage.removeItem("tokenExpiry"); // Remove Token Expiry Time
+
         navigate("/"); // Redirect to Login Page
     };
 
