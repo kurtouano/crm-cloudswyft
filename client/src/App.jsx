@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Sidenav from "./components/sidenav/Sidenav";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -18,7 +18,6 @@ export default function App() {
 }
 
 function MainLayout() {
-  const location = useLocation();
   const token = localStorage.getItem("token");
   
   return (
