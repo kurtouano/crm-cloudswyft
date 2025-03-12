@@ -1,5 +1,5 @@
 import '../components/Communications/Communication.css';
-import CommunicationPage from '../components/Communications/CommunicationPageNEW';
+import CommunicationPage from '../components/Communications/CommunicationPage';
 
 export default function Communications() {
   return (

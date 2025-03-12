@@ -1,257 +1,406 @@
-/* 🔵 Main Panel Container */
-.messaging-panel {
-    display: flex;
-    background: #f8f9fb;
+.communications-container {
     width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
 }
 
-/* 📜 Sidebar */
-.sidebar-panel {
-    width: 350px;
-    height: 710px;
-    background: white;
-    border-radius: 15px;
-    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+.inbox-container {
+    width: 32%;
+}
+
+.inbox-header-searchbox-container {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 20px;
+    margin-right: 20px;
+}
+
+.inbox-header-searchbox-input {
+    width: 100%;
+    padding: 10px 0;
+    padding-left: 40px;
+    font-size: 15px;
+    background-color: #F4F4F4;
+    border-radius: 7px;
+    outline: none;
+    border: 1px solid transparent;
+    color: #878787;
+    
+    transition: all 0.2s;
+}
+
+.inbox-header-searchbox-input::placeholder {
+    color: #9B9B9B;
+}
+
+.inbox-header-searchbox-input:focus-within {
+    outline: none;
+    border: 1px solid rgba(33, 149, 243, 0.664);
+}
+
+.inbox-header-searchbox-icon {
+    position: absolute;
+    left: 15px;
+    color: #9B9B9B;
+    stroke-width: 2.5px;
+}
+
+.inbox-header-create-email-btn {
+    margin-left: 15px;
+    width: 50px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+}
+
+.inbox-header-create-email-icon {
+    color: #9B9B9B;
+    font-size: 17px;
+}
+
+.inbox-body-list-grid {
+    display: flex;
+    flex-direction: column; 
+    height: 780px;
+    overflow-y: auto; 
+    align-items: flex-start; 
+}
+
+.inbox-body-list-grid::-webkit-scrollbar { 
+    background-color: transparent;
+    width: 8px; /* Adjust width as needed */
+}
+
+.inbox-body-list-grid::-webkit-scrollbar-thumb {
+    background: #dadada; /* Color of the scroll thumb */
+    border-radius: 5px;
+    width: 2px;
+}
+
+.inbox-body-list-container {
     display: flex;
     flex-direction: column;
-    padding: 10px;
-}
-
-/* 🔎 Search Bar */
-.panel-search-container {
-    display: flex;
-    align-items: center;
-    padding-top: 30px;
-    padding-bottom: 20px;
-    position: relative;
-    width: 100%;
-}
-
-.panel-search-container input {
-    width: 71%;
-    padding-left: 20px;
-    border: none;
-    background: transparent;
-    font-size: 16px;
-    color: #000000;
-    outline: none;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-}
-
-/* Search Icon */
-.panel-search-icon {
-    color: #888;
-    height: 20px;
-    width: 20px;
-    font-size: 14px;
-    padding-left: 20px;
-    flex-shrink: 0;
-}
-
-/* 📏 Search Underline */
-.panel-search-underline {
-    width: 240px;
-    height: 2px;
-    background: #888;
-    margin: -2px auto 10px auto;
-}
-
-/* 🟢 Leads List */
-.panel-leads-list {
-    flex-grow: 1;
-    overflow-y: auto;
-    padding-top: 5px;
-}
-
-/* 📩 Lead Item */
-.panel-lead-item {
-    display: flex;
-    align-items: center;
-    height: 100px;
-    background: white;
-    border-radius: 10px;
-    margin: 5px 0;
-    padding: 10px;
-    padding-bottom: 30px;
+    margin-right: 15px;
+    padding: 20px;
+    background-color: #F9F9F9;
+    border-bottom: 1px solid rgb(229, 229, 229);
+    row-gap: 15px;
     cursor: pointer;
-    transition: 0.2s;
+
+    transition: background-color 0.15s;
+}
+
+.inbox-body-list-container.active {
+    background-color: #E6F2FA; /* Light blue background for active lead */
+}
+
+.inbox-body-header {
     position: relative;
-    border-bottom: 1px solid #ddd;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
 }
 
-/* 🟦 Selected (Active) Lead */
-.panel-lead-item.active {
-    background: #2196f3;
-    color: white !important;
-}
-
-/* 📏 Underline for Each Lead */
-.panel-lead-item::after {
-    content: "";
+.inbox-body-header-icon {
+    width: 15px;
+    height: 15px;
     position: absolute;
-    bottom: -2px;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background: #ddd;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 10px;
+    color: #F9F9F9;
 }
 
-/* ❌ Remove Underline for Last Lead */
-.panel-lead-item:last-child::after {
-    display: none;
+.inbox-body-lead-type {
+    padding: 5px 10px 5px 35px;
+    background-color: #008cff;
+    color: #F9F9F9;
+    border-radius: 5px;
+    font-size: 13px;
 }
 
-/* 🖼️ Smaller Avatar Icon */
-.panel-lead-icon {
-    font-size: 25px;
-    color: black;
-    margin-right: 10px;
-    align-self: flex-start; /* Moves icon higher */
+.inbox-body-last-message-time {
+    color: #9B9B9B;
+    font-size: 13px;
+}
+
+.inbox-body-company-name {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.inbox-body-reply-type {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.inbox-body-reply-type-icons {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    position: relative;
+    gap: 6px;
     margin-top: 5px;
 }
 
-/* Change icon to white when selected */
-.panel-lead-item.active .panel-lead-icon {
-    color: white;
-}
-    
-.panel-lead-info {
-    flex-grow: 1;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    gap: 2px; /* Ensures consistent spacing */
-    align-items: flex-start;
+.inbox-body-file-icon {
+    height: 13px;
+    padding-right: 5px;
 }
 
- .panel-lead-info h4 {
-    font-size: 16px;
-    font-weight: bold;
-    margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.panel-lead-info p {
-    font-size: 12px;
-    font-weight: bold;
-    color: #888;
-    margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-
-/* When lead is selected, change text color */
-.panel-lead-item.active .panel-lead-info h4,
-.panel-lead-item.active .panel-lead-info p,
-.panel-lead-item.active .panel-lead-status,
-.panel-lead-item.active .panel-message-time {
-    color: white;
-}
-
-/* 🟢 Status */
-.panel-lead-status {
-    font-size: 12px;
-    color: #666;
+.inbox-body-reply-type-icons span {
     display: flex;
     align-items: center;
+    padding: 5px 10px 5px 10px;
+    background-color: #2196F3;
+    color: white;
+    font-size: 13px;
+    border-radius: 5px;
 }
 
-
-/* 🟢 Green Dot */
-.panel-status-dot {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    background: green;
-    border-radius: 50%;
-    margin-right: 5px;
-}
-
-/* 🕒 Message Time */
-.panel-message-time {
-    font-size: 12px;
-    color: #777;
-    align-self: flex-end;
-}
-
-/* 📨 Message Box */
-.message-panel {
+.inbox-body-reply-preview-container {
+    display: flex;
+    position: relative;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: nowrap;
     width: 100%;
-    height: 730px;
-    flex-grow: 1;
-    background: white;
-    border-radius: 15px;
-    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
-    margin-left: 20px;
+}
+
+.inbox-body-reply-preview {
+    width: 90%;
+    display: flex;
+    font-size: 13px;
+    color: #7a7a7a;
+}
+
+/* Styling for Star Icon */
+.inbox-body-reply-type-star {
+    position: absolute;
+    color: #F8E116;
+    font-size: 16px;
+    right: 0;
+    bottom: 0;
+}
+
+
+
+/* Right Side - Email Composition */
+.email-compose-container {
     display: flex;
     flex-direction: column;
-}
-
-/* 🟢 Chat Header */
-.message-header-panel {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 15px;
-    border-bottom: 1px solid #ddd;
-    font-weight: bold;
-    font-size: 16px;
-    color: #666;
-}
-
-/* 📝 Chat Area */
-.message-chat-area {
-    flex-grow: 1;
+    justify-content: space-between;
+    width: 68%;
     padding: 20px;
-    overflow-y: auto;
+    background-color: #fff;
 }
 
-/* 🖊️ Message Input */
-.message-input-box {
+.email-received-space {
+    width: 100%;
+    height: 430px;
+    overflow-y: scroll;
+    background-color: #f9f9f9; 
+}
+
+.email-header {
     display: flex;
     align-items: center;
-    height: 50px;
-    padding: 10px;
-    border-top: 1px solid #ddd;
-    background: #f8f9fb;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background-color: #F5F5F5;
+    border-radius: 8px;
 }
 
-.message-text-input {
-    flex-grow: 1;
+.email-header-left,
+.email-header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.email-pagination {
+    font-size: 14px;
+    color: #000;
+}
+
+.email-nav-icon {
+    font-size: 18px;
+    color: #333;
+    cursor: pointer;
+}
+
+.circle-icon {
+    background-color: #f0f0f0;
+    padding: 6px;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.circle-icon:hover {
+    background-color: #e0e0e0;
+}
+
+.email-compose-box {
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.email-left-icons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.email-recipient {
+    border-radius: 4px;
+    background-color: #1e28f110;
+    padding: 6px 12px;
+    color: #1E27F1;
+    font-size: 14px;
+    font-weight: 400;
+    white-space: normal;
     border: none;
-    background: transparent;
-    padding: 10px;
-    font-size: 17px;
-    color: #666;
+    user-select: none;
+    cursor: default;
+    text-wrap: wrap;
+    text-overflow: ellipsis;
+}
+
+.email-recipient:focus-within {
     outline: none;
 }
 
-.message-input-icon {
-    height: 20px;
-    width: 20px;
-    padding: 5px;
+.email-recipient.empty {
+    background-color: transparent; 
+    padding: 6px 12px;
+}
+
+.email-icon {
     font-size: 18px;
-    color: #aaa;
-    margin-right: 10px;
+    color: #777;
     cursor: pointer;
 }
 
-.send-email-btn {
-    margin-right: 10px;
-    width: 30px;
-    height: 30px;
-    background-color: transparent;
-    border: transparent;
+.email-subject {
+    border: none;
+    border-bottom: 1px solid #ddd;
+    padding: 10px;
+    font-size: 14px;
+    outline: none;
+    margin-bottom: 8px;
+}
+
+.email-body {
+    border: none;
+    padding: 10px;
+    font-size: 14px;
+    min-height: 120px;
+    outline: none;
+    resize: none;
+}
+
+/* Send button */
+.send-button {
+    background-color: #1E88E5;
+    color: white;
+    font-weight: 600;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 6px; 
+    height: 33px; 
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+
+.send-button:hover {
+    background-color: #1565C0;
+}
+
+.email-actions-icons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Icons (attachments, formatting, etc.) */
+.email-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+}
+
+.email-attach-icon {
+    font-size: 18px;
+    cursor: pointer;
+    color: #777;
+}
+
+.email-attach-input {
+    display: none;
+}
+
+.email-attach-preview {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    position: absolute;
+    right: 25px;
+    font-size: 12px;
+    top: 5px;
+    color: rgb(123, 123, 123);
+}
+
+.email-attach-remove-icon {
+    height: 20px;
+    width: 16px;
+    color: rgba(191, 52, 52, 0.674);
     cursor: pointer;
 }
 
-.send-email-btn-icon {
+.email-attachment-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    color: #2196F3;
+    background-color: rgba(0,0,0,0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.email-img-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.email-formatting-options {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }

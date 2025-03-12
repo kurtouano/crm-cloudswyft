@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import { ConfidentialClientApplication } from "@azure/msal-node";  // Use ConfidentialClientApplication for client secret
 import { SentEmail, ReceivedEmail  } from "../models/EmailSchema.js";  
 import Lead from "../models/LeadSchema.js";
+import { parse } from "node-html-parser";
 
 dotenv.config();
 
@@ -119,7 +120,7 @@ export async function fetchReceivedEmails(req, res) {
 
         // Fetch emails from Microsoft Graph API
         const graphResponse = await axios.get(
-            "https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages",
+            "https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?$top=15&$expand=attachments",
             { headers: { Authorization: `Bearer ${accessToken}` } }
         );
 
@@ -147,12 +148,26 @@ export async function fetchReceivedEmails(req, res) {
         const savedEmails = await Promise.all(
             filteredEmails.map(async (email) => {
                 try {
+                    // Extract plain text from HTML content
+                    const htmlContent = email.body.content || "";
+                    const parsedHtml = parse(htmlContent);
+                    const plainTextMessage = parsedHtml.text.trim(); // Extracts text
+
+                    // Extract attachments (if any)
+                    const attachments = email.attachments?.map(att => ({
+                        fileName: att.name,
+                        mimeType: att.contentType,
+                        contentUrl: att.contentBytes // Base64 encoded
+                    })) || [];
+
                     return await ReceivedEmail.findOneAndUpdate(
                         { subject: email.subject, sender: email.from.emailAddress.address },
                         {
                             subject: email.subject,
                             sender: email.from.emailAddress.address,
-                            message: email.body.content
+                            message: plainTextMessage, // Cleaned text version
+                            html: htmlContent, // Raw HTML
+                            attachments: attachments
                         },
                         { upsert: true, new: true }
                     );
@@ -172,5 +187,3 @@ export async function fetchReceivedEmails(req, res) {
         res.status(500).json({ error: "Failed to fetch received emails" });
     }
 }
-
-

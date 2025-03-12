@@ -3,7 +3,15 @@ import mongoose from "mongoose";
 const receivedEmailSchema = new mongoose.Schema({
     subject: { type: String, required: true },
     sender: { type: String, required: true },
-    message: { type: String, required: true },
+    message: { type: String, required: true }, // Cleaned text version
+    html: { type: String }, // Raw HTML content (optional)
+    attachments: [
+        {
+            fileName: { type: String, required: true },
+            mimeType: { type: String, required: true },
+            contentUrl: { type: String, required: true } // Base64 or download URL
+        }
+    ],
     timestamp: { type: Date, default: Date.now },
 });
 
