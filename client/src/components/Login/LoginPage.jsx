@@ -23,34 +23,38 @@ export default function LoginPage() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError(""); 
-
+  
     if (!email || !password) {
       setError("⚠️ Email and Password are required.");
       return;
     }
-
+  
     try {
       const response = await fetch("http://localhost:4000/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-
+  
       const data = await response.json();
-
+  
       if (!response.ok) {
         setError(data.message || "❌ Invalid credentials. Please try again.");
         return;
       }
-
+  
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", data.role);
-
-      navigate("/dashboard", { replace: true });
+  
+      // ✅ Update authentication state
+      window.dispatchEvent(new Event("storage")); 
+  
+      navigate("/dashboard", { replace: true }); // Redirect to dashboard immediately
     } catch (error) {
       setError("❌ Server error. Please try again later.");
     }
   };
+  
 
   return (
     <div className="login-page-container">

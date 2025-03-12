@@ -26,9 +26,10 @@ const Sidenav = () => {
         localStorage.removeItem("role");  // Remove User Role
         localStorage.removeItem("microsoftAccessToken"); // Remove Microsoft Token
         localStorage.removeItem("tokenExpiry"); // Remove Token Expiry Time
-
-        navigate("/"); // Redirect to Login Page
+    
+        window.location.href = "/"; // ✅ Force page reload to remove sidebar
     };
+    
 
     const toggleDropdown = () => {
         setShowDropdown(!showDropdown);

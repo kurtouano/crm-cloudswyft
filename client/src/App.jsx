@@ -1,10 +1,10 @@
+import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Sidenav from "./components/sidenav/Sidenav";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Salesflow from "./pages/Salesflow";
 import Accounts from "./pages/Accounts";
-import LeadProfile from "./pages/LeadProfile";
 import Employees from "./pages/Employees";
 import Communications from "./pages/Communications";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -18,28 +18,38 @@ export default function App() {
 }
 
 function MainLayout() {
-  const token = localStorage.getItem("token");
-  
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem("token"));
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setIsAuthenticated(!!localStorage.getItem("token"));
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
   return (
     <div className="app-container">
-      {/* ✅ Only show sidebar when the user is logged in */}
-      {token && <Sidenav />}
+      {/* ✅ Sidebar only appears when authenticated */}
+      {isAuthenticated && <Sidenav />}
 
-      <Routes>
-        {/* Public Route (Login Page) */}
-        <Route path="/" element={<Login />} />
+      <div className={`content ${isAuthenticated ? "with-sidebar" : "full-width"}`}>
+        <Routes>
+          {/* Public Route (Login Page) */}
+          <Route path="/" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
 
-        {/* Protected Routes - Requires Authentication */}
-        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/sales-flow" element={<ProtectedRoute><Salesflow /></ProtectedRoute>} />
-        <Route path="/accounts" element={<ProtectedRoute><Accounts /></ProtectedRoute>} />
-        <Route path="/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />
-        <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
-        <Route path="/lead-profile" element={<ProtectedRoute><LeadProfile /></ProtectedRoute>} />
+          {/* Protected Routes - Requires Authentication */}
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/sales-flow" element={<ProtectedRoute><Salesflow /></ProtectedRoute>} />
+          <Route path="/accounts" element={<ProtectedRoute><Accounts /></ProtectedRoute>} />
+          <Route path="/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />
+          <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
 
-        {/* ✅ Redirect unknown routes to login */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          {/* Redirect unknown routes to login */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
     </div>
   );
 }
