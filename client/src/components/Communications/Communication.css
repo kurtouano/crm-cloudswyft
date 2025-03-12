@@ -197,7 +197,7 @@
     flex-direction: column;
     justify-content: space-between;
     width: 68%;
-    padding: 20px;
+    padding-left:  20px;
     background-color: #fff;
 }
 
@@ -404,3 +404,296 @@
     align-items: center;
     gap: 10px;
 }
+
+.email-pagination-container {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.pagination-arrow {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 20px;
+    color: #333;
+    padding-top: 5px;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.pagination-arrow:hover {
+    background: #e0e0e0;
+}
+
+
+/* Email Container */
+.email-received-message {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Email Header */
+.email-header-details {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+/* User Icon */
+.email-user-icon {
+    font-size: 40px;
+    color: #888;
+    margin-right: 10px;
+}
+
+/* Sender Name & Email */
+.email-header-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.email-sender-name {
+    font-size: 20px;
+    font-weight: bold;
+    color: #000;
+    margin-bottom: 2px;
+}
+
+.email-sender-email {
+    font-size: 16px;
+    color: #777;
+}
+
+/* Timestamp */
+.email-timestamp {
+    font-size: 16px;
+    color: #bbb;
+    margin-left: auto;
+}
+
+/* Email Subject */
+.email-subject-display {
+    font-size: 20px;
+    font-weight: bold;
+    margin: 15px 0 10px;
+    color: #000;
+    padding: 25px 15px;
+}
+
+/* Email Body */
+.email-body-container {
+    padding: 15px;
+    background: #ffffff;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.email-body-display {
+    font-size: 16px;
+    color: #444;
+    line-height: 1.6;
+    word-wrap: break-word;
+}
+
+/* Attachments */
+.attachment-button {
+    display: block;
+    padding: 8px;
+    border: 1px solid #ccc;
+    background: #f8f8f8;
+    cursor: pointer;
+    text-align: left;
+    font-size: 14px;
+    color: #007bff;
+    margin-top: 5px;
+}
+
+/* Attachments Container */
+.email-attachments-container {
+    background: #f5f5f5;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 15px;
+  }
+  
+  .attachments-header {
+    font-size: 16px;
+    font-weight: bold;
+    color: #666;
+    margin-bottom: 10px;
+  }
+  
+  /* Attachments List */
+  .attachments-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  
+  /* Individual Attachment */
+  .attachment-item {
+    display: flex;
+    align-items: center;
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    width: 260px;
+  }
+  
+  /* Attachment Icons */
+  .attachment-icon {
+    font-size: 30px;
+    margin-right: 10px;
+  }
+  
+  .pdf { color: #d32f2f; }
+  .word { color: #2b579a; }
+  .excel { color: #217346; }
+  .image { color: #f4a261; }
+  .generic { color: #757575; }
+  
+  /* Attachment Details */
+  .attachment-details {
+    flex-grow: 1;
+  }
+  
+  .attachment-name {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #333;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    max-width: 200px;
+  }
+  
+  /* View & Download Buttons */
+  .attachment-actions {
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+  }
+  
+  .view-link, .download-link {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .view-link:hover, .download-link:hover {
+    text-decoration: underline;
+  }
+  
+  .separator {
+    color: #ccc;
+    margin: 0 5px;
+  }
+  
+  .attachment-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8); /* Darker overlay */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  
+  .attachment-modal-content {
+    background: #fff;
+    width: 90%;  /* 🟢 Make the modal wider */
+    height: 55%; /* 🟢 Make the modal taller */
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .attachment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background: #333;
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+  }
+  
+  .attachment-preview {
+    flex-grow: 1;
+    width: 100%;
+    border: none;
+  }
+  
+  .close-icon {
+    font-size: 22px;
+    cursor: pointer;
+    transition: color 0.3s;
+  }
+  
+
+  .attachment-modal-content {
+    background: #fff;
+    width: 50%;
+    min-height: 150px;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    position: relative;
+  }
+  
+  .attachment-modal-content p {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .download-button {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 10px 20px;
+    background: #007bff;
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+    border-radius: 5px;
+    transition: background 0.3s;
+  }
+  
+  .download-button:hover {
+    background: #0056b3;
+  }
+  
+  .close-icon {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 22px;
+    cursor: pointer;
+    color: #000000;
+    transition: color 0.3s;
+  }
+  
+  .close-icon:hover {
+    color: #000;
+  }
+  

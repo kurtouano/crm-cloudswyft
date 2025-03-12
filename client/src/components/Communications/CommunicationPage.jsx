@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo} from "react";
 import Fuse from "fuse.js"; // 🔍 Import Fuse.js
 import { FiSearch, FiEdit } from "react-icons/fi";
-import { FaStar } from "react-icons/fa";
+import { FaStar,FaFilePdf, FaFileWord, FaFileExcel, FaFileImage, FaFileAlt } from "react-icons/fa";
 import { CgProfile } from "react-icons/cg";
 import { IoArrowBack, IoArrowForward, IoReturnUpBackOutline, IoChevronDownOutline, IoTrashOutline, IoExpandOutline, IoEllipsisVerticalOutline } from "react-icons/io5";
 import { MdAttachFile, MdClose } from "react-icons/md";
@@ -21,8 +21,10 @@ export default function CommunicationPageNEW() {
   const [fetchEmailError, setFetchEmailError] = useState(null);
   const [attachment, setAttachment] = useState(null);
   const [formData, setFormData] = useState({ to: "", subject: "", text: "" });
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [selectedAttachment, setSelectedAttachment] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [currentEmailIndex, setCurrentEmailIndex] = useState(0);
+  const [filteredEmails, setFilteredEmails] = useState([]);
+
 
   useEffect(() => {
     const fetchLeads = async () => {
@@ -110,6 +112,18 @@ export default function CommunicationPageNEW() {
       return () => clearInterval(interval); // Cleanup when component unmounts
   }, []);
 
+  useEffect(() => {
+    if (activeLead) {
+      // Get emails for the selected lead, sorted by latest timestamp
+      const leadEmails = emails
+        .filter(email => email.sender.toLowerCase() === activeLead.bestEmail.toLowerCase())
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  
+      setFilteredEmails(leadEmails);
+      setCurrentEmailIndex(0); // Reset to the latest email
+    }
+  }, [activeLead, emails]);
+  
   // Memoized Fuse.js instance
   const fuse = useMemo(() => {
     return new Fuse(leads, { keys: ["leadName", "company"], threshold: 0.3 });
@@ -212,6 +226,36 @@ export default function CommunicationPageNEW() {
       }
     };
 
+    // Utility function to remove HTML tags
+    const stripHtmlTags = (html) => {
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      return doc.body.textContent || "";
+    };
+
+    // attachments icon
+    const getFileIcon = (mimeType) => {
+      if (mimeType.includes("pdf")) return <FaFilePdf className="attachment-icon pdf" />;
+      if (mimeType.includes("msword") || mimeType.includes("word")) return <FaFileWord className="attachment-icon word" />;
+      if (mimeType.includes("excel") || mimeType.includes("spreadsheet")) return <FaFileExcel className="attachment-icon excel" />;
+      if (mimeType.includes("image")) return <FaFileImage className="attachment-icon image" />;
+      return <FaFileAlt className="attachment-icon generic" />;
+    };
+
+
+    const handlePreviousEmail = () => {
+      if (currentEmailIndex > 0) { 
+        setCurrentEmailIndex(currentEmailIndex - 1); // Move Back
+      }
+    };
+    
+    const handleNextEmail = () => {
+      if (currentEmailIndex < filteredEmails.length - 1) {
+        setCurrentEmailIndex(currentEmailIndex + 1); // Move Forward
+      }
+    };
+    
+    
+
 
   return (
     <div className="communications-container">
@@ -297,7 +341,31 @@ export default function CommunicationPageNEW() {
           </div>
 
           {/* Pagination */}
-          <span className="email-pagination">1 of 200</span>
+          <div className="email-pagination-container">
+              <button 
+                className="pagination-arrow" 
+                onClick={handlePreviousEmail} 
+                disabled={currentEmailIndex <= 0} // Disable on first email
+              >
+                <IoArrowBack />
+              </button>
+
+              <span className="email-pagination">
+                {filteredEmails.length > 0 ? currentEmailIndex + 1 : 0} of {filteredEmails.length}
+              </span>
+
+              <button 
+                className="pagination-arrow" 
+                onClick={handleNextEmail} 
+                disabled={currentEmailIndex >= filteredEmails.length - 1} // Disable on last email
+              >
+                <IoArrowForward />
+              </button>
+            </div>
+
+
+
+
 
           {/* Right Side Icons */}
           <div className="email-header-right">
@@ -308,120 +376,101 @@ export default function CommunicationPageNEW() {
         </div>
 
         {/* Display received emails */}
-        <div className="email-received-space">
-          {activeLead &&
-            emails
-              .filter(
-                (email) =>
-                  email.sender.toLowerCase() === activeLead.bestEmail.toLowerCase()
-              )
-              .map((email, index) => {
-                return (
-                  <div key={index} className="email-received-message">
-                    <p>
-                      <strong>From:</strong> {email.sender}
-                    </p>
-                    <p>
-                      <strong>Subject:</strong> {email.subject}
-                    </p>
-                    <p>
-                    <strong>Body:</strong> {email.message}
-                    </p>
+<div className="email-received-space">
+  {filteredEmails.length > 0 && (
+    <div className="email-received-message">
+      {/* Email Header */}
+      <div className="email-header-details">
+        <CgProfile className="email-user-icon" />
+        <div className="email-header-info">
+          <p className="email-sender-name">{activeLead.leadName || "Unknown Lead"}</p>
+          <p className="email-sender-email">{filteredEmails[currentEmailIndex].sender}</p>
+        </div>
+        <p className="email-timestamp">
+          {new Date(filteredEmails[currentEmailIndex].timestamp).toLocaleString()}
+        </p>
+      </div>
 
-                    {/* Display attachments */}
-                    {email.attachments && email.attachments.length > 0 && (
-                      <div className="email-attachments">
-                        <p>
-                          <strong>Attachments:</strong>
-                        </p>
-                        {email.attachments.map((attachment, attIndex) => {
-                          const isImage = attachment.mimeType.startsWith("image/");
-                          const fileUrl = `data:${attachment.mimeType};base64,${attachment.contentUrl}`;
-                          return (
-                            <div key={attIndex} style={{ marginTop: "5px" }}>
-                              {isImage ? (
-                                <button
-                                  onClick={() => setSelectedImage(fileUrl)}
-                                  style={{
-                                    display: "block",
-                                    padding: "5px",
-                                    border: "1px solid #ccc",
-                                    background: "#f8f8f8",
-                                    cursor: "pointer",
-                                    textAlign: "left",
-                                  }}
-                                >
-                                  {attachment.fileName}
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() =>
-                                    setSelectedAttachment({
-                                      fileUrl,
-                                      attachment,
-                                    })
-                                  }
-                                  style={{
-                                    display: "block",
-                                    padding: "5px",
-                                    border: "1px solid #ccc",
-                                    background: "#f8f8f8",
-                                    cursor: "pointer",
-                                    textAlign: "left",
-                                  }}
-                                >
-                                  {attachment.fileName}
-                                </button>
-                              )}
-                            </div>
-                          );
-                        })}
+      {/* Email Subject */}
+      <p className="email-subject-display">{filteredEmails[currentEmailIndex].subject}</p>
+
+      {/* Email Body */}
+      <div className="email-body-container">
+        <p className="email-body-display">{stripHtmlTags(filteredEmails[currentEmailIndex].message)}</p>
+      </div>
+
+      {/* Attachments */}
+      {filteredEmails[currentEmailIndex]?.attachments?.length > 0 && (
+            <div className="email-attachments-container">
+              <p className="attachments-header">Attachments:</p>
+              <div className="attachments-list">
+                {filteredEmails[currentEmailIndex].attachments.map((attachment, attIndex) => {
+                  if (!attachment.contentUrl) {
+                    console.error(`Missing contentUrl for attachment: ${attachment.fileName}`);
+                    return null;
+                  }
+
+                  // ✅ Correct `fileUrl` construction
+                  const fileUrl = `data:${attachment.mimeType};base64,${attachment.contentUrl}`;
+
+                  return (
+                    <div key={attIndex} className="attachment-item">
+                      {getFileIcon(attachment.mimeType)}
+                      <div className="attachment-details">
+                        <p className="attachment-name">{attachment.fileName}</p>
+                        <div className="attachment-actions">
+                          {/* ✅ View in modal instead of new tab */}
+                          <button
+                            onClick={() => setSelectedFile({ fileUrl, mimeType: attachment.mimeType })}
+                            className="view-link"
+                          >
+                            View
+                          </button>
+                          <span className="separator"> | </span>
+                          {/* ✅ Download Attachment */}
+                          <a href={fileUrl} download={attachment.fileName} className="download-link">
+                            Download
+                          </a>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                );
-              })}
-
-          {/* Image Preview Modal */}
-          {selectedImage && (
-            <div className="email-img-modal" onClick={() => setSelectedImage(null)}>
-              <img src={selectedImage} alt="Preview" style={{
-                  maxWidth: "90%",
-                  maxHeight: "90%",
-                  borderRadius: "10px",
-                }}
-              />
-            </div>
-          )}
-
-          {/* Attachment Preview Modal for non-image files */}
-          {selectedAttachment && (
-            <div className="email-attachment-modal" onClick={() => setSelectedAttachment(null)}>
-              <div
-                style={{
-                  width: "90%",
-                  height: "80%",
-                  background: "#fff",
-                }}
-              >
-                {selectedAttachment.attachment.mimeType === "application/pdf" ? (
-                  <embed
-                    src={selectedAttachment.fileUrl}
-                    type="application/pdf"
-                    width="100%"
-                    height="100%"
-                  />
-                ) : (
-                  <iframe
-                    src={selectedAttachment.fileUrl}
-                    style={{ width: "100%", height: "100%" }}
-                    title="Attachment Preview"
-                  />
-                )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
-        </div>
+
+        {selectedFile && (
+          <div className="attachment-modal">
+            <div className="attachment-modal-content">
+              <MdClose className="close-icon" onClick={() => setSelectedFile(null)} />
+              
+              {/* ✅ If it's a PDF, use <embed> */}
+              {selectedFile.mimeType.includes("pdf") ? (
+                <embed src={selectedFile.fileUrl} type="application/pdf" width="100%" height="500px" />
+              ) : selectedFile.mimeType.includes("image") ? (
+                // ✅ If it's an image, use <img>
+                <img src={selectedFile.fileUrl} alt="Attachment Preview" style={{ width: "100%", height: "auto", borderRadius: "5px" }} />
+              ) : (
+                // 🚨 Unsupported File Type (Excel, Word, etc.)
+                <div className="unsupported-file-container">
+                  <p>Preview not available for this file type.</p>
+                  <a href={selectedFile.fileUrl} download className="download-button">
+                    Download File
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+    </div>
+  )}
+
+  
+</div>
+
+
 
         <form className="email-compose-box" onSubmit={handleSubmit}>
           <div className="email-header">
