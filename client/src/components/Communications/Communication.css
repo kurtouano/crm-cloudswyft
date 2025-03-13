@@ -613,11 +613,9 @@
     z-index: 1000;
   }
   
-  
   .attachment-modal-content {
     background: #fff;
-    width: 90%;  /* 🟢 Make the modal wider */
-    height: 55%; /* 🟢 Make the modal taller */
+    height: 75%; /* 🟢 Make the modal taller */
     border-radius: 10px;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5);
     overflow: hidden;

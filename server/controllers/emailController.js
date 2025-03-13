@@ -1,9 +1,10 @@
 import axios from "axios";
 import dotenv from "dotenv";
 import { ConfidentialClientApplication } from "@azure/msal-node";  // Use ConfidentialClientApplication for client secret
-import { SentEmail, ReceivedEmail  } from "../models/EmailSchema.js";  
+import { SentEmail, ReceivedEmail, ReplyEmail } from "../models/EmailSchema.js";  
 import Lead from "../models/LeadSchema.js";
 import { parse } from "node-html-parser";
+import * as cheerio from 'cheerio';
 
 dotenv.config();
 
@@ -107,6 +108,61 @@ export async function sendEmail(req, res) {
     }
 }
 
+export async function replyEmail(req, res) {
+    try {
+        const { messageId, content, token, attachments } = req.body;
+
+        console.log(content);
+
+        if (!messageId || !content || !token) {
+            return res.status(400).json({ error: "Missing required fields (messageId, content, or token)" });
+        }
+
+        // Format attachments for Microsoft Graph API
+        const formattedAttachments = attachments?.map((file) => ({
+            "@odata.type": "#microsoft.graph.fileAttachment",
+            name: file.fileName,
+            contentType: file.mimeType,
+            contentBytes: file.contentBytes, // Base64 encoded content
+        })) || [];
+
+        // Reply Email Data
+        const emailData = {
+            comment: content, // Microsoft API requires "comment" for replies
+            message: {
+                attachments: formattedAttachments,
+            }
+        };
+
+        // Send reply via Microsoft Graph API
+        const response = await axios.post(
+            `https://graph.microsoft.com/v1.0/me/messages/${messageId}/reply`,
+            emailData,
+            {
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+            }
+        );
+
+        // Extract the message ID of the sent reply
+        const replyMessageId = response.data?.id || null;
+
+        // Save reply email to database
+        const repliedEmail = new ReplyEmail({
+            originalMessageId: messageId, // The email being replied to
+            replyContent: content,
+            repliedAt: new Date(),
+            attachments,
+        });
+
+        await repliedEmail.save();
+
+        res.status(200).json({ success: true, message: "Email replied successfully!", replyMessageId });
+    } catch (error) {
+        console.error("Error replying to email:", error.response?.data || error.message);
+        res.status(500).json({ error: "Failed to send reply" });
+    }
+}
+
 export async function fetchReceivedEmails(req, res) {
     try {
         // Get Microsoft Access Token from headers
@@ -144,30 +200,38 @@ export async function fetchReceivedEmails(req, res) {
 
         console.log(`Filtered ${filteredEmails.length} emails matching leads`);
 
+        function cleanReplyText(html) {
+            const $ = cheerio.load(html);
+            $('blockquote, .gmail_quote, .gmail_attr').remove(); // Remove previous replies
+            return $('body').text().trim(); // Extract latest reply only
+        }
+
         // Save filtered emails to MongoDB
         const savedEmails = await Promise.all(
             filteredEmails.map(async (email) => {
                 try {
-                    // Extract plain text from HTML content
                     const htmlContent = email.body.content || "";
-                    const parsedHtml = parse(htmlContent);
-                    const plainTextMessage = parsedHtml.text.trim(); // Extracts text
+                    const plainTextMessage = cleanReplyText(htmlContent);
+                    const conversationId = email.conversationId || email.id; // Use conversationId as threadId
+                    const messageId = email.id; // Unique per email
 
-                    // Extract attachments (if any)
                     const attachments = email.attachments?.map(att => ({
                         fileName: att.name,
                         mimeType: att.contentType,
-                        contentUrl: att.contentBytes // Base64 encoded
+                        contentUrl: att.contentBytes || null // Base64 encoded
                     })) || [];
 
                     return await ReceivedEmail.findOneAndUpdate(
-                        { subject: email.subject, sender: email.from.emailAddress.address },
+                        { messageId }, // Ensure uniqueness
                         {
+                            messageId,
+                            threadId: conversationId, // Grouping based on conversationId
                             subject: email.subject,
                             sender: email.from.emailAddress.address,
-                            message: plainTextMessage, // Cleaned text version
-                            html: htmlContent, // Raw HTML
-                            attachments: attachments
+                            message: plainTextMessage,
+                            html: htmlContent,
+                            timestamp: new Date(email.receivedDateTime),
+                            attachments
                         },
                         { upsert: true, new: true }
                     );
@@ -187,3 +251,4 @@ export async function fetchReceivedEmails(req, res) {
         res.status(500).json({ error: "Failed to fetch received emails" });
     }
 }
+

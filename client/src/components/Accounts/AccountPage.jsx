@@ -60,7 +60,7 @@ export default function AccountPage() {
 
   // Memoize Fuse.js instance
   const fuse = useMemo(() => {
-    return new Fuse(leads, { keys: ["name", "company"], threshold: 0.3 });
+    return new Fuse(leads, { keys: ["leadName", "company"], threshold: 0.3 });
   }, [leads]);
 
   // Handle search input change

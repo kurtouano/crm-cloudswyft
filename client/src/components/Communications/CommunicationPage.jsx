@@ -21,10 +21,10 @@ export default function CommunicationPageNEW() {
   const [fetchEmailError, setFetchEmailError] = useState(null);
   const [attachment, setAttachment] = useState(null);
   const [formData, setFormData] = useState({ to: "", subject: "", text: "" });
+  const [formDataReply, setFormDataReply] = useState({ text: "", messageId: ""});
   const [selectedFile, setSelectedFile] = useState(null);
-  const [currentEmailIndex, setCurrentEmailIndex] = useState(0);
   const [filteredEmails, setFilteredEmails] = useState([]);
-
+  const [currentEmailIndex, setCurrentEmailIndex] = useState(0);
 
   useEffect(() => {
     const fetchLeads = async () => {
@@ -72,57 +72,64 @@ export default function CommunicationPageNEW() {
 
   useEffect(() => {
     const fetchEmails = async () => {
-        try {
-            const token = localStorage.getItem("microsoftAccessToken");
-
-            console.log("Fetched Email Token from localStorage:", token); // Debugging log
-
-            if (!token) {
-                throw new Error("Access token is missing from localStorage.");
-            }
-
-            const response = await fetch("http://localhost:4000/api/emails/received", {
-              method: "GET",
-              headers: {
-                  "Authorization": `Bearer ${token}`,  // Ensure "Bearer " is added
-                  "Content-Type": "application/json"
-              }
-          });
-
-            console.log("Response Status:", response.status); // Debugging log
-
-            const data = await response.json();
-            console.log("Response Data:", data); // Debugging log
-
-            if (response.ok) {
-                setEmails(data.emails);
-            } else {
-                throw new Error(data.error || "Failed to fetch emails.");
-            }
-        } catch (err) {
-            console.error("Fetch Emails Error:", err.message); // Debugging log
-            setFetchEmailError(err.message);
-        } finally {
-            receiveSetLoading(false);
+      try {
+        const token = localStorage.getItem("microsoftAccessToken");
+    
+        if (!token) {
+          throw new Error("Access token is missing from localStorage.");
         }
+    
+        const response = await fetch("http://localhost:4000/api/emails/received", {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+    
+        const data = await response.json();
+        console.log("Fetched Emails:", data.emails); // Debugging log
+    
+        if (response.ok) {
+          setEmails(data.emails); 
+        } else {
+          throw new Error(data.error || "Failed to fetch emails.");
+        }
+      } catch (err) {
+        console.error("Fetch Emails Error:", err.message);
+        setFetchEmailError(err.message);
+      } finally {
+        receiveSetLoading(false);
+      }
     };
-
+    
       fetchEmails();
-      const interval = setInterval(fetchEmails, 10000);  // Set interval to fetch emails every 5 seconds (TO BE CHANGED INTO)
-      return () => clearInterval(interval); // Cleanup when component unmounts
+      const interval = setInterval(fetchEmails, 10000); // Auto-fetch every 10 seconds
+      return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     if (activeLead) {
-      // Get emails for the selected lead, sorted by latest timestamp
       const leadEmails = emails
-        .filter(email => email.sender.toLowerCase() === activeLead.bestEmail.toLowerCase())
+        .filter(email => {
+          return email.sender.toLowerCase() === activeLead.bestEmail.toLowerCase();
+        })
         .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-  
       setFilteredEmails(leadEmails);
-      setCurrentEmailIndex(0); // Reset to the latest email
     }
-  }, [activeLead, emails]);
+  }, [activeLead, emails]); 
+  
+
+  useEffect(() => {
+    if (filteredEmails.length > 0) {
+      setFormDataReply((prev) => ({
+        ...prev,
+        messageId: filteredEmails[currentEmailIndex].messageId, // Update messageId
+      }));
+    } else {
+      console.log("No messageId found for current email");
+    }
+  }, [currentEmailIndex, filteredEmails]);
   
   // Memoized Fuse.js instance
   const fuse = useMemo(() => {
@@ -163,7 +170,7 @@ export default function CommunicationPageNEW() {
     }
   };
 
-  const handleSubmit = async (e) => {
+  /* const handleSubmit = async (e) => { // WILL BE ADDED IN THE FUTURE FOR CREATE EMAILS 
     e.preventDefault();
     const microsoftAccessToken = localStorage.getItem("microsoftAccessToken");
     console.log("Send Email Token", microsoftAccessToken);
@@ -203,6 +210,49 @@ export default function CommunicationPageNEW() {
 
     setLoading(false);
   };
+
+    */
+
+  const handleReplySubmit = async (e) => {
+    e.preventDefault();
+    const microsoftAccessToken = localStorage.getItem("microsoftAccessToken");
+    console.log("Reply Email Token", microsoftAccessToken);
+  
+    if (!microsoftAccessToken) {
+      alert("Please log in via Microsoft first.");
+      return;
+    }
+  
+    setLoading(true);
+  
+    try {
+      const res = await fetch("http://localhost:4000/api/emails/reply-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: formDataReply.text, // Reply message
+          token: microsoftAccessToken,
+          messageId: formDataReply.messageId, // Required for threading the reply
+          attachments: attachment ? [attachment] : [], // Include attachment if available
+        }),
+      });
+  
+      const data = await res.json();
+  
+      if (res.ok) {
+        alert("Reply sent successfully!");
+        setFormDataReply({ messageId: "", text: "" }); // Reset reply form
+        setAttachment(null); // Clear attachment
+      } else {
+        alert(data.error || "Failed to send reply");
+      }
+    } catch (error) {
+      console.error("Error sending reply:", error);
+    }
+  
+    setLoading(false);
+  };
+
 
     // Helper function to format timestamp
     const formatRelativeTime = (timestamp) => {
@@ -253,9 +303,6 @@ export default function CommunicationPageNEW() {
         setCurrentEmailIndex(currentEmailIndex + 1); // Move Forward
       }
     };
-    
-    
-
 
   return (
     <div className="communications-container">
@@ -363,10 +410,6 @@ export default function CommunicationPageNEW() {
               </button>
             </div>
 
-
-
-
-
           {/* Right Side Icons */}
           <div className="email-header-right">
             <IoArrowForward className="email-nav-icon circle-icon" />
@@ -376,103 +419,97 @@ export default function CommunicationPageNEW() {
         </div>
 
         {/* Display received emails */}
-<div className="email-received-space">
-  {filteredEmails.length > 0 && (
-    <div className="email-received-message">
-      {/* Email Header */}
-      <div className="email-header-details">
-        <CgProfile className="email-user-icon" />
-        <div className="email-header-info">
-          <p className="email-sender-name">{activeLead.leadName || "Unknown Lead"}</p>
-          <p className="email-sender-email">{filteredEmails[currentEmailIndex].sender}</p>
-        </div>
-        <p className="email-timestamp">
-          {new Date(filteredEmails[currentEmailIndex].timestamp).toLocaleString()}
-        </p>
-      </div>
+        <div className="email-received-space">
+        {filteredEmails.length > 0 && filteredEmails[currentEmailIndex] ? (
+            filteredEmails
+              .filter(email => email?.threadId === filteredEmails[currentEmailIndex]?.threadId)  // Check for email existence
+              .map((email, index) => email ? (
+                <div key={email?.messageId || `email-${index}`} className="email-received-message">
+                  {/* Email Header */}
+                  <div className="email-header-details">
+                    <CgProfile className="email-user-icon" />
+                    <div className="email-header-info">
+                      <p className="email-sender-name">{activeLead?.leadName || "Unknown Lead"}</p>
+                      <p className="email-sender-email">{email?.sender || "Unknown Sender"}</p>
+                    </div>
+                    <p className="email-timestamp">
+                      {email?.timestamp ? new Date(email.timestamp).toLocaleString() : "Unknown Time"}
+                    </p>
+                  </div>
 
-      {/* Email Subject */}
-      <p className="email-subject-display">{filteredEmails[currentEmailIndex].subject}</p>
+                  {/* Show subject only for the first email in a thread */}
+                  {index === 0 && <p className="email-subject-display">{email?.subject || "No Subject"}</p>}
 
-      {/* Email Body */}
-      <div className="email-body-container">
-        <p className="email-body-display">{stripHtmlTags(filteredEmails[currentEmailIndex].message)}</p>
-      </div>
+                  {/* Email Body */}
+                  <div className="email-body-container">
+                    <p className="email-body-display">{email?.message ? stripHtmlTags(email.message) : "No Content"}</p>
+                  </div>
 
-      {/* Attachments */}
-      {filteredEmails[currentEmailIndex]?.attachments?.length > 0 && (
-            <div className="email-attachments-container">
-              <p className="attachments-header">Attachments:</p>
-              <div className="attachments-list">
-                {filteredEmails[currentEmailIndex].attachments.map((attachment, attIndex) => {
-                  if (!attachment.contentUrl) {
-                    console.error(`Missing contentUrl for attachment: ${attachment.fileName}`);
-                    return null;
-                  }
+                  {/* Attachments */}
+                  {email?.attachments?.length > 0 && (
+                    <div className="email-attachments-container">
+                      <p className="attachments-header">Attachments:</p>
+                      <div className="attachments-list">
+                        {email.attachments.map((attachment, attIndex) => {
+                          if (!attachment?.contentUrl) {
+                            console.error(`Missing contentUrl for attachment: ${attachment?.fileName}`);
+                            return null;
+                          }
 
-                  // ✅ Correct `fileUrl` construction
-                  const fileUrl = `data:${attachment.mimeType};base64,${attachment.contentUrl}`;
+                          const fileUrl = `data:${attachment?.mimeType};base64,${attachment?.contentUrl}`;
 
-                  return (
-                    <div key={attIndex} className="attachment-item">
-                      {getFileIcon(attachment.mimeType)}
-                      <div className="attachment-details">
-                        <p className="attachment-name">{attachment.fileName}</p>
-                        <div className="attachment-actions">
-                          {/* ✅ View in modal instead of new tab */}
-                          <button
-                            onClick={() => setSelectedFile({ fileUrl, mimeType: attachment.mimeType })}
-                            className="view-link"
-                          >
-                            View
-                          </button>
-                          <span className="separator"> | </span>
-                          {/* ✅ Download Attachment */}
-                          <a href={fileUrl} download={attachment.fileName} className="download-link">
-                            Download
-                          </a>
-                        </div>
+                          return (
+                            <div key={attIndex} className="attachment-item">
+                              {getFileIcon(attachment?.mimeType)}
+                              <div className="attachment-details">
+                                <p className="attachment-name">{attachment?.fileName || "Unknown File"}</p>
+                                <div className="attachment-actions">
+                                  <button
+                                    onClick={() => setSelectedFile({ fileUrl, mimeType: attachment?.mimeType })}
+                                    className="view-link"
+                                  >
+                                    View
+                                  </button>
+                                  <span className="separator"> | </span>
+                                  <a href={fileUrl} download={attachment?.fileName} className="download-link">
+                                    Download
+                                  </a>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
-                  );
-                })}
+                  )}
+                </div>
+              ) : null)
+          ) : <p></p>
+          }
+
+          {selectedFile && (
+            <div className="attachment-modal">
+              <div className="attachment-modal-content">
+                <MdClose className="close-icon" onClick={() => setSelectedFile(null)} />
+                {selectedFile.mimeType.includes("pdf") ? (
+                  <embed src={selectedFile.fileUrl} type="application/pdf" width="100%" height="80%" />
+                ) : selectedFile.mimeType.includes("image") ? (
+                  <img src={selectedFile.fileUrl} alt="Attachment Preview" style={{ width: "100%", height: "auto", borderRadius: "5px" }} />
+                ) : (
+                  <div className="unsupported-file-container">
+                    <p>Preview not available for this file type.</p>
+                    <a href={selectedFile.fileUrl} download className="download-button">
+                      Download File
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
           )}
-
-        {selectedFile && (
-          <div className="attachment-modal">
-            <div className="attachment-modal-content">
-              <MdClose className="close-icon" onClick={() => setSelectedFile(null)} />
-              
-              {/* ✅ If it's a PDF, use <embed> */}
-              {selectedFile.mimeType.includes("pdf") ? (
-                <embed src={selectedFile.fileUrl} type="application/pdf" width="100%" height="500px" />
-              ) : selectedFile.mimeType.includes("image") ? (
-                // ✅ If it's an image, use <img>
-                <img src={selectedFile.fileUrl} alt="Attachment Preview" style={{ width: "100%", height: "auto", borderRadius: "5px" }} />
-              ) : (
-                // 🚨 Unsupported File Type (Excel, Word, etc.)
-                <div className="unsupported-file-container">
-                  <p>Preview not available for this file type.</p>
-                  <a href={selectedFile.fileUrl} download className="download-button">
-                    Download File
-                  </a>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-    </div>
-  )}
-
-  
-</div>
+        </div>
 
 
-
-        <form className="email-compose-box" onSubmit={handleSubmit}>
+        <form className="email-compose-box" onSubmit={handleReplySubmit}>
           <div className="email-header">
             <div className="email-left-icons">
               <IoReturnUpBackOutline className="email-icon" />
@@ -490,21 +527,12 @@ export default function CommunicationPageNEW() {
             </div>
           </div>
 
-          {/* Subject Input */}
-          <input
-            type="text"
-            className="email-subject"
-            value={formData.subject}
-            onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-            placeholder="Subject"
-          />
-
           {/* Message Body */}
           <textarea
             name="text"
             className="email-body"
-            value={formData.text}
-              onChange={(e) => setFormData({ ...formData, text: e.target.value })}
+            value={formDataReply.text}
+              onChange={(e) => setFormDataReply({ ...formDataReply, text: e.target.value })}
             placeholder="Write your message..."
           />
 

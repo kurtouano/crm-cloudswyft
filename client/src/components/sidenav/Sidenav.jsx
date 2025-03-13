@@ -13,13 +13,11 @@ const navItems = [
 
 const Sidenav = () => {
     const [showDropdown, setShowDropdown] = useState(false);
-    const [notifications, setNotifications] = useState([
+    const notifications = [
         "New message from HR",
         "Your task is due tomorrow",
         "Meeting scheduled at 3 PM",
-    ]);
-
-    const navigate = useNavigate();
+    ];
 
     const handleLogout = () => {
         localStorage.removeItem("token"); // Remove CRM JWT Token
