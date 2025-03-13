@@ -8,6 +8,7 @@ import Accounts from "./pages/Accounts";
 import Employees from "./pages/Employees";
 import Communications from "./pages/Communications";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import LeadProfile from "./pages/LeadProfile"
 
 export default function App() {
   return (
@@ -45,6 +46,7 @@ function MainLayout() {
           <Route path="/accounts" element={<ProtectedRoute><Accounts /></ProtectedRoute>} />
           <Route path="/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />
           <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
+          <Route path="/lead-profile" element={<ProtectedRoute><LeadProfile /></ProtectedRoute>} />
 
           {/* Redirect unknown routes to login */}
           <Route path="*" element={<Navigate to="/" replace />} />
