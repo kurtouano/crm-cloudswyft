@@ -24,6 +24,7 @@ export default function CommunicationPageNEW() {
   const [formDataReply, setFormDataReply] = useState({ text: "", messageId: ""});
   const [selectedAttachment, setSelectedAttachment] = useState(null);
 
+  const [modalOpen, setModalOpen] = useState(false); 
 
   const [sentEmails, setSentEmails] = useState([]); // Stores paginated sent emails
   const [totalSentEmails, setTotalSentEmails] = useState(0); // Total sent emails count
@@ -34,17 +35,24 @@ export default function CommunicationPageNEW() {
   const [filteredEmails, setFilteredEmails] = useState([]);
   const [currentEmailIndex, setCurrentEmailIndex] = useState(0);
 
-  
+  //for email suggestion
+  const [bestEmails, setBestEmails] = useState([]); // Store all bestEmail values
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
 
   useEffect(() => {
     const fetchLeads = async () => {
       try {
         const response = await fetch("http://localhost:4000/api/leads");
         if (!response.ok) throw new Error("Failed to fetch leads");
-
+  
         const data = await response.json();
         setLeads(data);
-        setFilteredLeads(data); // ✅ Initialize filtered leads
+        setFilteredLeads(data);
+  
+        // Extract bestEmails from leads
+        const emails = data.map(lead => lead.bestEmail).filter(email => email);
+        setBestEmails(emails);
       } catch (error) {
         console.error("Error fetching leads:", error);
         setError("Failed to fetch leads.");
@@ -52,10 +60,10 @@ export default function CommunicationPageNEW() {
         setLoading(false);
       }
     };
-
+  
     fetchLeads();
   }, []);
-
+  
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const accessToken = params.get("accessToken");
@@ -229,7 +237,22 @@ export default function CommunicationPageNEW() {
     }
   };
 
-  /* const handleSubmit = async (e) => { // WILL BE ADDED IN THE FUTURE FOR CREATE EMAILS 
+ // Open Modal
+ const openModal = () => setModalOpen(true);
+
+  // Close Modal
+  const closeModal = () => {
+    setModalOpen(false);
+    setFormData({ to: "", subject: "", text: "" });
+    setAttachment(null);
+  };
+
+   // Handle Input Changes
+   const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => { // WILL BE ADDED IN THE FUTURE FOR CREATE EMAILS 
     e.preventDefault();
     const microsoftAccessToken = localStorage.getItem("microsoftAccessToken");
     console.log("Send Email Token", microsoftAccessToken);
@@ -270,7 +293,6 @@ export default function CommunicationPageNEW() {
     setLoading(false);
   };
 
-    */
 
   const handleReplySubmit = async (e) => {
     e.preventDefault();
@@ -359,6 +381,28 @@ export default function CommunicationPageNEW() {
     return name.charAt(0).toUpperCase(); // First letter only
 };
 
+const handleRecipientChange = (e) => {
+  const input = e.target.value;
+  setFormData({ ...formData, to: input });
+
+  if (!input) {
+    setFilteredEmails(bestEmails); // Show all emails when input is empty
+  } else {
+    const matches = bestEmails.filter(email =>
+      email.toLowerCase().includes(input.toLowerCase())
+    );
+    setFilteredEmails(matches);
+  }
+
+  setShowSuggestions(true);
+};
+
+
+const handleSelectEmail = (email) => {
+  setFormData({ ...formData, to: email });
+  setShowSuggestions(false);
+};
+
 
 
   return (
@@ -373,12 +417,102 @@ export default function CommunicationPageNEW() {
             type="text"
             placeholder="Search leads..."
             value={searchQuery}
-            onChange={handleSearch} // ✅ Attach search handler
+            onChange={handleSearch} 
           />
-          <button className="inbox-header-create-email-btn">
-            <FiEdit className="inbox-header-create-email-icon" />
-          </button>
+           <button className="inbox-header-create-email-btn" onClick={openModal}>
+              <FiEdit className="inbox-header-create-email-icon" />
+           </button>
         </div>
+
+         {/* Floating Modal for Creating Email */}
+          {modalOpen && (
+            <div className="modal-overlay">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h2>New Email</h2>
+                  <MdClose className="modal-close-icon" onClick={closeModal} />
+                </div>
+
+                <form className="email-form" onSubmit={handleSubmit}>
+                  
+                  {/* ✅ Updated Recipient Input with Suggestions */}
+                  <div className="recipient-container">
+                  <input
+                    type="email"
+                    name="to"
+                    className="email-input"
+                    placeholder="Recipient"
+                    value={formData.to}
+                    onChange={handleRecipientChange}
+                    required
+                    autoComplete="off"
+                    onFocus={() => {
+                      setFilteredEmails(bestEmails); // Show all emails on focus
+                      setShowSuggestions(true);
+                    }}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)} // Delay hiding for click selection
+                  />
+
+
+                  {showSuggestions && filteredEmails.length > 0 && (
+                    <ul className="suggestions-dropdown">
+                      {filteredEmails.map((email, index) => (
+                        <li key={index} onClick={() => handleSelectEmail(email)}>
+                          {email}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+
+                  </div>
+
+                  {/* Subject */}
+                  <input
+                    type="text"
+                    name="subject"
+                    className="email-input"
+                    placeholder="Subject"
+                    value={formData.subject}
+                    onChange={handleChange}
+                    required
+                  />
+
+                  {/* Message Body */}
+                  <textarea
+                    name="text"
+                    className="email-textarea"
+                    placeholder="Write your message..."
+                    value={formData.text}
+                    onChange={handleChange}
+                    required
+                  />
+
+                  {/* Attachments & Send */}
+                  <div className="email-actions-send">
+                    <div className="email-attachment-container">
+                      <label className="email-attach-label">
+                        <MdAttachFile className="email-attach-icon-send" />
+                        <input type="file" className="email-attach-input" onChange={handleFileChange} />
+                      </label>
+
+                      {attachment && (
+                        <div className="email-attachment-preview">
+                          {getFileIcon(attachment.mimeType)}
+                          <span className="attachment-name-send">{attachment.fileName}</span>
+                          <MdClose className="email-attach-remove-icon-send" onClick={() => setAttachment(null)} />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Send Button */}
+                    <button className="send-button-send" type="submit">Send</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
 
         {/* Leads List */}
         <div className="inbox-body-list-grid">

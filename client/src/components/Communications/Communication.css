@@ -191,6 +191,154 @@
 
 
 
+/* Modal Overlay */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* Dark background */
+    display: flex;
+    justify-content: center;
+    align-items: center; /* Centers the modal vertically */
+    z-index: 1000;
+}
+
+/* Modal Box */
+.modal-content {
+    background: #fff;
+    width: 700px; /* Adjusted width */
+    height: 500px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    position: relative; /* No need for fixed position */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Modal Header */
+.modal-header {
+    width: 100%; /* Ensures it spans the entire modal */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px; /* Increased padding for better spacing */
+    border-bottom: 1px solid #ddd;
+    background-color: #f4f4f4;
+    font-size: 16px;
+    font-weight: 500;
+    box-sizing: border-box; /* Ensures padding doesn’t break alignment */
+}
+
+.modal-header h2 {
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0;
+}
+
+.modal-close-icon {
+    cursor: pointer;
+    font-size: 20px;
+    color: #555;
+    transition: color 0.2s;
+}
+
+.modal-close-icon:hover {
+    color: rgb(0, 0, 0);
+}
+
+/* Email Form */
+.email-form {
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+
+.inbox-header-create-email-icon {
+    font-size: 18px;
+    color: #333;
+    cursor: pointer;
+}
+
+.inbox-header-create-email-icon:hover {
+    background-color: #e0e0e0;
+}
+
+/* Input Fields */
+.email-input {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border: none;
+    border-bottom: 1px solid #ddd;
+    outline: none;
+    background: none;
+    transition: border-color 0.2s;
+}
+
+.email-input:focus {
+    border-bottom: 1px solid #007bff;
+}
+
+.email-textarea {
+    font: 1em sans-serif;
+    width: 100%;
+    height: 250px;
+    padding: 12px;
+    font-size: 16px;
+    border: none;
+    outline: none;
+    resize: none;
+}
+
+/* Email Actions (Attachments & Send Button) */
+.email-actions-send {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* ✅ Ensures attachment stays left, button stays right */
+    padding: 10px 15px;
+    border-top: 1px solid #ddd;
+    background: #f9f9f9;
+}
+
+.email-attach-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.email-attach-icon-send {
+    font-size: 18px;
+    color: #007bff;
+    margin-right: 10px;
+}
+
+
+.email-attach-input {
+    display: none;
+}
+
+/* Send Button */
+.send-button {
+    background: #007bff;
+    color: white;
+    font-weight: 600;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.send-button:hover {
+    background: #0056b3;
+}
+
+
+
 /* Right Side - Email Composition */
 .email-compose-container {
     display: flex;
@@ -523,6 +671,104 @@
 }
 
 /* Attachments Container */
+
+.email-attachment-preview {
+    display: flex;
+    align-items: center;
+    background: #f4f4f4;
+    padding: 8px 12px;
+    border-radius: 6px;
+    max-width: 400px;
+    min-width: 250px;
+    justify-content: flex-start; /* ✅ Aligns content to the left */
+    flex-grow: 1; /* ✅ Ensures it takes up space properly */
+}
+
+
+/* File Icon */
+
+
+.email-attachment-preview .attachment-icon {
+    font-size: 18px;
+    margin-right: 8px;
+}
+
+.email-attachment-preview .attachment-name-send {
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 250px; /* ✅ Prevents text from overflowing */
+}
+
+
+/* Close button */
+.email-attach-remove-icon-send {
+    font-size: 16px;
+    color: #d32f2f;
+    cursor: pointer;
+    margin-left: 8px;
+}
+
+
+.attachment-name-send {
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 250px; /* ✅ Prevents text from overflowing */
+}
+
+.send-button-send {
+    background: #007bff;
+    color: white;
+    font-weight: 600;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.send-button-send:hover {
+    background: #0056b3;
+}
+
+
+.recipient-container {
+    position: relative;
+    width: 100%;
+}
+
+.suggestions-dropdown {
+    position: absolute;
+    width: 100%;
+    background: white;
+    border: 1px solid #ddd;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 1000;
+    list-style: none;
+    padding: 0;
+    margin-top: 5px;
+    border-radius: 5px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.suggestions-dropdown li {
+    padding: 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.suggestions-dropdown li:hover {
+    background: #f0f0f0;
+}
+
 .email-attachments-container {
     background: #f5f5f5;
     border-radius: 8px;
