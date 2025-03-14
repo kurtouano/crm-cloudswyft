@@ -443,20 +443,28 @@
     padding: 15px 10px;
     border-radius: 8px;
     margin-bottom: 10px;
+    background: #f9f9f9; /* Light gray background */
 }
 
 /* User Icon */
 .email-user-icon {
-    font-size: 40px;
-    color: #888;
-    margin-right: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
+
+
 
 /* Sender Name & Email */
 .email-header-info {
     display: flex;
     flex-direction: column;
+    margin-left: 10px;
 }
+
 
 .email-sender-name {
     font-size: 20px;
@@ -479,11 +487,11 @@
 
 /* Email Subject */
 .email-subject-display {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: bold;
-    margin: 15px 0 10px;
-    color: #000;
-    padding: 25px 15px;
+    padding: 20px;
+    background: #f4f4f4; /* Slightly darker background */
+    border-radius: 8px;
 }
 
 /* Email Body */

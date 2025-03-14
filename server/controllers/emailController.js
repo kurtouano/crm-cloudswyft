@@ -163,6 +163,40 @@ export async function replyEmail(req, res) {
     }
 }
 
+export async function getSentEmail(req, res) {
+    try {
+        const { to, page = 1, limit = 1 } = req.query;
+        if (!to) return res.status(400).json({ error: "Recipient email is required" });
+
+        // Ensure page and limit are integers
+        const pageNumber = parseInt(page, 10) || 1;
+        const limitNumber = parseInt(limit, 10) || 1;
+        const skip = (pageNumber - 1) * limitNumber;
+
+        // Fetch paginated emails sorted by latest first
+        const sentEmails = await SentEmail.find({ to })
+            .sort({ sentAt: -1 }) // Sort newest to oldest
+            .skip(skip)
+            .limit(limitNumber);
+
+        const totalEmails = await SentEmail.countDocuments({ to }); // Get total sent emails
+
+        res.status(200).json({
+            emails: sentEmails,
+            totalEmails,
+            totalPages: Math.ceil(totalEmails / limitNumber),
+            currentPage: pageNumber
+        });
+    } catch (error) {
+        console.error("Error fetching sent emails:", error);
+        res.status(500).json({ error: "Failed to retrieve sent emails" });
+    }
+}
+
+
+
+
+
 export async function fetchReceivedEmails(req, res) {
     try {
         // Get Microsoft Access Token from headers
