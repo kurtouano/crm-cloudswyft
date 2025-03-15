@@ -5,13 +5,14 @@ const receivedEmailSchema = new mongoose.Schema({
     threadId: { type: String, required: true },
     subject: { type: String, required: true },
     sender: { type: String, required: true },
+    senderName: { type: String, required: true }, // Sender name
     message: { type: String, required: true }, // Cleaned text version
     html: { type: String }, // Raw HTML content
     attachments: [
         {
             fileName: { type: String, required: true },
             mimeType: { type: String, required: true },
-            contentUrl: { type: String, required: true }
+            contentBytes: { type: String, required: false },
         }
     ],
     timestamp: { type: Date, default: Date.now },

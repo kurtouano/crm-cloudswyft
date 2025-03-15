@@ -9,12 +9,14 @@ import "./Communication.css";
 
 export default function CommunicationPageNEW() {
   // Basic states
+  const companyDisplayName = "Cloudswyft";
   const [leads, setLeads] = useState([]);
   const [filteredLeads, setFilteredLeads] = useState([]);
   const [activeLead, setActiveLead] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [unreadCounts, setUnreadCounts] = useState({});
 
   // Auth & token
   const intervalRef = useRef(null);
@@ -25,6 +27,7 @@ export default function CommunicationPageNEW() {
   const [sentEmails, setSentEmails] = useState([]); // Stores paginated sent emails
   const [fetchEmailError, setFetchEmailError] = useState(null);
   const [attachment, setAttachment] = useState(null);
+  const [sortedLeads, setSortedLeads] = useState([]);
 
   // Email Form states
   const [formData, setFormData] = useState({ to: "", subject: "", text: "" });
@@ -69,52 +72,61 @@ export default function CommunicationPageNEW() {
   }, []);
   
   useEffect(() => {
-      const params = new URLSearchParams(window.location.search);
-      const accessToken = params.get("accessToken");
-      const expiryTime = params.get("expiry") ? Number(params.get("expiry")) : null;
-
-      const redirectToLogin = () => {
-          console.log("🔄 Token Expired. Redirecting to Microsoft login...");
-          localStorage.removeItem("microsoftAccessToken");
-          localStorage.removeItem("tokenExpiry");
-
-          if (intervalRef.current) {
-              clearInterval(intervalRef.current); // Clear the interval before redirecting
-          }
-
-          window.location.href = "http://localhost:4000/api/emails/microsoft-login";
-      };
-
-      const checkTokenValidity = () => {
-          const storedToken = localStorage.getItem("microsoftAccessToken");
-          const storedExpiry = localStorage.getItem("tokenExpiry");
-
-          if (!storedToken || !storedExpiry || Date.now() > Number(storedExpiry)) {
-              redirectToLogin();
-          }
-      };
-
-      if (accessToken && expiryTime) {
-          console.log("✅ Access Token Retrieved:", accessToken);
-          console.log("✅ Expires in:", Math.floor((expiryTime - Date.now()) / 60000), "minutes");
-
-          localStorage.setItem("microsoftAccessToken", accessToken);
-          localStorage.setItem("tokenExpiry", expiryTime);
-
-          window.history.replaceState({}, document.title, "/communications");
-      } else {
-          checkTokenValidity(); // Check token immediately on load
+    const params = new URLSearchParams(window.location.search);
+    const accessToken = params.get("accessToken");
+    const expiryTime = params.get("expiry") ? Number(params.get("expiry")) : null;
+  
+    const redirectToLogin = () => {
+      console.log("🔄 Access token is missing or expired. Redirecting to Microsoft login...");
+      localStorage.removeItem("microsoftAccessToken");
+      localStorage.removeItem("tokenExpiry");
+  
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current); // Clear the interval before redirecting
       }
-
-      // Start checking token every 60 seconds
-      intervalRef.current = setInterval(checkTokenValidity, 60000);
-
-      return () => {
-          if (intervalRef.current) {
-              clearInterval(intervalRef.current);
-          }
-      };
-  }, []);
+  
+      window.location.href = "http://localhost:4000/api/emails/microsoft-login"; // Redirect to your login page
+    };
+  
+    const checkTokenValidity = () => {
+      const storedToken = localStorage.getItem("microsoftAccessToken");
+  
+      // If token is missing, redirect to login
+      if (!storedToken) {
+        redirectToLogin();
+      }
+  
+      const storedExpiry = localStorage.getItem("tokenExpiry");
+  
+      // If token has expired, redirect to login
+      if (!storedExpiry || Date.now() > Number(storedExpiry)) {
+        redirectToLogin();
+      }
+    };
+  
+    // If the access token and expiry are in the URL params (i.e., after logging in)
+    if (accessToken && expiryTime) {
+      console.log("✅ Access Token Retrieved:", accessToken);
+      console.log("✅ Expires in:", Math.floor((expiryTime - Date.now()) / 60000), "minutes");
+  
+      localStorage.setItem("microsoftAccessToken", accessToken);
+      localStorage.setItem("tokenExpiry", expiryTime);
+  
+      window.history.replaceState({}, document.title, "/communications");
+    } else {
+      // If no access token in URL, check token validity in localStorage
+      checkTokenValidity();
+    }
+  
+    // Start checking token validity every 60 seconds
+    intervalRef.current = setInterval(checkTokenValidity, 60000);
+  
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current); // Cleanup on component unmount
+      }
+    };
+  }, []); // Empty dependency array ensures this runs once on component mount  
 
   useEffect(() => {
     const fetchSentEmails = async () => {
@@ -138,44 +150,49 @@ export default function CommunicationPageNEW() {
     };
 
     fetchSentEmails();
-}, [activeLead, currentSentPage]);
+  }, [activeLead, currentSentPage]);
 
   useEffect(() => {
     const fetchEmails = async () => {
       try {
         const token = localStorage.getItem("microsoftAccessToken");
-    
-        if (!token) {
-          throw new Error("Access token is missing from localStorage.");
-        }
-    
+        if (!token) throw new Error("Access token is missing from localStorage.");
+
         const response = await fetch("http://localhost:4000/api/emails/received", {
           method: "GET",
           headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         });
-    
+
         const data = await response.json();
         console.log("Fetched Emails:", data.emails); // Debugging log
-    
+
         if (response.ok) {
-          setEmails(data.emails); 
+          setEmails(data.emails);
+
+          // Calculate unread email count per lead
+          const counts = data.emails.reduce((acc, email) => {
+            if (!email.read) {
+              acc[email.sender] = (acc[email.sender] || 0) + 1;
+            }
+            return acc;
+          }, {});
+
+          setUnreadCounts(counts);
         } else {
           throw new Error(data.error || "Failed to fetch emails.");
         }
       } catch (err) {
         console.error("Fetch Emails Error:", err.message);
         setFetchEmailError(err.message);
-      } finally {
-        receiveSetLoading(false);
       }
     };
-    
-      fetchEmails();
-      const interval = setInterval(fetchEmails, 10000); // Auto-fetch every 10 seconds
-      return () => clearInterval(interval);
+
+    fetchEmails();
+    const interval = setInterval(fetchEmails, 12000); // Auto-fetch every 10 seconds
+    return () => clearInterval(interval);
   }, []);
   
   useEffect(() => {
@@ -200,7 +217,24 @@ export default function CommunicationPageNEW() {
     };
 
     fetchSentEmails();
-}, [activeLead, currentSentPage]);  // ✅ Updates when lead changes
+  }, [activeLead, currentSentPage]);  // ✅ Updates when lead changes
+
+  useEffect(() => {
+    const sortLeads = (leadsToSort) => {
+      return [...leadsToSort].sort((a, b) => {
+        const aLastEmail = emails.find(email => email.sender.toLowerCase() === a.bestEmail.toLowerCase());
+        const bLastEmail = emails.find(email => email.sender.toLowerCase() === b.bestEmail.toLowerCase());
+  
+        return (bLastEmail ? new Date(bLastEmail.timestamp) : 0) - (aLastEmail ? new Date(aLastEmail.timestamp) : 0);
+      });
+    };
+  
+    if (leads.length > 0) {
+      const sorted = sortLeads(leads);
+      setSortedLeads(sorted);
+      setFilteredLeads(sorted); // ✅ Initialize filteredLeads with sorted data
+    }
+  }, [leads, emails]); // ✅ Runs when leads or emails update
 
   useEffect(() => {
     if (activeLead) {
@@ -226,32 +260,38 @@ export default function CommunicationPageNEW() {
   }, [currentEmailIndex, filteredEmails]);
   
   // Memoized Fuse.js instance
-  const fuse = useMemo(() => {
-    return new Fuse(leads, { keys: ["leadName", "company"], threshold: 0.3 });
-  }, [leads]);
+  const fuse = useMemo(() => new Fuse(sortedLeads, { keys: ["leadName", "company"], threshold: 0.3 }), [sortedLeads]);
 
-  // ✅ Handle search input change
   const handleSearch = (event) => {
     const query = event.target.value;
     setSearchQuery(query);
-
-    if (!query) {
-      setFilteredLeads(leads); // Reset to original leads when search is cleared
-    } else {
-      const results = fuse.search(query).map(({ item }) => item);
-      setFilteredLeads(results);
-    }
+  
+    let updatedLeads = !query 
+      ? sortedLeads // No search → use all sorted leads
+      : fuse.search(query).map(({ item }) => item); // Search → filtered results
+  
+    // ✅ Re-sort search results to keep the latest activity on top
+    updatedLeads.sort((a, b) => {
+      const aLastEmail = emails.find(email => email.sender.toLowerCase() === a.bestEmail.toLowerCase());
+      const bLastEmail = emails.find(email => email.sender.toLowerCase() === b.bestEmail.toLowerCase());
+  
+      return (bLastEmail ? new Date(bLastEmail.timestamp) : 0) - (aLastEmail ? new Date(aLastEmail.timestamp) : 0);
+    });
+  
+    setFilteredLeads(updatedLeads);
   };
+  
 
   // Handle lead selection
   const handleLeadClick = (lead) => {
     setActiveLead(lead);
     setFormData((prev) => ({ ...prev, to: lead.bestEmail || "" }));
 
+    // Mark emails as read for this lead
     setCurrentSentPage(1);
-    setSentEmails([]);  
-};
-
+    setSentEmails([]);
+  };
+  
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -323,7 +363,6 @@ export default function CommunicationPageNEW() {
     setLoading(false);
   };
 
-
   const handleReplySubmit = async (e) => {
     e.preventDefault();
     const microsoftAccessToken = localStorage.getItem("microsoftAccessToken");
@@ -362,7 +401,7 @@ export default function CommunicationPageNEW() {
     }
   
     setLoading(false);
-};
+  };
 
 
   // Helper function to format timestamp
@@ -387,35 +426,40 @@ export default function CommunicationPageNEW() {
     }
   };
 
-  // Function to open modal
-  const handleViewAttachment = (attachment) => {
-    const byteCharacters = atob(attachment.contentBytes);
-    const byteNumbers = new Array(byteCharacters.length).fill(null).map((_, i) => byteCharacters.charCodeAt(i));
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: attachment.mimeType });
-    const blobUrl = URL.createObjectURL(blob);
+  const handleViewAttachment = (attachment, type) => {
+    try {
+      const blobUrl = type === "received" && attachment.contentUrl
+        ? attachment.contentUrl
+        : URL.createObjectURL(new Blob(
+            [Uint8Array.from(atob(attachment.contentBytes), c => c.charCodeAt(0))], 
+            { type: attachment.mimeType }
+          ));
 
-    setSelectedAttachment({
-        ...attachment,
-        blobUrl, // Store the generated Blob URL
-    });
+      if (blobUrl) setSelectedAttachment({ ...attachment, blobUrl });
+    } catch (error) {
+      console.error("Error opening attachment:", error);
+      alert("Error opening the attachment.");
+    }
   };
 
+  const handleDownloadAttachment = async (attachment) => {
+    try {
+      const blob = attachment.contentBytes
+        ? new Blob([Uint8Array.from(atob(attachment.contentBytes), c => c.charCodeAt(0))], { type: attachment.mimeType })
+        : await (await fetch(attachment.contentUrl)).blob();
 
-  const handleDownloadAttachment = (attachment) => {
-    const blob = new Blob([atob(attachment.contentBytes)], { type: attachment.mimeType });
-    const blobUrl = URL.createObjectURL(blob);
+      if (!blob?.size) throw new Error("Invalid blob received.");
 
-    const a = document.createElement("a");
-    a.href = blobUrl;
-    a.download = attachment.fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-
-    URL.revokeObjectURL(blobUrl); // Cleanup
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = attachment.fileName;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    } catch (error) {
+      console.error("Error downloading attachment:", error);
+      alert("Error downloading the attachment.");
+    }
   };
-
 
   // Function to close modal
   const handleCloseModal = () => {
@@ -561,7 +605,6 @@ const handleSelectEmail = (email) => {
             </div>
           )}
 
-
         {/* Leads List */}
         <div className="inbox-body-list-grid">
           {loading ? (
@@ -584,18 +627,14 @@ const handleSelectEmail = (email) => {
               }, null);
               
               return (
-                <div
-                  key={lead._id}
-                  className={`inbox-body-list-container ${
-                    activeLead?._id === lead._id ? "active" : ""
+                <div key={lead._id} className={`inbox-body-list-container ${
+                  activeLead?._id === lead._id ? "active" : ""
                   }`}
                   onClick={() => handleLeadClick(lead)}
                 >
                   <div className="inbox-body-header">
                     <CgProfile className="inbox-body-header-icon" />
-                    <p className="inbox-body-lead-type">
-                      {lead.leadName || "Unknown Lead"}
-                    </p>
+                    <p className="inbox-body-lead-type"> {lead.leadName || "Unknown Lead"}</p>
                     <p className="inbox-body-last-message-time">
                       {lastEmail ? formatRelativeTime(lastEmail.timestamp) : "No email"}
                     </p>
@@ -604,7 +643,7 @@ const handleSelectEmail = (email) => {
                   <div className="inbox-body-reply-preview-container">
                     <p className="inbox-body-reply-preview">
                       {lead.lastMessage ||
-                        "No recent message Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ex tellus, maximus pharetra tellus ac."}
+                        "No recent message Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ex tellus, maximus pharetra tellus ac, ultrices."}
                     </p>
                     <FaStar className="inbox-body-reply-type-star" />
                   </div>
@@ -657,120 +696,226 @@ const handleSelectEmail = (email) => {
           </div>
         </div>
 
-        {/* Display Sent Emails */}
+        {/* Display Both Received & Sent Emails */}
         <div className="email-received-space">
-            {sentEmails.length > 0 && (
-                <div className="email-received-message">
-                    {/* Email Header */}
-                    <div className="email-header-details">
-                        {/*  Profile Icon  */}
-                        <div 
-                            className="email-user-icon"
-                            style={{
-                                backgroundColor: "#007bff", // Fixed blue color
-                                color: "#fff", // White text
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                fontSize: "16px",
-                                fontWeight: "bold",
-                                textTransform: "uppercase",
-                                width: "45px",
-                                height: "45px",
-                                borderRadius: "50%",
-                                marginRight: "12px"
-                            }}
-                        >
-                            {getInitials("Cloudswyft")}
-                        </div>
-
-                        {/* ✅ Sender Name & Email */}
-                        <div className="email-header-info">
-                            <p className="email-sender-name">Cloudswyft</p>
-                            <p className="email-sender-email">crm-cloudswyft-test@outlook.com</p>
-                        </div>
-
-                        {/* ✅ Timestamp (Aligned Right) */}
-                        <p className="email-timestamp">
-                            {sentEmails[0].sentAt
-                                ? new Date(sentEmails[0].sentAt).toLocaleString()
-                                : "No Timestamp Available"}
-                        </p>
-                    </div>
-
-                    {/* Email Subject (Proper Padding) */}
-                    <p className="email-subject-display">{sentEmails[0].subject || "No Subject"}</p>
-
-                    {/* Email Body (Better Spacing) */}
-                    <div className="email-body-container">
-                        <p className="email-body-display">{sentEmails[0].content || "No Content"}</p>
-                    </div>
-
-                    {/* Attachments Section */}
-                    {sentEmails[0].attachments.length > 0 && (
-                        <div className="email-attachments-container">
-                            <p className="attachments-header">Attachment:</p>
-                            <div className="attachments-list">
-                                {sentEmails[0].attachments.map((attachment, index) => (
-                                    <div key={index} className="attachment-item">
-                                        {/* File Icon */}
-                                        {getFileIcon(attachment.mimeType)}
-
-                                        <div className="attachment-details">
-                                            <p className="attachment-name">{attachment.fileName}</p>
-                                            
-                                            {/* View & Download Actions */}
-                                            <div className="attachment-actions">
-                                                <button className="view-link" onClick={() => handleViewAttachment(attachment)}>
-                                                    View
-                                                </button>
-
-                                                <span className="separator">|</span>
-
-                                                <button className="download-link" onClick={() => handleDownloadAttachment(attachment)}>
-                                                    Download
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Attachment Modal */}
-                    {selectedAttachment && (
-                        <div className="attachment-modal" onClick={handleCloseModal}>
-                            <div className="attachment-modal-content" onClick={(e) => e.stopPropagation()}>
-                                <div className="attachment-modal-header">
-                                    <p className="attachment-filename">{selectedAttachment.fileName}</p>
-                                    <span className="close-icon" onClick={handleCloseModal}>x</span>
+            {emails.length > 0 || sentEmails.length > 0 ? (
+                <>
+                    {/* Display Received Emails */}
+                    {emails.map((email, index) => (
+                        <div key={index} className="email-received-message">
+                            {/* Email Header */}
+                            <div className="email-header-details">
+                                {/* Profile Icon */}
+                                <div 
+                                    className="email-user-icon"
+                                    style={{
+                                        backgroundColor: "#007bff", 
+                                        color: "#fff",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        fontSize: "16px",
+                                        fontWeight: "bold",
+                                        textTransform: "uppercase",
+                                        width: "45px",
+                                        height: "45px",
+                                        borderRadius: "50%",
+                                        marginRight: "12px"
+                                    }}
+                                >
+                                    {getInitials(email.sender)}
                                 </div>
-                                
 
-                                {/* File Preview */}
-                                  {selectedAttachment.mimeType.includes("image") ? (
-                                      <img src={selectedAttachment.blobUrl} alt="Preview" className="attachment-preview" />
-                                  ) : selectedAttachment.mimeType === "application/pdf" ? (
-                                      <iframe
-                                          src={selectedAttachment.blobUrl}
-                                          title="Attachment Preview"
-                                          className="attachment-preview"
-                                      />
-                                  ) : (
-                                      <div className="no-preview">
-                                          <p className="no-preview-text">No preview available</p>
-                                          <a href={selectedAttachment.blobUrl} download={selectedAttachment.fileName}>
-                                              Download file
-                                          </a>
-                                      </div>
-                                  )}
+                                {/* Sender Name & Email */}
+                                <div className="email-header-info">
+                                    <p className="email-sender-name">{email.senderName || "Unknown Sender"}</p>
+                                    <p className="email-sender-email">{email.sender}</p>
+                                </div>
 
+                                {/* Timestamp */}
+                                <p className="email-timestamp">
+                                    {email.timestamp
+                                        ? new Date(email.timestamp).toLocaleDateString("en-US", {
+                                            month: "long",
+                                            day: "numeric",
+                                            year: "numeric",
+                                          }) +
+                                          " - " +
+                                          new Date(email.timestamp).toLocaleTimeString("en-US", {
+                                            hour: "numeric",
+                                            minute: "numeric",
+                                            hour12: true,
+                                          })
+                                        : "No Timestamp Available"}
+                                </p>
                             </div>
-                        </div>
-                    )}
 
-                </div>
+                            {/* Email Subject */}
+                            <p className="email-subject-display">{email.subject || "No Subject"}</p>
+
+                            {/* Email Body */}
+                            <div className="email-body-container">
+                                <p className="email-body-display">{email.message || "No Content"}</p>
+                            </div>
+
+                            {/* Attachments Section */}
+                            {email.attachments && email.attachments.length > 0 && (
+                                <div className="email-attachments-container">
+                                    <p className="attachments-header">Attachments:</p>
+                                    <div className="attachments-list">
+                                        {email.attachments.map((attachment, index) => (
+                                            <div key={index} className="attachment-item">
+                                                {/* File Icon */}
+                                                {getFileIcon(attachment.mimeType)}
+
+                                                <div className="attachment-details">
+                                                    <p className="attachment-name">{attachment.fileName}</p>
+
+                                                    {/* View & Download Actions */}
+                                                    <div className="attachment-actions">
+                                                        <button className="view-link" onClick={() => handleViewAttachment(attachment, "received")}>
+                                                            View
+                                                        </button>
+
+                                                        <span className="separator">|</span>
+
+                                                        <button className="download-link" onClick={() => handleDownloadAttachment(attachment)}>
+                                                            Download
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ))}
+
+                    {/* Display Sent Emails */}
+                    {sentEmails.map((email, index) => (
+                        <div key={index} className="email-received-message">
+                            {/* Email Header */}
+                            <div className="email-header-details">
+                                {/* Profile Icon */}
+                                <div 
+                                    className="email-user-icon"
+                                    style={{
+                                        backgroundColor: "#28a745", // Green for Sent Emails
+                                        color: "#fff",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        fontSize: "16px",
+                                        fontWeight: "bold",
+                                        textTransform: "uppercase",
+                                        width: "45px",
+                                        height: "45px",
+                                        borderRadius: "50%",
+                                        marginRight: "12px"
+                                    }}
+                                >
+                                    {getInitials(companyDisplayName)}
+                                </div>
+
+                                {/* Recipient Name & Email */}
+                                <div className="email-header-info">
+                                    <p className="email-sender-name">{companyDisplayName}</p>
+                                    <p className="email-sender-email">{email.recipient}</p>
+                                </div>
+
+                                {/* Timestamp */}
+                                <p className="email-timestamp">
+                                    {email.sentAt
+                                        ? new Date(email.sentAt).toLocaleDateString("en-US", {
+                                            month: "long",
+                                            day: "numeric",
+                                            year: "numeric",
+                                          }) +
+                                          " - " +
+                                          new Date(email.sentAt).toLocaleTimeString("en-US", {
+                                            hour: "numeric",
+                                            minute: "numeric",
+                                            hour12: true,
+                                          })
+                                        : "No Timestamp Available"}
+                                </p>
+                            </div>
+
+                            {/* Email Subject */}
+                            <p className="email-subject-display">{email.subject || "No Subject"}</p>
+
+                            {/* Email Body */}
+                            <div className="email-body-container">
+                                <p className="email-body-display">{email.content || "No Content"}</p>
+                            </div>
+
+                            {/* Attachments Section */}
+                            {email.attachments && email.attachments.length > 0 && (
+                                <div className="email-attachments-container">
+                                    <p className="attachments-header">Attachments:</p>
+                                    <div className="attachments-list">
+                                        {email.attachments.map((attachment, index) => (
+                                            <div key={index} className="attachment-item">
+                                                {/* File Icon */}
+                                                {getFileIcon(attachment.mimeType)}
+
+                                                <div className="attachment-details">
+                                                    <p className="attachment-name">{attachment.fileName}</p>
+
+                                                    {/* View & Download Actions */}
+                                                    <div className="attachment-actions">
+                                                        <button className="view-link" onClick={() => handleViewAttachment(attachment, email.messageId ? "received" : "sent")}>
+                                                            View
+                                                        </button>
+
+                                                        <span className="separator">|</span>
+
+                                                        <button className="download-link" onClick={() => handleDownloadAttachment(attachment)}>
+                                                            Download
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {selectedAttachment && (
+                                <div className="attachment-modal" onClick={handleCloseModal}>
+                                    <div className="attachment-modal-content" onClick={(e) => e.stopPropagation()}>
+                                        <div className="attachment-modal-header">
+                                            <p className="attachment-filename">{selectedAttachment.fileName}</p>
+                                            <span className="close-icon" onClick={handleCloseModal}>x</span>
+                                        </div>
+
+                                        {/* File Preview */}
+                                        {selectedAttachment.mimeType.includes("image") ? (
+                                            <img src={selectedAttachment.blobUrl} alt="Preview" className="attachment-preview" />
+                                        ) : selectedAttachment.mimeType === "application/pdf" ? (
+                                            <iframe
+                                                src={selectedAttachment.blobUrl}
+                                                title="Attachment Preview"
+                                                className="attachment-preview"
+                                            />
+                                        ) : (
+                                            <div className="no-preview">
+                                                <p className="no-preview-text">No preview available</p>
+                                                <a href={selectedAttachment.blobUrl} download={selectedAttachment.fileName}>
+                                                    Download file
+                                                </a>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                        </div>
+                    ))}
+                </>
+            ) : (
+                <p>No emails found</p>
             )}
         </div>
 

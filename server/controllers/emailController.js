@@ -254,7 +254,7 @@ export async function fetchReceivedEmails(req, res) {
                     const attachments = email.attachments?.map(att => ({
                         fileName: att.name,
                         mimeType: att.contentType,
-                        contentUrl: att.contentBytes || null // Base64 encoded
+                        contentBytes: att.contentBytes || null, // Only if Base64 is available
                     })) || [];
 
                     return await ReceivedEmail.findOneAndUpdate(
@@ -264,6 +264,7 @@ export async function fetchReceivedEmails(req, res) {
                             threadId: conversationId, // Grouping based on conversationId
                             subject: email.subject,
                             sender: email.from.emailAddress.address,
+                            senderName: email.from.emailAddress.name,
                             message: plainTextMessage,
                             html: htmlContent,
                             timestamp: new Date(email.receivedDateTime),
