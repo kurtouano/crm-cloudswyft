@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const receivedEmailSchema = new mongoose.Schema({
-    messageId: { type: String, required: true, unique: true },
+    messageId: { type: String, required: true},
     threadId: { type: String, required: true },
     subject: { type: String, required: true },
     sender: { type: String, required: true },

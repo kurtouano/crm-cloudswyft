@@ -34,18 +34,33 @@ export default function CommunicationPageNEW() {
   const [formDataReply, setFormDataReply] = useState({ text: "", messageId: "", threadId: "" });
   const [selectedAttachment, setSelectedAttachment] = useState(null);
   
-   // Modal and Paginations
+   // Modal
   const [modalOpen, setModalOpen] = useState(false); 
-  const [totalSentEmails, setTotalSentEmails] = useState(0); // Total sent emails count
-  const [currentSentPage, setCurrentSentPage] = useState(1); // Current page number
-  const sentEmailsPerPage = 1; // Display one email at a time
+
+  // Emails & Paginations
   const [filteredEmails, setFilteredEmails] = useState([]);
   const [currentEmailIndex, setCurrentEmailIndex] = useState(0);
-
-  // for email suggestion
+  
+  const [currentSentPage, setCurrentSentPage] = useState(1); // Current page number
+  const sentEmailsPerPage = 1; // Display one email at a time
   const [bestEmails, setBestEmails] = useState([]); // Store all bestEmail values
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const emailsPerPage = 1; // Show one email per page
+  const [currentPage, setCurrentPage] = useState(1);
 
+  const allEmails = [
+    ...filteredEmails.map(email => ({ ...email, type: "received" })), 
+    ...sentEmails.map(email => ({ 
+        ...email, 
+        type: "sent", 
+        timestamp: email.sentAt // Ensure a common timestamp field 
+      }))
+  ];
+
+  allEmails.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  const totalPages = Math.ceil(allEmails.length / emailsPerPage);
+  const startIndex = (currentPage - 1) * emailsPerPage;
+  const displayedEmail = allEmails.slice(startIndex, startIndex + emailsPerPage);
 
   useEffect(() => {
     const fetchLeads = async () => {
@@ -130,24 +145,34 @@ export default function CommunicationPageNEW() {
 
   useEffect(() => {
     const fetchSentEmails = async () => {
-        if (!activeLead?.bestEmail) return;
-
-        try {
-            const response = await fetch(`http://localhost:4000/api/emails/sent?to=${activeLead.bestEmail}&page=${currentSentPage}&limit=${sentEmailsPerPage}`);
-            const data = await response.json();
-
-            if (response.ok && data.emails.length > 0) {
-                setSentEmails(data.emails);
-                setTotalSentEmails(data.totalEmails);  // ✅ Update total sent emails count
-            } else {
-                setSentEmails([]);
-                setTotalSentEmails(0);  // ✅ Reset count if no emails found
-            }
-        } catch (error) {
-            console.error("Error fetching sent emails:", error);
-            setSentEmails([]);
-        }
-    };
+      if (!activeLead?.bestEmail) return;
+  
+      let allSentEmails = [];
+      let page = 1;
+      let totalEmailsFetched = 0;
+      let totalEmailsToFetch = Infinity; // Will be updated once we get the first response
+  
+      try {
+          while (totalEmailsFetched < totalEmailsToFetch) {
+              const response = await fetch(`http://localhost:4000/api/emails/sent?to=${activeLead.bestEmail}&page=${page}&limit=${sentEmailsPerPage}`);
+              const data = await response.json();
+  
+              if (response.ok && data.emails.length > 0) {
+                  allSentEmails = [...allSentEmails, ...data.emails];
+                  totalEmailsFetched += data.emails.length;
+                  totalEmailsToFetch = data.totalEmails;
+                  page++; // Move to the next page
+              } else {
+                  break;
+              }
+          }
+  
+          setSentEmails(allSentEmails);
+      } catch (error) {
+          console.error("Error fetching sent emails:", error);
+          setSentEmails([]);
+      }
+  };
 
     fetchSentEmails();
   }, [activeLead, currentSentPage]);
@@ -182,6 +207,7 @@ export default function CommunicationPageNEW() {
 
           setUnreadCounts(counts);
         } else {
+          setEmails([]);
           throw new Error(data.error || "Failed to fetch emails.");
         }
       } catch (err) {
@@ -191,33 +217,9 @@ export default function CommunicationPageNEW() {
     };
 
     fetchEmails();
-    const interval = setInterval(fetchEmails, 12000); // Auto-fetch every 10 seconds
+    const interval = setInterval(fetchEmails, 20000); // Auto-fetch every 20 seconds
     return () => clearInterval(interval);
   }, []);
-  
-  useEffect(() => {
-    const fetchSentEmails = async () => {
-        if (!activeLead?.bestEmail) return;
-
-        try {
-            const response = await fetch(`http://localhost:4000/api/emails/sent?to=${activeLead.bestEmail}&page=${currentSentPage}&limit=${sentEmailsPerPage}`);
-            const data = await response.json();
-
-            if (response.ok && data.emails.length > 0) {
-                setSentEmails(data.emails);
-                setTotalSentEmails(data.totalEmails);  // ✅ Update total sent emails count
-            } else {
-                setSentEmails([]);
-                setTotalSentEmails(0);  // ✅ Reset count if no emails found
-            }
-        } catch (error) {
-            console.error("Error fetching sent emails:", error);
-            setSentEmails([]);
-        }
-    };
-
-    fetchSentEmails();
-  }, [activeLead, currentSentPage]);  // ✅ Updates when lead changes
 
   useEffect(() => {
     const sortLeads = (leadsToSort) => {
@@ -281,15 +283,11 @@ export default function CommunicationPageNEW() {
     setFilteredLeads(updatedLeads);
   };
   
-
   // Handle lead selection
   const handleLeadClick = (lead) => {
     setActiveLead(lead);
     setFormData((prev) => ({ ...prev, to: lead.bestEmail || "" }));
-
-    // Mark emails as read for this lead
-    setCurrentSentPage(1);
-    setSentEmails([]);
+    setCurrentSentPage(1); // Reset page but keep existing sent emails
   };
   
   const handleFileChange = (e) => {
@@ -669,20 +667,20 @@ const handleSelectEmail = (email) => {
           <div className="email-pagination-container">
               <button 
                   className="pagination-arrow" 
-                  onClick={() => setCurrentSentPage((prev) => Math.max(prev - 1, 1))}
-                  disabled={currentSentPage === 1 || totalSentEmails === 0} // Disable if no emails
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1 || allEmails.length === 0}
               >
                   <IoArrowBack />
               </button>
 
               <span className="email-pagination">
-                  {totalSentEmails > 0 ? currentSentPage : 0} of {totalSentEmails > 0 ? Math.ceil(totalSentEmails / sentEmailsPerPage) : 0}
+                  {allEmails.length > 0 ? currentPage : 0} of {allEmails.length > 0 ? totalPages : 0}
               </span>
 
               <button 
                   className="pagination-arrow" 
-                  onClick={() => setCurrentSentPage((prev) => Math.min(prev + 1, Math.ceil(totalSentEmails / sentEmailsPerPage)))}
-                  disabled={currentSentPage >= Math.ceil(totalSentEmails / sentEmailsPerPage) || totalSentEmails === 0} // Disable if no emails
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage >= totalPages || allEmails.length === 0} 
               >
                   <IoArrowForward />
               </button>
@@ -698,191 +696,101 @@ const handleSelectEmail = (email) => {
 
         {/* Display Both Received & Sent Emails */}
         <div className="email-received-space">
-            {emails.length > 0 || sentEmails.length > 0 ? (
-                <>
-                    {/* Display Received Emails */}
-                    {emails.map((email, index) => (
-                        <div key={index} className="email-received-message">
-                            {/* Email Header */}
-                            <div className="email-header-details">
-                                {/* Profile Icon */}
-                                <div 
-                                    className="email-user-icon"
-                                    style={{
-                                        backgroundColor: "#007bff", 
-                                        color: "#fff",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        fontSize: "16px",
-                                        fontWeight: "bold",
-                                        textTransform: "uppercase",
-                                        width: "45px",
-                                        height: "45px",
-                                        borderRadius: "50%",
-                                        marginRight: "12px"
-                                    }}
-                                >
-                                    {getInitials(email.sender)}
-                                </div>
+            {allEmails.length > 0 ? (
+                displayedEmail.map((email, index) => (
+                    <div key={index} className="email-received-message">
+                        {/* Email Header */}
+                        <div className="email-header-details">
+                            {/* Profile Icon */}
+                            <div 
+                                className="email-user-icon"
+                                style={{
+                                    backgroundColor: email.type === "received" ? "#007bff" : "#28a745", 
+                                    color: "#fff",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    fontSize: "16px",
+                                    fontWeight: "bold",
+                                    textTransform: "uppercase",
+                                    width: "45px",
+                                    height: "45px",
+                                    borderRadius: "50%",
+                                    marginRight: "12px"
+                                }}
+                            >
+                                {email.type === "received" ? getInitials(email.sender) : getInitials(companyDisplayName)}
+                            </div>
 
-                                {/* Sender Name & Email */}
-                                <div className="email-header-info">
-                                    <p className="email-sender-name">{email.senderName || "Unknown Sender"}</p>
-                                    <p className="email-sender-email">{email.sender}</p>
-                                </div>
-
-                                {/* Timestamp */}
-                                <p className="email-timestamp">
-                                    {email.timestamp
-                                        ? new Date(email.timestamp).toLocaleDateString("en-US", {
-                                            month: "long",
-                                            day: "numeric",
-                                            year: "numeric",
-                                          }) +
-                                          " - " +
-                                          new Date(email.timestamp).toLocaleTimeString("en-US", {
-                                            hour: "numeric",
-                                            minute: "numeric",
-                                            hour12: true,
-                                          })
-                                        : "No Timestamp Available"}
+                            {/* Sender/Recipient Details */}
+                            <div className="email-header-info">
+                                <p className="email-sender-name">
+                                    {email.type === "received" ? email.senderName || "Unknown Sender" : companyDisplayName}
+                                </p>
+                                <p className="email-sender-email">
+                                    {email.type === "received" ? email.sender : email.recipient}
                                 </p>
                             </div>
 
-                            {/* Email Subject */}
-                            <p className="email-subject-display">{email.subject || "No Subject"}</p>
-
-                            {/* Email Body */}
-                            <div className="email-body-container">
-                                <p className="email-body-display">{email.message || "No Content"}</p>
-                            </div>
-
-                            {/* Attachments Section */}
-                            {email.attachments && email.attachments.length > 0 && (
-                                <div className="email-attachments-container">
-                                    <p className="attachments-header">Attachments:</p>
-                                    <div className="attachments-list">
-                                        {email.attachments.map((attachment, index) => (
-                                            <div key={index} className="attachment-item">
-                                                {/* File Icon */}
-                                                {getFileIcon(attachment.mimeType)}
-
-                                                <div className="attachment-details">
-                                                    <p className="attachment-name">{attachment.fileName}</p>
-
-                                                    {/* View & Download Actions */}
-                                                    <div className="attachment-actions">
-                                                        <button className="view-link" onClick={() => handleViewAttachment(attachment, "received")}>
-                                                            View
-                                                        </button>
-
-                                                        <span className="separator">|</span>
-
-                                                        <button className="download-link" onClick={() => handleDownloadAttachment(attachment)}>
-                                                            Download
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
+                            {/* Timestamp */}
+                            <p className="email-timestamp">
+                                {email.timestamp
+                                    ? new Date(email.timestamp).toLocaleDateString("en-US", {
+                                        month: "long",
+                                        day: "numeric",
+                                        year: "numeric",
+                                      }) +
+                                      " - " +
+                                      new Date(email.timestamp).toLocaleTimeString("en-US", {
+                                        hour: "numeric",
+                                        minute: "numeric",
+                                        hour12: true,
+                                      })
+                                    : "No Timestamp Available"}
+                            </p>
                         </div>
-                    ))}
 
-                    {/* Display Sent Emails */}
-                    {sentEmails.map((email, index) => (
-                        <div key={index} className="email-received-message">
-                            {/* Email Header */}
-                            <div className="email-header-details">
-                                {/* Profile Icon */}
-                                <div 
-                                    className="email-user-icon"
-                                    style={{
-                                        backgroundColor: "#28a745", // Green for Sent Emails
-                                        color: "#fff",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        fontSize: "16px",
-                                        fontWeight: "bold",
-                                        textTransform: "uppercase",
-                                        width: "45px",
-                                        height: "45px",
-                                        borderRadius: "50%",
-                                        marginRight: "12px"
-                                    }}
-                                >
-                                    {getInitials(companyDisplayName)}
-                                </div>
+                        {/* Email Subject */}
+                        <p className="email-subject-display">{email.subject || "No Subject"}</p>
 
-                                {/* Recipient Name & Email */}
-                                <div className="email-header-info">
-                                    <p className="email-sender-name">{companyDisplayName}</p>
-                                    <p className="email-sender-email">{email.recipient}</p>
-                                </div>
+                        {/* Email Body */}
+                        <div className="email-body-container">
+                            <p className="email-body-display">{email.message || email.content || "No Content"}</p>
+                        </div>
 
-                                {/* Timestamp */}
-                                <p className="email-timestamp">
-                                    {email.sentAt
-                                        ? new Date(email.sentAt).toLocaleDateString("en-US", {
-                                            month: "long",
-                                            day: "numeric",
-                                            year: "numeric",
-                                          }) +
-                                          " - " +
-                                          new Date(email.sentAt).toLocaleTimeString("en-US", {
-                                            hour: "numeric",
-                                            minute: "numeric",
-                                            hour12: true,
-                                          })
-                                        : "No Timestamp Available"}
-                                </p>
-                            </div>
+                        {/* Attachments Section */}
+                        {email.attachments && email.attachments.length > 0 && (
+                            <div className="email-attachments-container">
+                                <p className="attachments-header">Attachments:</p>
+                                <div className="attachments-list">
+                                    {email.attachments.map((attachment, index) => (
+                                        <div key={index} className="attachment-item">
+                                            {/* File Icon */}
+                                            {getFileIcon(attachment.mimeType)}
 
-                            {/* Email Subject */}
-                            <p className="email-subject-display">{email.subject || "No Subject"}</p>
+                                            <div className="attachment-details">
+                                                <p className="attachment-name">{attachment.fileName}</p>
 
-                            {/* Email Body */}
-                            <div className="email-body-container">
-                                <p className="email-body-display">{email.content || "No Content"}</p>
-                            </div>
+                                                {/* View & Download Actions */}
+                                                <div className="attachment-actions">
+                                                    <button className="view-link" onClick={() => handleViewAttachment(attachment, email.type)}>
+                                                        View
+                                                    </button>
 
-                            {/* Attachments Section */}
-                            {email.attachments && email.attachments.length > 0 && (
-                                <div className="email-attachments-container">
-                                    <p className="attachments-header">Attachments:</p>
-                                    <div className="attachments-list">
-                                        {email.attachments.map((attachment, index) => (
-                                            <div key={index} className="attachment-item">
-                                                {/* File Icon */}
-                                                {getFileIcon(attachment.mimeType)}
+                                                    <span className="separator">|</span>
 
-                                                <div className="attachment-details">
-                                                    <p className="attachment-name">{attachment.fileName}</p>
-
-                                                    {/* View & Download Actions */}
-                                                    <div className="attachment-actions">
-                                                        <button className="view-link" onClick={() => handleViewAttachment(attachment, email.messageId ? "received" : "sent")}>
-                                                            View
-                                                        </button>
-
-                                                        <span className="separator">|</span>
-
-                                                        <button className="download-link" onClick={() => handleDownloadAttachment(attachment)}>
-                                                            Download
-                                                        </button>
-                                                    </div>
+                                                    <button className="download-link" onClick={() => handleDownloadAttachment(attachment)}>
+                                                        Download
+                                                    </button>
                                                 </div>
                                             </div>
-                                        ))}
-                                    </div>
+                                        </div>
+                                    ))}
                                 </div>
-                            )}
+                            </div>
+                        )}
 
-                            {selectedAttachment && (
+                        {selectedAttachment && (
                                 <div className="attachment-modal" onClick={handleCloseModal}>
                                     <div className="attachment-modal-content" onClick={(e) => e.stopPropagation()}>
                                         <div className="attachment-modal-header">
@@ -911,13 +819,12 @@ const handleSelectEmail = (email) => {
                                 </div>
                             )}
 
-                        </div>
-                    ))}
-                </>
+                    </div> 
+                ))
             ) : (
-                <p>No emails found</p>
+                <p>No emails found.</p>
             )}
-        </div>
+          </div>
 
 
         <form className="email-compose-box" onSubmit={handleReplySubmit}>
