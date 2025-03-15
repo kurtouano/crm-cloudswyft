@@ -18,9 +18,10 @@ const receivedEmailSchema = new mongoose.Schema({
 });
 
 const replyEmailSchema = new mongoose.Schema({
+    threadId: { type: String, required: true }, 
     originalMessageId: { type: String }, // Links reply to the original email
-    replyContent: { type: String, required: true }, // The reply text
-    repliedAt: { type: Date, default: Date.now }, // Timestamp
+    replyContent: { type: String, required: true }, // The reply text from cloudswyft 
+    repliedAt: { type: Date, default: Date.now }, 
     attachments: [
         {
             fileName: { type: String, required: true },
@@ -39,7 +40,7 @@ const sentEmailSchema = new mongoose.Schema({
         {
             fileName: { type: String, required: true },
             mimeType: { type: String, required: true },
-            contentBytes: { type: String, required: true } // Base64 encoded content
+            contentBytes: { type: String, required: true } 
         }
     ]
 });

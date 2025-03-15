@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 import { ConfidentialClientApplication } from "@azure/msal-node";  // Use ConfidentialClientApplication for client secret
 import { SentEmail, ReceivedEmail, ReplyEmail } from "../models/EmailSchema.js";  
 import Lead from "../models/LeadSchema.js";
-import { parse } from "node-html-parser";
 import * as cheerio from 'cheerio';
 
 dotenv.config();
@@ -23,7 +22,7 @@ const cca = new ConfidentialClientApplication(msalConfig);  // Using Confidentia
 export async function handleMicrosoftLogin(req, res) {
     try {
         const authUrl = await cca.getAuthCodeUrl({
-            scopes: ["Mail.ReadWrite", "openid", "email", "profile"], // Scopes for personal account login
+            scopes: ["Mail.ReadWrite", "Mail.Send", "Mail.Read", "openid", "email", "profile"], // Scopes for personal account login
             redirectUri: process.env.REDIRECT_URI,
         });
 
@@ -42,16 +41,19 @@ export async function handleOAuthRedirect(req, res) {
     try {
         const tokenResponse = await cca.acquireTokenByCode({
             code,
-            scopes: ["Mail.ReadWrite", "openid", "email", "profile"],
+            scopes: ["Mail.ReadWrite", "Mail.Send", "Mail.Read", "openid", "email", "profile"],
             redirectUri: process.env.REDIRECT_URI,
         });
 
-         if (tokenResponse?.accessToken) {
+        if (tokenResponse?.accessToken) {
+            const expiryTimestamp = new Date(tokenResponse.expiresOn).getTime(); // Convert ISO to ms
+            
             return res.redirect(
-                `${process.env.FRONTEND_URL}/communications?accessToken=${tokenResponse.accessToken}&expiry=${tokenResponse.expiresOnTimestamp}`
+                `${process.env.FRONTEND_URL}/communications?accessToken=${tokenResponse.accessToken}&expiry=${expiryTimestamp}`
             );
+        }        
 
-        } else {
+        else {
             return res.status(400).json({ error: "Token response is invalid or empty" });
         }
     } catch (error) {
@@ -104,18 +106,20 @@ export async function sendEmail(req, res) {
         res.status(200).json({ success: true, message: "Email sent successfully!" });
     } catch (error) {
         console.error("Error sending email:", error.response?.data || error.message);
-        res.status(500).json({ error: "Failed to send email" });
+        res.status(500).json({ 
+            error: "Failed to send email",
+            details: error.response?.data || error.message 
+        });
     }
+    
 }
 
 export async function replyEmail(req, res) {
     try {
-        const { messageId, content, token, attachments } = req.body;
+        const { messageId, threadId, content, token, attachments } = req.body;
 
-        console.log(content);
-
-        if (!messageId || !content || !token) {
-            return res.status(400).json({ error: "Missing required fields (messageId, content, or token)" });
+        if (!messageId || !content || !token || !threadId) {
+            return res.status(400).json({ error: "Missing required fields (messageId, threadId, content, or token)" });
         }
 
         // Format attachments for Microsoft Graph API
@@ -148,6 +152,7 @@ export async function replyEmail(req, res) {
 
         // Save reply email to database
         const repliedEmail = new ReplyEmail({
+            threadId, // Store threadId for proper threading
             originalMessageId: messageId, // The email being replied to
             replyContent: content,
             repliedAt: new Date(),
@@ -162,6 +167,7 @@ export async function replyEmail(req, res) {
         res.status(500).json({ error: "Failed to send reply" });
     }
 }
+
 
 export async function getSentEmail(req, res) {
     try {
@@ -192,10 +198,6 @@ export async function getSentEmail(req, res) {
         res.status(500).json({ error: "Failed to retrieve sent emails" });
     }
 }
-
-
-
-
 
 export async function fetchReceivedEmails(req, res) {
     try {

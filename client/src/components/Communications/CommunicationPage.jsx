@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo} from "react";
+import { useEffect, useState, useMemo, useRef} from "react";
 import Fuse from "fuse.js"; // 🔍 Import Fuse.js
 import { FiSearch, FiEdit } from "react-icons/fi";
 import { FaStar,FaFilePdf, FaFileWord, FaFileExcel, FaFileImage, FaFileAlt } from "react-icons/fa";
@@ -8,34 +8,38 @@ import { MdAttachFile, MdClose } from "react-icons/md";
 import "./Communication.css";
 
 export default function CommunicationPageNEW() {
+  // Basic states
   const [leads, setLeads] = useState([]);
   const [filteredLeads, setFilteredLeads] = useState([]);
   const [activeLead, setActiveLead] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchQuery, setSearchQuery] = useState(""); 
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const [microsoftAccessToken, setMicrosoftAccessToken] = useState("");
-  const [receiveloading, receiveSetLoading] = useState(true);
+  // Auth & token
+  const intervalRef = useRef(null);
+
+  // Emails & attachments
+  const [receiveloading, receiveSetLoading] = useState(false);
   const [emails, setEmails] = useState([]);
+  const [sentEmails, setSentEmails] = useState([]); // Stores paginated sent emails
   const [fetchEmailError, setFetchEmailError] = useState(null);
   const [attachment, setAttachment] = useState(null);
+
+  // Email Form states
   const [formData, setFormData] = useState({ to: "", subject: "", text: "" });
-  const [formDataReply, setFormDataReply] = useState({ text: "", messageId: ""});
+  const [formDataReply, setFormDataReply] = useState({ text: "", messageId: "", threadId: "" });
   const [selectedAttachment, setSelectedAttachment] = useState(null);
-
+  
+   // Modal and Paginations
   const [modalOpen, setModalOpen] = useState(false); 
-
-  const [sentEmails, setSentEmails] = useState([]); // Stores paginated sent emails
   const [totalSentEmails, setTotalSentEmails] = useState(0); // Total sent emails count
   const [currentSentPage, setCurrentSentPage] = useState(1); // Current page number
   const sentEmailsPerPage = 1; // Display one email at a time
-
-
   const [filteredEmails, setFilteredEmails] = useState([]);
   const [currentEmailIndex, setCurrentEmailIndex] = useState(0);
 
-  //for email suggestion
+  // for email suggestion
   const [bestEmails, setBestEmails] = useState([]); // Store all bestEmail values
   const [showSuggestions, setShowSuggestions] = useState(false);
 
@@ -65,28 +69,76 @@ export default function CommunicationPageNEW() {
   }, []);
   
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const accessToken = params.get("accessToken");
-    const expiryTime = params.get("expiry");
+      const params = new URLSearchParams(window.location.search);
+      const accessToken = params.get("accessToken");
+      const expiryTime = params.get("expiry") ? Number(params.get("expiry")) : null;
 
-    if (accessToken && expiryTime) {
-      localStorage.setItem("microsoftAccessToken", accessToken);
-      localStorage.setItem("tokenExpiry", expiryTime);
-      setMicrosoftAccessToken(accessToken);
-      window.history.replaceState({}, document.title, "/communications");
-    } else {
-      const storedToken = localStorage.getItem("microsoftAccessToken");
-      const tokenExpiry = localStorage.getItem("tokenExpiry");
+      const redirectToLogin = () => {
+          console.log("🔄 Token Expired. Redirecting to Microsoft login...");
+          localStorage.removeItem("microsoftAccessToken");
+          localStorage.removeItem("tokenExpiry");
 
-      if (!storedToken || !tokenExpiry || new Date().getTime() > tokenExpiry) {
-        localStorage.removeItem("microsoftAccessToken");
-        localStorage.removeItem("tokenExpiry");
-        window.location.href = "http://localhost:4000/api/emails/microsoft-login";
+          if (intervalRef.current) {
+              clearInterval(intervalRef.current); // Clear the interval before redirecting
+          }
+
+          window.location.href = "http://localhost:4000/api/emails/microsoft-login";
+      };
+
+      const checkTokenValidity = () => {
+          const storedToken = localStorage.getItem("microsoftAccessToken");
+          const storedExpiry = localStorage.getItem("tokenExpiry");
+
+          if (!storedToken || !storedExpiry || Date.now() > Number(storedExpiry)) {
+              redirectToLogin();
+          }
+      };
+
+      if (accessToken && expiryTime) {
+          console.log("✅ Access Token Retrieved:", accessToken);
+          console.log("✅ Expires in:", Math.floor((expiryTime - Date.now()) / 60000), "minutes");
+
+          localStorage.setItem("microsoftAccessToken", accessToken);
+          localStorage.setItem("tokenExpiry", expiryTime);
+
+          window.history.replaceState({}, document.title, "/communications");
       } else {
-        setMicrosoftAccessToken(storedToken);
+          checkTokenValidity(); // Check token immediately on load
       }
-    }
+
+      // Start checking token every 60 seconds
+      intervalRef.current = setInterval(checkTokenValidity, 60000);
+
+      return () => {
+          if (intervalRef.current) {
+              clearInterval(intervalRef.current);
+          }
+      };
   }, []);
+
+  useEffect(() => {
+    const fetchSentEmails = async () => {
+        if (!activeLead?.bestEmail) return;
+
+        try {
+            const response = await fetch(`http://localhost:4000/api/emails/sent?to=${activeLead.bestEmail}&page=${currentSentPage}&limit=${sentEmailsPerPage}`);
+            const data = await response.json();
+
+            if (response.ok && data.emails.length > 0) {
+                setSentEmails(data.emails);
+                setTotalSentEmails(data.totalEmails);  // ✅ Update total sent emails count
+            } else {
+                setSentEmails([]);
+                setTotalSentEmails(0);  // ✅ Reset count if no emails found
+            }
+        } catch (error) {
+            console.error("Error fetching sent emails:", error);
+            setSentEmails([]);
+        }
+    };
+
+    fetchSentEmails();
+}, [activeLead, currentSentPage]);
 
   useEffect(() => {
     const fetchEmails = async () => {
@@ -125,17 +177,6 @@ export default function CommunicationPageNEW() {
       const interval = setInterval(fetchEmails, 10000); // Auto-fetch every 10 seconds
       return () => clearInterval(interval);
   }, []);
-
-  useEffect(() => {
-    if (activeLead) {
-      const leadEmails = emails
-        .filter(email => {
-          return email.sender.toLowerCase() === activeLead.bestEmail.toLowerCase();
-        })
-        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-      setFilteredEmails(leadEmails);
-    }
-  }, [activeLead, emails]); 
   
   useEffect(() => {
     const fetchSentEmails = async () => {
@@ -161,34 +202,23 @@ export default function CommunicationPageNEW() {
     fetchSentEmails();
 }, [activeLead, currentSentPage]);  // ✅ Updates when lead changes
 
-
   useEffect(() => {
-    const fetchReceivedEmails = async () => {
-        if (!activeLead?.bestEmail) return;
+    if (activeLead) {
+      const leadEmails = emails
+        .filter(email => {
+          return email.sender.toLowerCase() === activeLead.bestEmail.toLowerCase();
+        })
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      setFilteredEmails(leadEmails);
+    }
+  }, [activeLead, emails]); 
 
-        try {
-            const response = await fetch(`http://localhost:4000/api/emails/received?to=${activeLead.bestEmail}`);
-            const data = await response.json();
-
-            if (response.ok && data.emails) {
-                setFilteredEmails(data.emails);
-            }
-        } catch (error) {
-            console.error("Error fetching received emails:", error);
-        }
-    };
-
-    fetchReceivedEmails();
-    const interval = setInterval(fetchReceivedEmails, 10000); // Auto-fetch every 10 seconds
-    return () => clearInterval(interval);
-  }, [activeLead]);
-
-
-  useEffect(() => {
+  useEffect(() => { // Automatically Update messageID & ThreadId based on the current lead email/page
     if (filteredEmails.length > 0) {
       setFormDataReply((prev) => ({
         ...prev,
         messageId: filteredEmails[currentEmailIndex].messageId, // Update messageId
+        threadId: filteredEmails[currentEmailIndex]?.threadId || "",
       }));
     } else {
       console.log("No messageId found for current email");
@@ -297,7 +327,6 @@ export default function CommunicationPageNEW() {
   const handleReplySubmit = async (e) => {
     e.preventDefault();
     const microsoftAccessToken = localStorage.getItem("microsoftAccessToken");
-    console.log("Reply Email Token", microsoftAccessToken);
   
     if (!microsoftAccessToken) {
       alert("Please log in via Microsoft first.");
@@ -314,6 +343,7 @@ export default function CommunicationPageNEW() {
           content: formDataReply.text, // Reply message
           token: microsoftAccessToken,
           messageId: formDataReply.messageId, // Required for threading the reply
+          threadId: formDataReply.threadId,  // Include threadId
           attachments: attachment ? [attachment] : [], // Include attachment if available
         }),
       });
@@ -322,7 +352,7 @@ export default function CommunicationPageNEW() {
   
       if (res.ok) {
         alert("Reply sent successfully!");
-        setFormDataReply({ messageId: "", text: "" }); // Reset reply form
+        setFormDataReply({ messageId: "", text: "", threadId: "" }); // Reset reply form
         setAttachment(null); // Clear attachment
       } else {
         alert(data.error || "Failed to send reply");
@@ -332,7 +362,7 @@ export default function CommunicationPageNEW() {
     }
   
     setLoading(false);
-  };
+};
 
 
   // Helper function to format timestamp
@@ -359,8 +389,33 @@ export default function CommunicationPageNEW() {
 
   // Function to open modal
   const handleViewAttachment = (attachment) => {
-    setSelectedAttachment(attachment);
+    const byteCharacters = atob(attachment.contentBytes);
+    const byteNumbers = new Array(byteCharacters.length).fill(null).map((_, i) => byteCharacters.charCodeAt(i));
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: attachment.mimeType });
+    const blobUrl = URL.createObjectURL(blob);
+
+    setSelectedAttachment({
+        ...attachment,
+        blobUrl, // Store the generated Blob URL
+    });
   };
+
+
+  const handleDownloadAttachment = (attachment) => {
+    const blob = new Blob([atob(attachment.contentBytes)], { type: attachment.mimeType });
+    const blobUrl = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = attachment.fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    URL.revokeObjectURL(blobUrl); // Cleanup
+  };
+
 
   // Function to close modal
   const handleCloseModal = () => {
@@ -397,13 +452,10 @@ const handleRecipientChange = (e) => {
   setShowSuggestions(true);
 };
 
-
 const handleSelectEmail = (email) => {
   setFormData({ ...formData, to: email });
   setShowSuggestions(false);
 };
-
-
 
   return (
     <div className="communications-container">
@@ -429,29 +481,28 @@ const handleSelectEmail = (email) => {
             <div className="modal-overlay">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h2>New Email</h2>
+                  <h2>Create New Email</h2>
                   <MdClose className="modal-close-icon" onClick={closeModal} />
                 </div>
 
                 <form className="email-form" onSubmit={handleSubmit}>
                   
                   {/* ✅ Updated Recipient Input with Suggestions */}
-                  <div className="recipient-container">
-                  <input
-                    type="email"
-                    name="to"
-                    className="email-input"
-                    placeholder="Recipient"
-                    value={formData.to}
-                    onChange={handleRecipientChange}
-                    required
-                    autoComplete="off"
-                    onFocus={() => {
-                      setFilteredEmails(bestEmails); // Show all emails on focus
-                      setShowSuggestions(true);
-                    }}
-                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)} // Delay hiding for click selection
-                  />
+                    <input
+                      type="email"
+                      name="to"
+                      className="email-input"
+                      placeholder="Recipient"
+                      value={formData.to}
+                      onChange={handleRecipientChange}
+                      required
+                      autoComplete="off"
+                      onFocus={() => {
+                        setFilteredEmails(bestEmails); // Show all emails on focus
+                        setShowSuggestions(true);
+                      }}
+                      onBlur={() => setTimeout(() => setShowSuggestions(false), 200)} // Delay hiding for click selection
+                    />
 
 
                   {showSuggestions && filteredEmails.length > 0 && (
@@ -463,9 +514,6 @@ const handleSelectEmail = (email) => {
                       ))}
                     </ul>
                   )}
-
-
-                  </div>
 
                   {/* Subject */}
                   <input
@@ -572,35 +620,34 @@ const handleSelectEmail = (email) => {
       <div className="email-compose-container">
         {/* Email Header */}
         <div className="email-header">
-        {/* Left Side Icons */}
-        <div className="email-header-left">
-            <IoArrowBack className="email-nav-icon circle-icon" />
-            <IoTrashOutline className="email-nav-icon" />
-        </div>
+          {/* Left Side Icons */}
+          <div className="email-header-left">
+              <IoArrowBack className="email-nav-icon circle-icon" />
+              <IoTrashOutline className="email-nav-icon" />
+          </div>
 
           {/* Pagination Controls */}
           <div className="email-pagination-container">
               <button 
                   className="pagination-arrow" 
                   onClick={() => setCurrentSentPage((prev) => Math.max(prev - 1, 1))}
-                  disabled={currentSentPage === 1} // Disable on first email
+                  disabled={currentSentPage === 1 || totalSentEmails === 0} // Disable if no emails
               >
                   <IoArrowBack />
               </button>
 
               <span className="email-pagination">
-                  {totalSentEmails > 0 ? currentSentPage : 0} of {Math.max(1, Math.ceil(totalSentEmails / sentEmailsPerPage))}
+                  {totalSentEmails > 0 ? currentSentPage : 0} of {totalSentEmails > 0 ? Math.ceil(totalSentEmails / sentEmailsPerPage) : 0}
               </span>
 
               <button 
                   className="pagination-arrow" 
                   onClick={() => setCurrentSentPage((prev) => Math.min(prev + 1, Math.ceil(totalSentEmails / sentEmailsPerPage)))}
-                  disabled={currentSentPage >= Math.ceil(totalSentEmails / sentEmailsPerPage)} // Disable on last email
+                  disabled={currentSentPage >= Math.ceil(totalSentEmails / sentEmailsPerPage) || totalSentEmails === 0} // Disable if no emails
               >
                   <IoArrowForward />
               </button>
           </div>
-
 
           {/* Right Side Icons */}
           <div className="email-header-right">
@@ -610,128 +657,126 @@ const handleSelectEmail = (email) => {
           </div>
         </div>
 
-      {/* Display Sent Emails */}
-      <div className="email-received-space">
-          {sentEmails.length > 0 && (
-              <div className="email-received-message">
-                  {/* Email Header */}
-                  <div className="email-header-details">
-                      {/*  Profile Icon  */}
-                      <div 
-                          className="email-user-icon"
-                          style={{
-                              backgroundColor: "#007bff", // Fixed blue color
-                              color: "#fff", // White text
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: "16px",
-                              fontWeight: "bold",
-                              textTransform: "uppercase",
-                              width: "45px",
-                              height: "45px",
-                              borderRadius: "50%",
-                              marginRight: "12px"
-                          }}
-                      >
-                          {getInitials("Cloudswyft")}
-                      </div>
+        {/* Display Sent Emails */}
+        <div className="email-received-space">
+            {sentEmails.length > 0 && (
+                <div className="email-received-message">
+                    {/* Email Header */}
+                    <div className="email-header-details">
+                        {/*  Profile Icon  */}
+                        <div 
+                            className="email-user-icon"
+                            style={{
+                                backgroundColor: "#007bff", // Fixed blue color
+                                color: "#fff", // White text
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: "16px",
+                                fontWeight: "bold",
+                                textTransform: "uppercase",
+                                width: "45px",
+                                height: "45px",
+                                borderRadius: "50%",
+                                marginRight: "12px"
+                            }}
+                        >
+                            {getInitials("Cloudswyft")}
+                        </div>
 
-                      {/* ✅ Sender Name & Email */}
-                      <div className="email-header-info">
-                          <p className="email-sender-name">Cloudswyft</p>
-                          <p className="email-sender-email">crm-cloudswyft-test@outlook.com</p>
-                      </div>
+                        {/* ✅ Sender Name & Email */}
+                        <div className="email-header-info">
+                            <p className="email-sender-name">Cloudswyft</p>
+                            <p className="email-sender-email">crm-cloudswyft-test@outlook.com</p>
+                        </div>
 
-                      {/* ✅ Timestamp (Aligned Right) */}
-                      <p className="email-timestamp">
-                          {sentEmails[0].sentAt
-                              ? new Date(sentEmails[0].sentAt).toLocaleString()
-                              : "No Timestamp Available"}
-                      </p>
-                  </div>
+                        {/* ✅ Timestamp (Aligned Right) */}
+                        <p className="email-timestamp">
+                            {sentEmails[0].sentAt
+                                ? new Date(sentEmails[0].sentAt).toLocaleString()
+                                : "No Timestamp Available"}
+                        </p>
+                    </div>
 
-                  {/* Email Subject (Proper Padding) */}
-                  <p className="email-subject-display">{sentEmails[0].subject || "No Subject"}</p>
+                    {/* Email Subject (Proper Padding) */}
+                    <p className="email-subject-display">{sentEmails[0].subject || "No Subject"}</p>
 
-                  {/* Email Body (Better Spacing) */}
-                  <div className="email-body-container">
-                      <p className="email-body-display">{sentEmails[0].content || "No Content"}</p>
-                  </div>
+                    {/* Email Body (Better Spacing) */}
+                    <div className="email-body-container">
+                        <p className="email-body-display">{sentEmails[0].content || "No Content"}</p>
+                    </div>
 
-                  {/* Attachments Section */}
-                  {sentEmails[0].attachments.length > 0 && (
-                      <div className="email-attachments-container">
-                          <p className="attachments-header">Attachments:</p>
-                          <div className="attachments-list">
-                              {sentEmails[0].attachments.map((attachment, index) => (
-                                  <div key={index} className="attachment-item">
-                                      {/* File Icon */}
-                                      {getFileIcon(attachment.mimeType)}
+                    {/* Attachments Section */}
+                    {sentEmails[0].attachments.length > 0 && (
+                        <div className="email-attachments-container">
+                            <p className="attachments-header">Attachment:</p>
+                            <div className="attachments-list">
+                                {sentEmails[0].attachments.map((attachment, index) => (
+                                    <div key={index} className="attachment-item">
+                                        {/* File Icon */}
+                                        {getFileIcon(attachment.mimeType)}
 
-                                      <div className="attachment-details">
-                                          <p className="attachment-name">{attachment.fileName}</p>
-                                          
-                                          {/* View & Download Actions */}
-                                          <div className="attachment-actions">
-                                              <button
-                                                  className="view-link"
-                                                  onClick={() => handleViewAttachment(attachment)}
-                                              >
-                                                  View
-                                              </button>
+                                        <div className="attachment-details">
+                                            <p className="attachment-name">{attachment.fileName}</p>
+                                            
+                                            {/* View & Download Actions */}
+                                            <div className="attachment-actions">
+                                                <button className="view-link" onClick={() => handleViewAttachment(attachment)}>
+                                                    View
+                                                </button>
 
-                                              <span className="separator">|</span>
+                                                <span className="separator">|</span>
 
-                                              <a
-                                                  href={`data:${attachment.mimeType};base64,${attachment.contentBytes}`}
-                                                  download={attachment.fileName}
-                                                  className="download-link"
-                                              >
-                                                  Download
-                                              </a>
-                                          </div>
+                                                <button className="download-link" onClick={() => handleDownloadAttachment(attachment)}>
+                                                    Download
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Attachment Modal */}
+                    {selectedAttachment && (
+                        <div className="attachment-modal" onClick={handleCloseModal}>
+                            <div className="attachment-modal-content" onClick={(e) => e.stopPropagation()}>
+                                <div className="attachment-modal-header">
+                                    <p className="attachment-filename">{selectedAttachment.fileName}</p>
+                                    <span className="close-icon" onClick={handleCloseModal}>x</span>
+                                </div>
+                                
+
+                                {/* File Preview */}
+                                  {selectedAttachment.mimeType.includes("image") ? (
+                                      <img src={selectedAttachment.blobUrl} alt="Preview" className="attachment-preview" />
+                                  ) : selectedAttachment.mimeType === "application/pdf" ? (
+                                      <iframe
+                                          src={selectedAttachment.blobUrl}
+                                          title="Attachment Preview"
+                                          className="attachment-preview"
+                                      />
+                                  ) : (
+                                      <div className="no-preview">
+                                          <p className="no-preview-text">No preview available</p>
+                                          <a href={selectedAttachment.blobUrl} download={selectedAttachment.fileName}>
+                                              Download file
+                                          </a>
                                       </div>
-                                  </div>
-                              ))}
-                          </div>
-                      </div>
-                  )}
+                                  )}
 
-                  {/* Attachment Modal */}
-                  {selectedAttachment && (
-                      <div className="attachment-modal" onClick={handleCloseModal}>
-                          <div className="attachment-modal-content" onClick={(e) => e.stopPropagation()}>
-                              <div className="attachment-header">
-                                  <p>{selectedAttachment.fileName}</p>
-                                  <span className="close-icon" onClick={handleCloseModal}>×</span>
-                              </div>
+                            </div>
+                        </div>
+                    )}
 
-                              {/* File Preview */}
-                              {selectedAttachment.mimeType.includes("image") ? (
-                                  <img
-                                      src={`data:${selectedAttachment.mimeType};base64,${selectedAttachment.contentBytes}`}
-                                      alt="Preview"
-                                      className="attachment-preview"
-                                  />
-                              ) : (
-                                  <iframe
-                                      src={`data:${selectedAttachment.mimeType};base64,${selectedAttachment.contentBytes}`}
-                                      title="Attachment Preview"
-                                      className="attachment-preview"
-                                  />
-                              )}
-                          </div>
-                      </div>
-                  )}
-
-              </div>
-          )}
-      </div>
+                </div>
+            )}
+        </div>
 
 
         <form className="email-compose-box" onSubmit={handleReplySubmit}>
-          <div className="email-header">
+          <div className="email-compose-header">
             <div className="email-left-icons">
               <IoReturnUpBackOutline className="email-icon" />
               <IoChevronDownOutline className="email-icon" />
