@@ -1,5 +1,6 @@
 import axios from "axios";
 import dotenv from "dotenv";
+import { io } from "../index.js";
 import { ConfidentialClientApplication } from "@azure/msal-node";  // Use ConfidentialClientApplication for client secret
 import { SentEmail, ReceivedEmail, ReplyEmail } from "../models/EmailSchema.js";  
 import Lead from "../models/LeadSchema.js";
@@ -242,6 +243,8 @@ export async function fetchReceivedEmails(req, res) {
             return $('body').text().trim(); // Extract latest reply only
         }
 
+        let newEmails = []; // ✅ Track new emails for WebSocket notifications
+
         // Save filtered emails to MongoDB
         const savedEmails = await Promise.all(
             filteredEmails.map(async (email) => {
@@ -256,6 +259,17 @@ export async function fetchReceivedEmails(req, res) {
                         mimeType: att.contentType,
                         contentBytes: att.contentBytes || null, // Only if Base64 is available
                     })) || [];
+
+                    const existingEmail = await ReceivedEmail.findOne({ messageId }); // ✅ Check if email exists
+
+                    // ✅ If it's a new email, push to `newEmails`
+                    if (!existingEmail) {
+                        newEmails.push({
+                            message: `New reply from ${email.from.emailAddress.name} – Click to view the conversation!`,
+                            leadEmail: email.from.emailAddress.address,
+                            threadId: conversationId
+                        });
+                    }
 
                     return await ReceivedEmail.findOneAndUpdate(
                         { messageId }, // Ensure uniqueness
@@ -282,10 +296,48 @@ export async function fetchReceivedEmails(req, res) {
         const successfullySavedEmails = savedEmails.filter(email => email !== null);
         console.log(`Saved ${successfullySavedEmails.length} emails to MongoDB`);
 
+       // ✅ Emit WebSocket notifications for new emails only
+        if (newEmails.length > 0) {
+            // Sort new emails by timestamp (latest first)
+            newEmails.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            newEmails.forEach(notif => {
+                io.emit("newReplyNotification", notif);
+            });
+            console.log(`Sent ${newEmails.length} new notifications via WebSocket.`);
+        } else {
+            console.log("No new notifications to send.");
+        }
+
         res.status(200).json({ success: true, emails: successfullySavedEmails });
     } catch (error) {
-        console.error("Error fetching emails:", error.response?.data || error.message);
+        console.error("❌ Error fetching emails:", error.response?.data || error.message);
         res.status(500).json({ error: "Failed to fetch received emails" });
     }
 }
 
+
+export async function fetchNotifications(req, res) {
+    try {
+        // Fetch received emails sorted by latest first
+        const storedEmails = await ReceivedEmail.find().sort({ timestamp: -1 }); // ✅ Ensure latest emails come first
+
+        if (!storedEmails || storedEmails.length === 0) {
+            console.warn("⚠️ No received emails found in the database.");
+            return res.status(200).json({ success: true, notifications: [] });
+        }
+
+        const notifications = storedEmails.map(email => ({
+            message: `New reply from ${email.senderName || "Unknown"} – Click to view the conversation!`,
+            leadEmail: email.sender,
+            threadId: email.threadId
+        }));
+
+        console.log(`📩 Retrieved ${notifications.length} notifications from the database.`);
+
+        res.status(200).json({ success: true, notifications });
+    } catch (error) {
+        console.error("❌ Error fetching notifications:", error);
+        res.status(500).json({ error: "Failed to fetch notifications", details: error.message });
+    }
+}
