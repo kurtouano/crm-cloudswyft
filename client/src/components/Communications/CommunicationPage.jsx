@@ -30,6 +30,7 @@ export default function CommunicationPageNEW() {
   const [fetchEmailError, setFetchEmailError] = useState(null);
   const [attachment, setAttachment] = useState(null);
   const [sortedLeads, setSortedLeads] = useState([]);
+  const [attachmentsLoading, setAttachmentsLoading] = useState({});
 
   // Email Form states
   const [formData, setFormData] = useState({ to: "", subject: "", text: "" });
@@ -44,11 +45,12 @@ export default function CommunicationPageNEW() {
   const [currentEmailIndex, setCurrentEmailIndex] = useState(0);
   
   const [currentSentPage, setCurrentSentPage] = useState(1); // Current page number
-  const sentEmailsPerPage = 1; // Display one email at a time
+  const sentEmailsPerPage = 10; // Display one email at a time
   const [bestEmails, setBestEmails] = useState([]); // Store all bestEmail values
   const [showSuggestions, setShowSuggestions] = useState(false);
   const emailsPerPage = 1; // Show one email per page
   const [currentPage, setCurrentPage] = useState(1);
+  const [attachments, setAttachments] = useState({}); 
 
   const allEmails = [
     ...filteredEmails.map(email => ({ ...email, type: "received" })), 
@@ -59,8 +61,11 @@ export default function CommunicationPageNEW() {
       }))
   ];
 
-  allEmails.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-  const totalPages = Math.ceil(allEmails.length / emailsPerPage);
+  allEmails.sort((a, b) => 
+    new Date(b.timestamp || 0) - new Date(a.timestamp || 0) // ✅ Avoid NaN issues
+  );
+
+  const totalPages = Math.max(1, Math.ceil(allEmails.length / emailsPerPage)); 
   const startIndex = (currentPage - 1) * emailsPerPage;
   const displayedEmail = allEmails.slice(startIndex, startIndex + emailsPerPage);
 
@@ -156,38 +161,99 @@ export default function CommunicationPageNEW() {
   }, []); // Empty dependency array ensures this runs once on component mount  
 
   useEffect(() => {
-    const fetchSentEmails = async () => {
-      if (!activeLead?.bestEmail) return;
-  
-      let allSentEmails = [];
-      let page = 1;
-      let totalEmailsFetched = 0;
-      let totalEmailsToFetch = Infinity; // Will be updated once we get the first response
-  
-      try {
-          while (totalEmailsFetched < totalEmailsToFetch) {
-              const response = await fetch(`http://localhost:4000/api/emails/sent?to=${activeLead.bestEmail}&page=${page}&limit=${sentEmailsPerPage}`);
-              const data = await response.json();
-  
-              if (response.ok && data.emails.length > 0) {
-                  allSentEmails = [...allSentEmails, ...data.emails];
-                  totalEmailsFetched += data.emails.length;
-                  totalEmailsToFetch = data.totalEmails;
-                  page++; // Move to the next page
-              } else {
-                  break;
-              }
-          }
-  
-          setSentEmails(allSentEmails);
-      } catch (error) {
-          console.error("Error fetching sent emails:", error);
-          setSentEmails([]);
-      }
-  };
+      const fetchSentEmails = async () => {
+          if (!activeLead?.bestEmail) return;
 
-    fetchSentEmails();
-  }, [activeLead, currentSentPage]);
+          setSentEmails([]); 
+          let allSentEmails = [];
+          let page = 1;
+          let totalEmailsFetched = 0;
+          let totalEmailsToFetch = Infinity;
+
+          try {
+              while (totalEmailsFetched < totalEmailsToFetch) {
+                  const response = await fetch(
+                      `http://localhost:4000/api/emails/sent?to=${activeLead.bestEmail}&page=${page}&limit=${sentEmailsPerPage}`
+                  );
+                  const data = await response.json();
+
+                  if (response.ok && data.emails.length > 0) {
+                      allSentEmails = [...allSentEmails, ...data.emails];
+                      totalEmailsFetched += data.emails.length;
+                      totalEmailsToFetch = data.totalEmails;
+                      page++;
+                  } else {
+                      break;
+                  }
+              }
+
+              // ✅ Show emails IMMEDIATELY without attachments
+              setSentEmails(allSentEmails);
+
+          } catch (error) {
+              console.error("Error fetching sent emails:", error);
+              setSentEmails([]);
+          }
+      };
+
+      fetchSentEmails();
+  }, [activeLead, currentSentPage]); 
+
+
+  useEffect(() => {
+      const fetchAttachments = async () => {
+          if (!sentEmails.length) return;
+
+          const attachmentsData = {};
+          const loadingState = {};
+
+          try {
+              await Promise.all(
+                  sentEmails.map(async (email) => {
+                      loadingState[email._id] = true; // ✅ Mark email as loading
+                      setAttachmentsLoading((prev) => ({ ...prev, ...loadingState }));
+
+                      // Check if attachments are already in localStorage
+                      const storedAttachments = localStorage.getItem(`attachments_${email._id}`);
+                      if (storedAttachments) {
+                          attachmentsData[email._id] = JSON.parse(storedAttachments);
+                      } else {
+                          try {
+                              const response = await fetch(
+                                  `http://localhost:4000/api/emails/attachments/${email._id}`
+                              );
+                              const data = await response.json();
+
+                              if (response.ok) {
+                                  attachmentsData[email._id] = data.attachments;
+                                  // Store attachments in localStorage
+                                  localStorage.setItem(`attachments_${email._id}`, JSON.stringify(data.attachments));
+                              } else {
+                                  attachmentsData[email._id] = [];
+                              }
+                          } catch (err) {
+                              console.error(`Failed to fetch attachments for email ID ${email._id}`, err);
+                              attachmentsData[email._id] = [];
+                          }
+                      }
+                  })
+              );
+
+              setAttachments((prevAttachments) => ({
+                  ...prevAttachments,
+                  ...attachmentsData,
+              }));
+          } catch (error) {
+              console.error("Error fetching email attachments:", error);
+          } finally {
+              setAttachmentsLoading((prev) =>
+                  Object.keys(prev).reduce((acc, key) => ({ ...acc, [key]: false }), {})
+              );
+          }
+      };
+
+      fetchAttachments();
+  }, [sentEmails]);
 
   useEffect(() => {
     const fetchEmails = async () => {
@@ -295,13 +361,22 @@ export default function CommunicationPageNEW() {
     setFilteredLeads(updatedLeads);
   };
   
-  // Handle lead selection
   const handleLeadClick = (lead) => {
-    setActiveLead(lead);
-    setFormData((prev) => ({ ...prev, to: lead.bestEmail || "" }));
-    setCurrentSentPage(1); // Reset page but keep existing sent emails
+      // ✅ If clicking the same lead, force refetch
+      if (activeLead?._id === lead._id) {
+          setActiveLead(null); // Temporarily reset activeLead
+          setTimeout(() => setActiveLead(lead), 0); // Reassign after a short delay
+      } else {
+          setActiveLead(lead);
+      }
+
+      setSentEmails([]); // ✅ Clear sent emails immediately
+      setFilteredEmails([]); // ✅ Clear received emails immediately
+      setCurrentPage(1); // ✅ Reset pagination
+      setAttachments({}); // ✅ Clear attachments when switching leads
+      setFormData((prev) => ({ ...prev, to: lead.bestEmail || "" }));
   };
-  
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -680,7 +755,7 @@ const handleSelectEmail = (email) => {
               <button 
                   className="pagination-arrow" 
                   onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1 || allEmails.length === 0}
+                  disabled={currentPage === 1 || allEmails.length === 0 || totalPages === 0}
               >
                   <IoArrowBack />
               </button>
@@ -692,7 +767,7 @@ const handleSelectEmail = (email) => {
               <button 
                   className="pagination-arrow" 
                   onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage >= totalPages || allEmails.length === 0} 
+                  disabled={currentPage >= totalPages || allEmails.length === 0 || totalPages === 0} 
               >
                   <IoArrowForward />
               </button>
@@ -771,11 +846,11 @@ const handleSelectEmail = (email) => {
                         </div>
 
                         {/* Attachments Section */}
-                        {email.attachments && email.attachments.length > 0 && (
+                        {attachments[email._id] && attachments[email._id].length > 0 && (
                             <div className="email-attachments-container">
                                 <p className="attachments-header">Attachments:</p>
                                 <div className="attachments-list">
-                                    {email.attachments.map((attachment, index) => (
+                                    {attachments[email._id].map((attachment, index) => (
                                         <div key={index} className="attachment-item">
                                             {/* File Icon */}
                                             {getFileIcon(attachment.mimeType)}
@@ -834,7 +909,7 @@ const handleSelectEmail = (email) => {
                     </div> 
                 ))
             ) : (
-                <p>No emails found.</p>
+                <p></p>
             )}
           </div>
 

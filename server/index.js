@@ -18,8 +18,8 @@ const io = new Server(server, {
 });
 
 app.use(cors({ origin: "http://localhost:3000", credentials: true }));
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ limit: "10mb", extended: true }));
+app.use(express.json({ limit: "3mb" }));
+app.use(express.urlencoded({ limit: "3mb", extended: true }));
 
 mongoose
   .connect(process.env.MONGO)

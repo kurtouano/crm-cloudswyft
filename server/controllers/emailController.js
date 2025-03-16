@@ -169,36 +169,51 @@ export async function replyEmail(req, res) {
     }
 }
 
+    export async function getSentEmail(req, res) {
+        try {
+            const { to, page = 1, limit = 10 } = req.query;
+            if (!to) return res.status(400).json({ error: "Recipient email is required" });
 
-export async function getSentEmail(req, res) {
-    try {
-        const { to, page = 1, limit = 1 } = req.query;
-        if (!to) return res.status(400).json({ error: "Recipient email is required" });
+            const pageNumber = Math.max(parseInt(page, 10) || 1, 1);
+            const limitNumber = Math.max(parseInt(limit, 10) || 10, 1);
+            const skip = (pageNumber - 1) * limitNumber;
 
-        // Ensure page and limit are integers
-        const pageNumber = parseInt(page, 10) || 1;
-        const limitNumber = parseInt(limit, 10) || 1;
-        const skip = (pageNumber - 1) * limitNumber;
+            // Fetch emails WITHOUT attachments for speed
+            const [sentEmails, totalEmails] = await Promise.all([
+                SentEmail.find({ to })
+                    .sort({ _id: -1 })
+                    .select("subject sender sentAt content") // Exclude attachments for speed
+                    .skip(skip)
+                    .limit(limitNumber)
+                    .lean(), 
 
-        // Fetch paginated emails sorted by latest first
-        const sentEmails = await SentEmail.find({ to })
-            .sort({ sentAt: -1 }) // Sort newest to oldest
-            .skip(skip)
-            .limit(limitNumber);
+                SentEmail.countDocuments({ to }) 
+            ]);
 
-        const totalEmails = await SentEmail.countDocuments({ to }); // Get total sent emails
-
-        res.status(200).json({
-            emails: sentEmails,
-            totalEmails,
-            totalPages: Math.ceil(totalEmails / limitNumber),
-            currentPage: pageNumber
-        });
-    } catch (error) {
-        console.error("Error fetching sent emails:", error);
-        res.status(500).json({ error: "Failed to retrieve sent emails" });
+            res.status(200).json({
+                emails: sentEmails,
+                totalEmails,
+                totalPages: Math.ceil(totalEmails / limitNumber),
+                currentPage: pageNumber
+            });
+        } catch (error) {
+            console.error("Error fetching sent emails:", error);
+            res.status(500).json({ error: "Failed to retrieve sent emails" });
+        }
     }
-}
+
+    export async function getEmailAttachments(req, res) {
+        try {
+            const { emailId } = req.params;
+            const email = await SentEmail.findById(emailId).select("attachments").lean();
+            if (!email) return res.status(404).json({ error: "Email not found" });
+    
+            res.status(200).json({ attachments: email.attachments });
+        } catch (error) {
+            console.error("Error fetching attachments:", error);
+            res.status(500).json({ error: "Failed to retrieve attachments" });
+        }
+    }
 
 export async function fetchReceivedEmails(req, res) {
     try {
@@ -213,7 +228,7 @@ export async function fetchReceivedEmails(req, res) {
 
         // Fetch emails from Microsoft Graph API
         const graphResponse = await axios.get(
-            "https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?$top=15&$expand=attachments",
+            "https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?$top=10&$expand=attachments",
             { headers: { Authorization: `Bearer ${accessToken}` } }
         );
 
@@ -225,14 +240,12 @@ export async function fetchReceivedEmails(req, res) {
         }
 
         // Fetch leads from the database
-        const leads = await Lead.find({}, "bestEmail");
+        const leads = await Lead.find({}, "bestEmail").lean();
         const leadEmails = new Set(leads.map(lead => lead.bestEmail.toLowerCase()));
 
         // Filter emails based on lead emails
         const filteredEmails = emails.filter(email =>
-            email.from &&
-            email.from.emailAddress &&
-            leadEmails.has(email.from.emailAddress.address.toLowerCase())
+            email.from?.emailAddress && leadEmails.has(email.from.emailAddress.address.toLowerCase())
         );
 
         console.log(`Filtered ${filteredEmails.length} emails matching leads`);
