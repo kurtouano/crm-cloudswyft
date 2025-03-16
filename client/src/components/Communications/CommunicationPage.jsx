@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useRef} from "react";
+import { useLocation } from "react-router-dom";
 import Fuse from "fuse.js"; // 🔍 Import Fuse.js
 import { FiSearch, FiEdit } from "react-icons/fi";
 import { FaStar,FaFilePdf, FaFileWord, FaFileExcel, FaFileImage, FaFileAlt } from "react-icons/fa";
@@ -9,6 +10,7 @@ import "./Communication.css";
 
 export default function CommunicationPageNEW() {
   // Basic states
+  const location = useLocation();
   const companyDisplayName = "Cloudswyft";
   const [leads, setLeads] = useState([]);
   const [filteredLeads, setFilteredLeads] = useState([]);
@@ -71,6 +73,16 @@ export default function CommunicationPageNEW() {
         const data = await response.json();
         setLeads(data);
         setFilteredLeads(data);
+
+          // ✅ Extract lead email from URL
+          const params = new URLSearchParams(location.search);
+          const leadEmail = params.get("leadEmail");
+
+           // ✅ Find and set active lead
+          const matchedLead = data.find((lead) => lead.bestEmail === leadEmail);
+          if (matchedLead) {
+            setActiveLead(matchedLead);
+          }
   
         // Extract bestEmails from leads
         const emails = data.map(lead => lead.bestEmail).filter(email => email);
@@ -84,7 +96,7 @@ export default function CommunicationPageNEW() {
     };
   
     fetchLeads();
-  }, []);
+  }, [location.search]);
   
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

@@ -187,7 +187,9 @@ export default function AccountPage() {
     }
   };
   
-  
+  const handleChatClick = (lead) => {
+    navigate(`/communications?leadEmail=${encodeURIComponent(lead.bestEmail)}`);
+  };
   return (
     <div className="accounts-container">
       {/* Cards Section */}
@@ -294,9 +296,16 @@ export default function AccountPage() {
         
           {/* Action Icons */}
           <div className="lead-actions">
-            <div className="chat-icon clickable">
+            <div 
+              className="chat-icon clickable"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleChatClick(lead);
+              }}
+            >
               <img src={chatIcon} alt="Chat" />
             </div>
+
             <div 
               className="user-icon clickable"
               onClick={(e) => { 
