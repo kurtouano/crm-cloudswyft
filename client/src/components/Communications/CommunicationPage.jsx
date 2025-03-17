@@ -36,7 +36,7 @@ export default function CommunicationPageNEW() {
   const [formData, setFormData] = useState({ to: "", subject: "", text: "" });
   const [formDataReply, setFormDataReply] = useState({ text: "", messageId: "", threadId: "" });
   const [selectedAttachment, setSelectedAttachment] = useState(null);
-  
+
    // Modal
   const [modalOpen, setModalOpen] = useState(false); 
 
@@ -44,13 +44,13 @@ export default function CommunicationPageNEW() {
   const [filteredEmails, setFilteredEmails] = useState([]);
   const [currentEmailIndex, setCurrentEmailIndex] = useState(0);
   
-  const [currentSentPage, setCurrentSentPage] = useState(1); // Current page number
   const sentEmailsPerPage = 10; // Display one email at a time
   const [bestEmails, setBestEmails] = useState([]); // Store all bestEmail values
   const [showSuggestions, setShowSuggestions] = useState(false);
   const emailsPerPage = 1; // Show one email per page
   const [currentPage, setCurrentPage] = useState(1);
   const [attachments, setAttachments] = useState({}); 
+  const [replies, setReplies] = useState({});
 
   const allEmails = [
     ...filteredEmails.map(email => ({ ...email, type: "received" })), 
@@ -58,16 +58,73 @@ export default function CommunicationPageNEW() {
         ...email, 
         type: "sent", 
         timestamp: email.sentAt // Ensure a common timestamp field 
-      }))
+    }))
   ];
 
   allEmails.sort((a, b) => 
     new Date(b.timestamp || 0) - new Date(a.timestamp || 0) // ✅ Avoid NaN issues
   );
 
-  const totalPages = Math.max(1, Math.ceil(allEmails.length / emailsPerPage)); 
+  // Pagination logic
+
+  const groupEmailsByThread = (emails) => {
+    const groupedThreads = new Map();
+    const standaloneEmails = []; // Declare standalone emails list
+
+    emails.forEach(email => {
+        if (email.threadId) {
+            if (!groupedThreads.has(email.threadId)) {
+                groupedThreads.set(email.threadId, []);
+            }
+            groupedThreads.get(email.threadId).push(email);
+        } else {
+            standaloneEmails.push(email); // Sent emails without a threadId
+        }
+    });
+
+    // ✅ Sort each thread by timestamp (newest first)
+    groupedThreads.forEach((thread, key) => {
+        groupedThreads.set(key, thread.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
+    });
+
+    return { groupedThreads, standaloneEmails };
+};
+
+
+
+// Sort threads by the latest email in each thread
+const sortThreadsByLatestEmail = (groupedThreads) => {
+  return Array.from(groupedThreads.values()).sort((a, b) => {
+      return new Date(b[0].timestamp) - new Date(a[0].timestamp); // Sort threads by newest email
+  });
+};
+
+
+// Merge sorted threads and standalone emails for pagination
+const getPaginatedEmails = (sortedThreads, standaloneEmails, currentPage, emailsPerPage) => {
+  const allThreads = [...sortedThreads, ...standaloneEmails.map(email => [email])]; // Treat standalone emails as mini-threads
+
+  // ✅ Sort **all** threads by the most recent email (ensuring sent & received emails are mixed)
+  allThreads.sort((a, b) => new Date(b[0].timestamp) - new Date(a[0].timestamp));
+
+  const totalPages = Math.ceil(allThreads.length / emailsPerPage);
   const startIndex = (currentPage - 1) * emailsPerPage;
-  const displayedEmail = allEmails.slice(startIndex, startIndex + emailsPerPage);
+  const displayedThreads = allThreads.slice(startIndex, startIndex + emailsPerPage);
+
+  // Flatten for UI display
+  const displayedEmails = displayedThreads.flat();
+
+  return { displayedEmails, totalPages };
+};
+
+
+
+
+// Apply the logic
+const { groupedThreads, standaloneEmails } = groupEmailsByThread(allEmails);
+const sortedThreads = sortThreadsByLatestEmail(groupedThreads);
+const { displayedEmails, totalPages } = getPaginatedEmails(sortedThreads, standaloneEmails, currentPage, emailsPerPage);
+
 
   useEffect(() => {
     const fetchLeads = async () => {
@@ -197,7 +254,7 @@ export default function CommunicationPageNEW() {
       };
 
       fetchSentEmails();
-  }, [activeLead, currentSentPage]); 
+  }, [activeLead]); 
 
 
   useEffect(() => {
@@ -255,6 +312,30 @@ export default function CommunicationPageNEW() {
       fetchAttachments();
   }, [sentEmails]);
 
+  const fetchReplyEmails = async (threadId) => {
+    try {
+      const response = await fetch(`http://localhost:4000/api/emails/fetch-reply-emails?threadId=${threadId}`);
+      const data = await response.json();
+
+      if (response.ok) {
+        setReplies((prevReplies) => ({
+          ...prevReplies,
+          [threadId]: data.replies,
+        }));
+      } else {
+        console.error("Failed to fetch replies:", data.error);
+      }
+    } catch (error) {
+      console.error("Error fetching replies:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (formDataReply.threadId) {
+      fetchReplyEmails(formDataReply.threadId);
+    }
+  }, [formDataReply.threadId]);
+
   useEffect(() => {
     const fetchEmails = async () => {
       try {
@@ -274,6 +355,9 @@ export default function CommunicationPageNEW() {
 
         if (response.ok) {
           setEmails(data.emails);
+
+        const threadIds = [...new Set(data.emails.map(email => email.threadId).filter(Boolean))];
+        threadIds.forEach(threadId => fetchReplyEmails(threadId));
 
           // Calculate unread email count per lead
           const counts = data.emails.reduce((acc, email) => {
@@ -327,17 +411,25 @@ export default function CommunicationPageNEW() {
     }
   }, [activeLead, emails]); 
 
-  useEffect(() => { // Automatically Update messageID & ThreadId based on the current lead email/page
-    if (filteredEmails.length > 0) {
-      setFormDataReply((prev) => ({
-        ...prev,
-        messageId: filteredEmails[currentEmailIndex].messageId, // Update messageId
-        threadId: filteredEmails[currentEmailIndex]?.threadId || "",
-      }));
+useEffect(() => { 
+    if (displayedEmails.length > 0) {
+        setFormDataReply((prev) => {
+            const newMessageId = displayedEmails[0].messageId;
+            const newThreadId = displayedEmails[0]?.threadId || "";
+            if (prev.messageId !== newMessageId || prev.threadId !== newThreadId) {
+                return {
+                    ...prev,
+                    messageId: newMessageId, // Set first email on current page
+                    threadId: newThreadId,
+                };
+            }
+            return prev;
+        });
     } else {
-      console.log("No messageId found for current email");
+        console.log("No messageId found for current email");
     }
-  }, [currentEmailIndex, filteredEmails]);
+}, [displayedEmails, currentPage]); // Depend on displayedEmails and currentPage
+
   
   // Memoized Fuse.js instance
   const fuse = useMemo(() => new Fuse(sortedLeads, { keys: ["leadName", "company"], threshold: 0.3 }), [sortedLeads]);
@@ -374,7 +466,7 @@ export default function CommunicationPageNEW() {
       setFilteredEmails([]); // ✅ Clear received emails immediately
       setCurrentPage(1); // ✅ Reset pagination
       setAttachments({}); // ✅ Clear attachments when switching leads
-      setFormData((prev) => ({ ...prev, to: lead.bestEmail || "" }));
+      setFormData((prev) => ({ ...prev, to: lead.bestEmail}));
   };
 
   const handleFileChange = (e) => {
@@ -447,18 +539,18 @@ export default function CommunicationPageNEW() {
 
     setLoading(false);
   };
-
+  
   const handleReplySubmit = async (e) => {
     e.preventDefault();
     const microsoftAccessToken = localStorage.getItem("microsoftAccessToken");
-  
+
     if (!microsoftAccessToken) {
       alert("Please log in via Microsoft first.");
       return;
     }
-  
+
     setLoading(true);
-  
+
     try {
       const res = await fetch("http://localhost:4000/api/emails/reply-email", {
         method: "POST",
@@ -471,23 +563,31 @@ export default function CommunicationPageNEW() {
           attachments: attachment ? [attachment] : [], // Include attachment if available
         }),
       });
-  
+
       const data = await res.json();
-  
+
       if (res.ok) {
         alert("Reply sent successfully!");
         setFormDataReply({ messageId: "", text: "", threadId: "" }); // Reset reply form
         setAttachment(null); // Clear attachment
+
+        // Append the reply to the specific email's replies
+        setReplies((prevReplies) => ({
+          ...prevReplies,
+          [formDataReply.messageId]: [
+            ...(prevReplies[formDataReply.messageId] || []),
+            { content: formDataReply.text, timestamp: new Date().toISOString() },
+          ],
+        }));
       } else {
         alert(data.error || "Failed to send reply");
       }
     } catch (error) {
       console.error("Error sending reply:", error);
     }
-  
-    setLoading(false);
-  };
 
+    setLoading(false);
+    };
 
   // Helper function to format timestamp
   const formatRelativeTime = (timestamp) => {
@@ -782,136 +882,144 @@ const handleSelectEmail = (email) => {
         </div>
 
         {/* Display Both Received & Sent Emails */}
-        <div className="email-received-space">
-            {allEmails.length > 0 ? (
-                displayedEmail.map((email, index) => (
-                    <div key={index} className="email-received-message">
-                        {/* Email Header */}
-                        <div className="email-header-details">
-                            {/* Profile Icon */}
-                            <div 
-                                className="email-user-icon"
-                                style={{
-                                    backgroundColor: email.type === "received" ? "#007bff" : "#28a745", 
-                                    color: "#fff",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    fontSize: "16px",
-                                    fontWeight: "bold",
-                                    textTransform: "uppercase",
-                                    width: "45px",
-                                    height: "45px",
-                                    borderRadius: "50%",
-                                    marginRight: "12px"
-                                }}
-                            >
-                                {email.type === "received" ? getInitials(email.sender) : getInitials(companyDisplayName)}
-                            </div>
+          <div className="email-received-space">
+              {allEmails.length > 0 ? (
+                displayedEmails.map((email, index, arr) => {
+                  const isLastEmailInThread =
+                  index === arr.length - 1 || arr[index + 1]?.threadId !== email.threadId;
 
-                            {/* Sender/Recipient Details */}
-                            <div className="email-header-info">
-                                <p className="email-sender-name">
-                                    {email.type === "received" ? email.senderName || "Unknown Sender" : companyDisplayName}
-                                </p>
-                                <p className="email-sender-email">
-                                    {email.type === "received" ? email.sender : email.recipient}
-                                </p>
-                            </div>
+                  return (
+                <div key={index} className="email-received-message">
+              {/* Email Header */}
+              <div className="email-header-details">
+                  {/* Profile Icon */}
+                  <div className={`email-user-icon ${email.type === "received" ? "received" : "sent"}`}>
+                      {email.type === "received" ? getInitials(email.sender) : getInitials(companyDisplayName)}
+                  </div>
 
-                            {/* Timestamp */}
-                            <p className="email-timestamp">
-                                {email.timestamp
-                                    ? new Date(email.timestamp).toLocaleDateString("en-US", {
-                                        month: "long",
-                                        day: "numeric",
-                                        year: "numeric",
-                                      }) +
-                                      " - " +
-                                      new Date(email.timestamp).toLocaleTimeString("en-US", {
-                                        hour: "numeric",
-                                        minute: "numeric",
-                                        hour12: true,
-                                      })
-                                    : "No Timestamp Available"}
-                            </p>
-                        </div>
+                  {/* Sender/Recipient Details */}
+                  <div className="email-header-info">
+                <p className="email-sender-name">
+                    {email.type === "received" ? email.senderName || "Unknown Sender" : companyDisplayName}
+                </p>
+                <p className="email-sender-email">
+                    {email.type === "received" ? email.sender : email.recipient}
+                </p>
+                  </div>
 
-                        {/* Email Subject */}
-                        <p className="email-subject-display">{email.subject || "No Subject"}</p>
+                  {/* Timestamp */}
+                  <p className="email-timestamp">
+                {email.timestamp
+                    ? new Date(email.timestamp).toLocaleDateString("en-US", {
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                      }) +
+                      " - " +
+                      new Date(email.timestamp).toLocaleTimeString("en-US", {
+                  hour: "numeric",
+                  minute: "numeric",
+                  hour12: true,
+                      })
+                    : "No Timestamp Available"}
+                  </p>
+              </div>
 
-                        {/* Email Body */}
-                        <div className="email-body-container">
-                            <p className="email-body-display">{email.message || email.content || "No Content"}</p>
-                        </div>
+              {/* Email Subject */}
+              <p className="email-subject-display">{email.subject || "No Subject"}</p>
 
-                        {/* Attachments Section */}
-                        {attachments[email._id] && attachments[email._id].length > 0 && (
-                            <div className="email-attachments-container">
-                                <p className="attachments-header">Attachments:</p>
-                                <div className="attachments-list">
-                                    {attachments[email._id].map((attachment, index) => (
-                                        <div key={index} className="attachment-item">
-                                            {/* File Icon */}
-                                            {getFileIcon(attachment.mimeType)}
+              {/* Email Body */}
+              <div className="email-body-container">
+                  <p className="email-body-display">{email.message || email.content || "No Content"}</p>
+              </div>
 
-                                            <div className="attachment-details">
-                                                <p className="attachment-name">{attachment.fileName}</p>
+              {/* Attachments Section */}
+              {attachments[email._id] && attachments[email._id].length > 0 && (
+                <div className="email-attachments-container">
+                  <p className="attachments-header">Attachments:</p>
+                  <div className="attachments-list">
+                      {attachments[email._id].map((attachment, index) => (
+                    <div key={index} className="attachment-item">
+                        {/* File Icon */}
+                        {getFileIcon(attachment.mimeType)}
 
-                                                {/* View & Download Actions */}
-                                                <div className="attachment-actions">
-                                                    <button className="view-link" onClick={() => handleViewAttachment(attachment, email.type)}>
-                                                        View
-                                                    </button>
+                        <div className="attachment-details">
+                      <p className="attachment-name">{attachment.fileName}</p>
 
-                                                    <span className="separator">|</span>
+                    {/* View & Download Actions */}
+                    <div className="attachment-actions">
+                        <button className="view-link" onClick={() => handleViewAttachment(attachment, email.type)}>
+                      View
+                        </button>
 
-                                                    <button className="download-link" onClick={() => handleDownloadAttachment(attachment)}>
-                                                        Download
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                        <span className="separator">|</span>
 
-                        {selectedAttachment && (
-                                <div className="attachment-modal" onClick={handleCloseModal}>
-                                    <div className="attachment-modal-content" onClick={(e) => e.stopPropagation()}>
-                                        <div className="attachment-modal-header">
-                                            <p className="attachment-filename">{selectedAttachment.fileName}</p>
-                                            <span className="close-icon" onClick={handleCloseModal}>x</span>
-                                        </div>
+                        <button className="download-link" onClick={() => handleDownloadAttachment(attachment)}>
+                      Download
+                        </button>
+                    </div>
+                      </div>
+                  </div>
+                    ))}
+                </div>
+                  </div>
+              )}
 
-                                        {/* File Preview */}
-                                        {selectedAttachment.mimeType.includes("image") ? (
-                                            <img src={selectedAttachment.blobUrl} alt="Preview" className="attachment-preview" />
-                                        ) : selectedAttachment.mimeType === "application/pdf" ? (
-                                            <iframe
-                                                src={selectedAttachment.blobUrl}
-                                                title="Attachment Preview"
-                                                className="attachment-preview"
-                                            />
-                                        ) : (
-                                            <div className="no-preview">
-                                                <p className="no-preview-text">No preview available</p>
-                                                <a href={selectedAttachment.blobUrl} download={selectedAttachment.fileName}>
-                                                    Download file
-                                                </a>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
+              <div className="email-divider-line"></div>
 
-                    </div> 
-                ))
-            ) : (
-                <p></p>
-            )}
-          </div>
+              {/* Replies Section */}
+              {isLastEmailInThread && email.threadId && replies[email.threadId]?.length > 0 && (
+                <div className="email-replies-container">
+                  <div className="replies-header">
+                    <p className={`email-user-icon ${email.type === "sent"}`}>K </p>
+                    <p className="email-sender-name">Cloudswyft Team</p>
+                  </div>
+                  {replies[email.threadId].map((reply, index) => (
+                    <div key={index} className="reply-item">
+                      <p className="reply-content">{reply.replyContent}</p>
+                      <p className="reply-timestamp">{formatRelativeTime(reply.repliedAt)}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {selectedAttachment && (
+                <div className="attachment-modal" onClick={handleCloseModal}>
+                    <div className="attachment-modal-content" onClick={(e) => e.stopPropagation()}>
+                      <div className="attachment-modal-header">
+                        <p className="attachment-filename">{selectedAttachment.fileName}</p>
+                        <span className="close-icon" onClick={handleCloseModal}>x</span>
+                      </div>
+
+                  {/* File Preview */}
+                  {selectedAttachment.mimeType.includes("image") ? (
+                      <img src={selectedAttachment.blobUrl} alt="Preview" className="attachment-preview" />
+                  ) : selectedAttachment.mimeType === "application/pdf" ? (
+                      <iframe
+                    src={selectedAttachment.blobUrl}
+                    title="Attachment Preview"
+                    className="attachment-preview"
+                      />
+                  ) : (
+                      <div className="no-preview">
+                        <p className="no-preview-text">No preview available</p>
+                        <a href={selectedAttachment.blobUrl} download={selectedAttachment.fileName}>
+                            Download file
+                        </a>
+                      </div>
+                  )}
+                    </div>
+                </div>
+                  )}
+
+              </div> 
+            );
+                })
+              ) : (
+            <p></p>
+              )}
+            </div>
+
 
 
         <form className="email-compose-box" onSubmit={handleReplySubmit}>

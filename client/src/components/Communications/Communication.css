@@ -590,7 +590,6 @@
 .email-received-message {
     padding-bottom: 10px;
     padding-top: 15px;
-    border-bottom: 1px solid rgb(232, 232, 232);
 }
 
 /* Email Header */
@@ -678,6 +677,13 @@
     border-radius: 6px;
     justify-content: flex-start; /* ✅ Aligns content to the left */
     flex-grow: 1; /* ✅ Ensures it takes up space properly */
+}
+
+.email-divider-line {
+    border: none;
+    height: 1px;
+    background-color: rgb(213, 213, 213); /* Remove default border */
+    margin-top: 10px;
 }
 
 
@@ -936,4 +942,46 @@
   .close-icon:hover {
     color: #a0a0a0;
   }
+
+  .email-replies-container {
+    padding-top: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .replies-header {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+  }
   
+  .reply-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .email-user-icon {
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: bold;
+    text-transform: uppercase;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 12px;
+}
+
+/* Background color for received emails */
+.email-user-icon.received {
+    background-color: #007bff;
+}
+
+/* Background color for sent emails */
+.email-user-icon.sent {
+    background-color: #28a745;
+}

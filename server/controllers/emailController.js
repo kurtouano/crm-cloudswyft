@@ -215,6 +215,25 @@ export async function replyEmail(req, res) {
         }
     }
 
+    export async function fetchSentReplyEmails(req, res) {
+        try {
+            const { threadId } = req.query;
+            if (!threadId) return res.status(400).json({ error: "Thread ID is required" });
+
+            // Fetch reply emails from the database based on threadId
+            const replyEmails = await ReplyEmail.find({ threadId }).sort({ repliedAt: -1 }).lean();
+
+            if (!replyEmails || replyEmails.length === 0) {
+                return res.status(200).json({ success: true, replies: [] });
+            }
+
+            res.status(200).json({ success: true, replies: replyEmails });
+        } catch (error) {
+            console.error("Error fetching reply emails:", error);
+            res.status(500).json({ error: "Failed to fetch reply emails" });
+        }
+    }
+
 export async function fetchReceivedEmails(req, res) {
     try {
         // Get Microsoft Access Token from headers
@@ -228,7 +247,7 @@ export async function fetchReceivedEmails(req, res) {
 
         // Fetch emails from Microsoft Graph API
         const graphResponse = await axios.get(
-            "https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?$top=10&$expand=attachments",
+            "https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?$top=15&$expand=attachments",
             { headers: { Authorization: `Bearer ${accessToken}` } }
         );
 
