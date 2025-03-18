@@ -350,7 +350,6 @@ const { displayedEmails, totalPages } = getPaginatedEmails(sortedThreads, standa
                   })
               );
 
-              console.log("🔄 Updating state with replies & attachments:", repliesWithAttachments);
               // Update the replies state with attachments
               setReplies((prevReplies) => ({
                   ...prevReplies,
