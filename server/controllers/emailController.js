@@ -116,59 +116,62 @@ export async function sendEmail(req, res) {
     
 }
 
-export async function replyEmail(req, res) {
-    try {
-        const { messageId, threadId, content, token, attachments } = req.body;
+    export async function replyEmail(req, res) {
+        try {
+            const { messageId, threadId, content, token, attachments } = req.body;
 
-        if (!messageId || !content || !token || !threadId) {
-            return res.status(400).json({ error: "Missing required fields (messageId, threadId, content, or token)" });
+            if (!messageId || !content || !token || !threadId) {
+                return res.status(400).json({ error: "Missing required fields (messageId, threadId, content, or token)" });
+            }
+
+            const formattedContentForEmail = content.replace(/\n/g, "<br>");
+            const formattedContentForDB = content;
+
+            // Format attachments for Microsoft Graph API
+            const formattedAttachments = attachments?.map((file) => ({
+                "@odata.type": "#microsoft.graph.fileAttachment",
+                name: file.fileName,
+                contentType: file.mimeType,
+                contentBytes: file.contentBytes, // Base64 encoded content
+            })) || [];
+
+            // Reply Email Data
+            const emailData = {
+                comment: formattedContentForEmail, // Microsoft API requires "comment" for replies
+                message: {
+                    attachments: formattedAttachments,
+                }
+            };
+
+            // Send reply via Microsoft Graph API
+            const response = await axios.post(
+                `https://graph.microsoft.com/v1.0/me/messages/${messageId}/reply`,
+                emailData,
+                {
+                    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                }
+            );
+
+            // Extract the message ID of the sent reply
+            const replyMessageId = response.data?.id || null;
+
+            // Save reply email to database
+            const repliedEmail = new ReplyEmail({
+                threadId, // Store threadId for proper threading
+                originalMessageId: messageId, // The email being replied to
+                replyContent: formattedContentForDB,
+                repliedAt: new Date(),
+                attachments,
+            });
+
+            await repliedEmail.save();
+
+            res.status(200).json({ success: true, message: "Email replied successfully!", replyMessageId });
+        } catch (error) {
+            console.error("Error replying to email:", error.response?.data || error.message);
+            res.status(500).json({ error: "Failed to send reply" });
         }
-
-        // Format attachments for Microsoft Graph API
-        const formattedAttachments = attachments?.map((file) => ({
-            "@odata.type": "#microsoft.graph.fileAttachment",
-            name: file.fileName,
-            contentType: file.mimeType,
-            contentBytes: file.contentBytes, // Base64 encoded content
-        })) || [];
-
-        // Reply Email Data
-        const emailData = {
-            comment: content, // Microsoft API requires "comment" for replies
-            message: {
-                attachments: formattedAttachments,
-            }
-        };
-
-        // Send reply via Microsoft Graph API
-        const response = await axios.post(
-            `https://graph.microsoft.com/v1.0/me/messages/${messageId}/reply`,
-            emailData,
-            {
-                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-            }
-        );
-
-        // Extract the message ID of the sent reply
-        const replyMessageId = response.data?.id || null;
-
-        // Save reply email to database
-        const repliedEmail = new ReplyEmail({
-            threadId, // Store threadId for proper threading
-            originalMessageId: messageId, // The email being replied to
-            replyContent: content,
-            repliedAt: new Date(),
-            attachments,
-        });
-
-        await repliedEmail.save();
-
-        res.status(200).json({ success: true, message: "Email replied successfully!", replyMessageId });
-    } catch (error) {
-        console.error("Error replying to email:", error.response?.data || error.message);
-        res.status(500).json({ error: "Failed to send reply" });
     }
-}
 
     export async function getSentEmail(req, res) {
         try {
@@ -220,23 +223,50 @@ export async function replyEmail(req, res) {
         try {
             const { threadId } = req.query;
             if (!threadId) return res.status(400).json({ error: "Thread ID is required" });
-
+    
             // Fetch reply emails from the database based on threadId
             const replyEmails = await ReplyEmail.find({ threadId }).sort({ repliedAt: -1 }).lean();
-
+    
             if (!replyEmails || replyEmails.length === 0) {
                 return res.status(200).json({ success: true, replies: [] });
             }
-
-            res.status(200).json({ success: true, replies: replyEmails });
+    
+            // Add attachments to each reply email
+            const repliesWithAttachments = replyEmails.map((reply) => {
+                return {
+                    ...reply,
+                    attachments: reply.attachments || [], // Attachments are already included in the reply
+                };
+            });
+    
+            res.status(200).json({ success: true, replies: repliesWithAttachments });
         } catch (error) {
             console.error("Error fetching reply emails:", error);
             res.status(500).json({ error: "Failed to fetch reply emails" });
         }
     }
+    
+    export async function fetchAttachmentsForReply(req, res) {
+        try {
+            const { emailId } = req.params;
+    
+            // Fetch the reply email by its _id (using the emailId)
+            const reply = await ReplyEmail.findById(emailId).select("attachments").lean();
+    
+            if (!reply) {
+                return res.status(404).json({ error: "Reply email not found" });
+            }
+    
+            res.status(200).json({ attachments: reply.attachments || [] });
+        } catch (error) {
+            console.error("Error fetching attachments:", error);
+            res.status(500).json({ error: "Failed to fetch attachments" });
+        }
+    }
 
-export async function fetchReceivedEmails(req, res) {
-    try {
+
+    export async function fetchReceivedEmails(req, res) {
+        try {
         // Get Microsoft Access Token from headers
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -269,12 +299,36 @@ export async function fetchReceivedEmails(req, res) {
         );
 
         console.log(`Filtered ${filteredEmails.length} emails matching leads`);
-
+        
         function cleanReplyText(html) {
             const $ = cheerio.load(html);
-            $('blockquote, .gmail_quote, .gmail_attr').remove(); // Remove previous replies
-            return $('body').text().trim(); // Extract latest reply only
+        
+            // Remove quoted text, previous replies, and Gmail/Outlook metadata
+            $("blockquote, .gmail_quote, .gmail_attr, #divRplyFwdMsg, #x_divRplyFwdMsg, hr").remove();
+            $("#ms-outlook-mobile-signature, #x_ms-outlook-mobile-signature").remove();
+            $("a[href*='outlook.com'], a[href*='aka.ms']").remove(); // Remove "Get Outlook for iOS" links
+        
+            // Remove unnecessary meta tags
+            $("head, meta").remove();
+        
+            // Replace <br> with new lines
+            $("br").replaceWith("\n");
+        
+            // Convert <div> to new lines (while keeping spacing)
+            $("div").each(function () {
+                $(this).replaceWith($(this).text() + "\n");
+            });
+        
+            // Extract only the first part of the body (latest reply)
+            let cleanedText = $("body").contents().first().text().trim();
+        
+            // Preserve multiple new lines (while preventing excessive spaces)
+            cleanedText = cleanedText.replace(/\n{3,}/g, "\n\n");
+        
+            return cleanedText;
         }
+        
+        
 
         let newEmails = []; // ✅ Track new emails for WebSocket notifications
 

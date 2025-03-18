@@ -321,7 +321,6 @@
     margin-right: 10px;
 }
 
-
 .email-attach-input {
     display: none;
 }
@@ -468,6 +467,7 @@
     min-height: 120px;
     outline: none;
     resize: none;
+    white-space: pre-line;
 }
 
 /* Send button */
