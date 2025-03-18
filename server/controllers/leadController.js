@@ -1,4 +1,5 @@
 import Lead from "../models/LeadSchema.js";
+import { sendAutoWelcomeEmail } from "./sendAutoWelcomeEmail.js";
 
 // 🟢 Get all leads
 export const getLeads = async (req, res) => {
@@ -40,16 +41,14 @@ export const importLead = async (req, res) => {
       return res.status(400).json({ error: "Invalid data format or empty file." });
     }
 
-    // Required fields for individual rows (REMOVED name of HR, Social, and Website)
     const requiredFields = [
       "leadName", "bestEmail", "nameOfPresident", "company",
       "industry", "companyAddress", "phone"
     ];
 
-    // Remove empty or incomplete rows, ensuring numbers are accepted
     const validLeads = leads.filter(lead =>
       requiredFields.every(field =>
-        lead[field] !== undefined && lead[field] !== null && 
+        lead[field] !== undefined && lead[field] !== null &&
         (typeof lead[field] === "string" ? lead[field].trim() !== "" : true)
       )
     );
@@ -58,14 +57,12 @@ export const importLead = async (req, res) => {
       return res.status(400).json({ error: "All rows are empty or missing required fields." });
     }
 
-    // Convert phone numbers to strings before inserting into DB
     validLeads.forEach(lead => {
       if (typeof lead.phone !== "string") {
         lead.phone = String(lead.phone);
       }
     });
 
-    // Fetch existing leads based on email & company
     const existingLeads = await Lead.find({
       $or: validLeads.map(lead => ({
         bestEmail: lead.bestEmail,
@@ -73,12 +70,10 @@ export const importLead = async (req, res) => {
       }))
     });
 
-    // Convert existing leads into a Set for quick lookup
     const existingLeadSet = new Set(
       existingLeads.map(lead => `${lead.bestEmail}-${lead.company}`)
     );
 
-    // Filter out duplicates based on email & company
     const newLeads = validLeads.filter(lead =>
       !existingLeadSet.has(`${lead.bestEmail}-${lead.company}`)
     );
@@ -93,22 +88,28 @@ export const importLead = async (req, res) => {
       });
     }
 
-    // Save each lead individually to trigger auto-incremented `leadID`
     const insertedLeads = [];
+    const accessToken = global.MICROSOFT_ACCESS_TOKEN; // ✅ store token after OAuth in global or db
+
     for (const lead of newLeads) {
       const newLead = new Lead({
         ...lead,
-        importDate: new Date(), // Ensure import date is set
+        importDate: new Date(),
       });
-
       const savedLead = await newLead.save();
       insertedLeads.push(savedLead);
+
+      if (accessToken) {
+        await sendAutoWelcomeEmail(savedLead, accessToken);
+      } else {
+        console.warn("⚠️ Microsoft token missing. Auto email not sent.");
+      }
     }
 
     res.status(201).json({
-      message: "Leads uploaded successfully!",
+      message: "Leads uploaded successfully and emails sent!",
       insertedCount: insertedLeads.length,
-      skippedCount: skippedCount, // Now always present
+      skippedCount,
       insertedLeads
     });
 
@@ -117,6 +118,7 @@ export const importLead = async (req, res) => {
     res.status(500).json({ error: "Failed to save leads." });
   }
 };
+
 
 
 

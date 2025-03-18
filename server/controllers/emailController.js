@@ -47,6 +47,7 @@ export async function handleOAuthRedirect(req, res) {
         });
 
         if (tokenResponse?.accessToken) {
+            global.MICROSOFT_ACCESS_TOKEN = tokenResponse.accessToken; // Save globally!
             const expiryTimestamp = new Date(tokenResponse.expiresOn).getTime(); // Convert ISO to ms
             
             return res.redirect(
