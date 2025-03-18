@@ -12,6 +12,7 @@ export default function CommunicationPageNEW() {
   // Basic states
   const location = useLocation();
   const companyDisplayName = "Cloudswyft";
+  const companyEmail = "cloudswyft-test@outlook.com";
   const [leads, setLeads] = useState([]);
   const [filteredLeads, setFilteredLeads] = useState([]);
   const [activeLead, setActiveLead] = useState(null);
@@ -69,7 +70,7 @@ export default function CommunicationPageNEW() {
 
   const groupEmailsByThread = (emails) => {
     const groupedThreads = new Map();
-    const standaloneEmails = []; // Declare standalone emails list
+    const standaloneEmails = []; // Sent emails without a thread
 
     emails.forEach(email => {
         if (email.threadId) {
@@ -78,18 +79,17 @@ export default function CommunicationPageNEW() {
             }
             groupedThreads.get(email.threadId).push(email);
         } else {
-            standaloneEmails.push(email); // Sent emails without a threadId
+            standaloneEmails.push(email); // Keep truly standalone emails separate
         }
     });
 
-    // ✅ Sort each thread by timestamp (newest first)
+    // ✅ Sort each thread by timestamp (oldest to newest)
     groupedThreads.forEach((thread, key) => {
-        groupedThreads.set(key, thread.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
+        groupedThreads.set(key, thread.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)));
     });
 
     return { groupedThreads, standaloneEmails };
 };
-
 
 
 // Sort threads by the latest email in each thread
@@ -104,7 +104,6 @@ const sortThreadsByLatestEmail = (groupedThreads) => {
 const getPaginatedEmails = (sortedThreads, standaloneEmails, currentPage, emailsPerPage) => {
   const allThreads = [...sortedThreads, ...standaloneEmails.map(email => [email])]; // Treat standalone emails as mini-threads
 
-  // ✅ Sort **all** threads by the most recent email (ensuring sent & received emails are mixed)
   allThreads.sort((a, b) => new Date(b[0].timestamp) - new Date(a[0].timestamp));
 
   const totalPages = Math.ceil(allThreads.length / emailsPerPage);
@@ -116,9 +115,6 @@ const getPaginatedEmails = (sortedThreads, standaloneEmails, currentPage, emails
 
   return { displayedEmails, totalPages };
 };
-
-
-
 
 // Apply the logic
 const { groupedThreads, standaloneEmails } = groupEmailsByThread(allEmails);
@@ -411,15 +407,17 @@ const { displayedEmails, totalPages } = getPaginatedEmails(sortedThreads, standa
     }
   }, [activeLead, emails]); 
 
-useEffect(() => { 
+  useEffect(() => {  
+    // Automatically gets the messageId and threadID of the latest email 
     if (displayedEmails.length > 0) {
         setFormDataReply((prev) => {
-            const newMessageId = displayedEmails[0].messageId;
-            const newThreadId = displayedEmails[0]?.threadId || "";
+            const lastIndex = displayedEmails.length - 1;
+            const newMessageId = displayedEmails[lastIndex].messageId; // Get last email on current page
+            const newThreadId = displayedEmails[lastIndex]?.threadId || "";
             if (prev.messageId !== newMessageId || prev.threadId !== newThreadId) {
                 return {
                     ...prev,
-                    messageId: newMessageId, // Set first email on current page
+                    messageId: newMessageId, // Set latest email on current page
                     threadId: newThreadId,
                 };
             }
@@ -428,8 +426,7 @@ useEffect(() => {
     } else {
         console.log("No messageId found for current email");
     }
-}, [displayedEmails, currentPage]); // Depend on displayedEmails and currentPage
-
+  }, [displayedEmails, currentPage]); // Depend on displayedEmails and currentPage
   
   // Memoized Fuse.js instance
   const fuse = useMemo(() => new Fuse(sortedLeads, { keys: ["leadName", "company"], threshold: 0.3 }), [sortedLeads]);
@@ -881,146 +878,164 @@ const handleSelectEmail = (email) => {
           </div>
         </div>
 
-        {/* Display Both Received & Sent Emails */}
+          {/* Display Both Received & Sent Emails */}
           <div className="email-received-space">
-              {allEmails.length > 0 ? (
-                displayedEmails.map((email, index, arr) => {
-                  const isLastEmailInThread =
-                  index === arr.length - 1 || arr[index + 1]?.threadId !== email.threadId;
-
-                  return (
-                <div key={index} className="email-received-message">
-              {/* Email Header */}
-              <div className="email-header-details">
-                  {/* Profile Icon */}
-                  <div className={`email-user-icon ${email.type === "received" ? "received" : "sent"}`}>
-                      {email.type === "received" ? getInitials(email.sender) : getInitials(companyDisplayName)}
-                  </div>
-
-                  {/* Sender/Recipient Details */}
-                  <div className="email-header-info">
-                <p className="email-sender-name">
-                    {email.type === "received" ? email.senderName || "Unknown Sender" : companyDisplayName}
-                </p>
-                <p className="email-sender-email">
-                    {email.type === "received" ? email.sender : email.recipient}
-                </p>
-                  </div>
-
-                  {/* Timestamp */}
-                  <p className="email-timestamp">
-                {email.timestamp
-                    ? new Date(email.timestamp).toLocaleDateString("en-US", {
-                  month: "long",
-                  day: "numeric",
-                  year: "numeric",
-                      }) +
-                      " - " +
-                      new Date(email.timestamp).toLocaleTimeString("en-US", {
-                  hour: "numeric",
-                  minute: "numeric",
-                  hour12: true,
-                      })
-                    : "No Timestamp Available"}
-                  </p>
-              </div>
-
-              {/* Email Subject */}
-              <p className="email-subject-display">{email.subject || "No Subject"}</p>
-
-              {/* Email Body */}
-              <div className="email-body-container">
-                  <p className="email-body-display">{email.message || email.content || "No Content"}</p>
-              </div>
-
-              {/* Attachments Section */}
-              {attachments[email._id] && attachments[email._id].length > 0 && (
-                <div className="email-attachments-container">
-                  <p className="attachments-header">Attachments:</p>
-                  <div className="attachments-list">
-                      {attachments[email._id].map((attachment, index) => (
-                    <div key={index} className="attachment-item">
-                        {/* File Icon */}
-                        {getFileIcon(attachment.mimeType)}
-
-                        <div className="attachment-details">
-                      <p className="attachment-name">{attachment.fileName}</p>
-
-                    {/* View & Download Actions */}
-                    <div className="attachment-actions">
-                        <button className="view-link" onClick={() => handleViewAttachment(attachment, email.type)}>
-                      View
-                        </button>
-
-                        <span className="separator">|</span>
-
-                        <button className="download-link" onClick={() => handleDownloadAttachment(attachment)}>
-                      Download
-                        </button>
-                    </div>
+              {displayedEmails.map((email, emailIndex) => (
+              <div key={emailIndex} className={`email-message ${email.type}`}>
+                  {/* Email Header */}
+                  <div className="email-header-details">
+                      {/* Profile Icon */}
+                      <div className={`email-user-icon ${email.type === "received" ? "received" : "sent"}`}>
+                          {email.type === "received" ? getInitials(email.sender) : getInitials(companyDisplayName)}
                       </div>
-                  </div>
-                    ))}
-                </div>
-                  </div>
-              )}
-
-              <div className="email-divider-line"></div>
-
-              {/* Replies Section */}
-              {isLastEmailInThread && email.threadId && replies[email.threadId]?.length > 0 && (
-                <div className="email-replies-container">
-                  <div className="replies-header">
-                    <p className={`email-user-icon ${email.type === "sent"}`}>K </p>
-                    <p className="email-sender-name">Cloudswyft Team</p>
-                  </div>
-                  {replies[email.threadId].map((reply, index) => (
-                    <div key={index} className="reply-item">
-                      <p className="reply-content">{reply.replyContent}</p>
-                      <p className="reply-timestamp">{formatRelativeTime(reply.repliedAt)}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {selectedAttachment && (
-                <div className="attachment-modal" onClick={handleCloseModal}>
-                    <div className="attachment-modal-content" onClick={(e) => e.stopPropagation()}>
-                      <div className="attachment-modal-header">
-                        <p className="attachment-filename">{selectedAttachment.fileName}</p>
-                        <span className="close-icon" onClick={handleCloseModal}>x</span>
+      
+                      {/* Sender/Recipient Details */}
+                      <div className="email-header-info">
+                          <p className="email-sender-name">
+                              {email.type === "received" ? email.senderName || "Unknown Sender" : companyDisplayName}
+                          </p>
+                          <p className="email-sender-email">
+                              {email.type === "received" ? email.sender : email.recipient}
+                          </p>
                       </div>
-
-                  {/* File Preview */}
-                  {selectedAttachment.mimeType.includes("image") ? (
-                      <img src={selectedAttachment.blobUrl} alt="Preview" className="attachment-preview" />
-                  ) : selectedAttachment.mimeType === "application/pdf" ? (
-                      <iframe
-                    src={selectedAttachment.blobUrl}
-                    title="Attachment Preview"
-                    className="attachment-preview"
-                      />
-                  ) : (
-                      <div className="no-preview">
-                        <p className="no-preview-text">No preview available</p>
-                        <a href={selectedAttachment.blobUrl} download={selectedAttachment.fileName}>
-                            Download file
-                        </a>
+      
+                      {/* Timestamp */}
+                      <p className="email-timestamp">
+                          {email.timestamp
+                              ? new Date(email.timestamp).toLocaleDateString("en-US", {
+                                  month: "long",
+                                  day: "numeric",
+                                  year: "numeric",
+                              }) +
+                              " - " +
+                              new Date(email.timestamp).toLocaleTimeString("en-US", {
+                                  hour: "numeric",
+                                  minute: "numeric",
+                                  hour12: true,
+                              })
+                              : "No Timestamp Available"}
+                      </p>
+                    </div>
+      
+                  {/* Email Subject */}
+                  <p className="email-subject-display">{email.subject || "No Subject"}</p>
+      
+                  {/* Email Body */}
+                  <div className="email-body-container">
+                      <p className="email-body-display">{email.message || email.content || "No Content"}</p>
+                  </div>
+      
+                  {/* Attachments Section */}
+                  {attachments[email._id] && attachments[email._id].length > 0 && (
+                      <div className="email-attachments-container">
+                          <p className="attachments-header">Attachments:</p>
+                          <div className="attachments-list">
+                              {attachments[email._id].map((attachment, index) => (
+                                  <div key={index} className="attachment-item">
+                                      {/* File Icon */}
+                                      {getFileIcon(attachment.mimeType)}
+      
+                                      <div className="attachment-details">
+                                          <p className="attachment-name">{attachment.fileName}</p>
+      
+                                          {/* View & Download Actions */}
+                                          <div className="attachment-actions">
+                                              <button className="view-link" onClick={() => handleViewAttachment(attachment, email.type)}>
+                                                  View
+                                              </button>
+      
+                                              <span className="separator">|</span>
+      
+                                              <button className="download-link" onClick={() => handleDownloadAttachment(attachment)}>
+                                                  Download
+                                              </button>
+                                          </div>
+                                      </div>
+                                  </div>
+                              ))}
+                          </div>
                       </div>
                   )}
-                    </div>
-                </div>
+      
+                  <div className="email-divider-line"></div>
+      
+                  {selectedAttachment && (
+                      <div className="attachment-modal" onClick={handleCloseModal}>
+                          <div className="attachment-modal-content" onClick={(e) => e.stopPropagation()}>
+                              <div className="attachment-modal-header">
+                                  <p className="attachment-filename">{selectedAttachment.fileName}</p>
+                                  <span className="close-icon" onClick={handleCloseModal}>x</span>
+                              </div>
+      
+                              {/* File Preview */}
+                              {selectedAttachment.mimeType.includes("image") ? (
+                                  <img src={selectedAttachment.blobUrl} alt="Preview" className="attachment-preview" />
+                              ) : selectedAttachment.mimeType === "application/pdf" ? (
+                                  <iframe
+                                      src={selectedAttachment.blobUrl}
+                                      title="Attachment Preview"
+                                      className="attachment-preview"
+                                  />
+                              ) : (
+                                  <div className="no-preview">
+                                      <p className="no-preview-text">No preview available</p>
+                                      <a href={selectedAttachment.blobUrl} download={selectedAttachment.fileName}>
+                                          Download file
+                                      </a>
+                                  </div>
+                              )}
+                          </div>
+                      </div>
                   )}
 
-              </div> 
-            );
-                })
-              ) : (
-            <p></p>
-              )}
-            </div>
+                  {email.messageId && replies[email.threadId]?.length > 0 && (
+                    replies[email.threadId]
+                      .filter(reply => reply.originalMessageId === email.messageId) // Ensure reply belongs to this email
+                      .sort((a, b) => new Date(a.repliedAt) - new Date(b.repliedAt))
+                      .map((reply, index) => (
+                        <div key={index} className="email-replies-container">
+                          <div className="email-header-details">
+                            <div className="email-user-icon sent">
+                              {getInitials(companyDisplayName)}
+                            </div>
 
+                            <div className="email-header-info">
+                              <p className="email-sender-name">
+                                {companyDisplayName}
+                              </p>
+                              <p className="email-sender-email">
+                                {companyEmail}
+                              </p>  
+                            </div>
 
+                            {/* ✅ Corrected timestamp */}
+                            <p className="email-timestamp">
+                              {reply.repliedAt
+                                ? new Date(reply.repliedAt).toLocaleDateString("en-US", {
+                                    month: "long",
+                                    day: "numeric",
+                                    year: "numeric",
+                                }) +
+                                  " - " +
+                                  new Date(reply.repliedAt).toLocaleTimeString("en-US", {
+                                    hour: "numeric",
+                                    minute: "numeric",
+                                    hour12: true,
+                                })
+                                : "No Timestamp Available"}
+                            </p>
+                          </div>
+
+                          {/* ✅ Reply content */}
+                            <div className="email-body-container">
+                              <p className="email-body-display">{reply.replyContent || "No Content"}</p>
+                            </div>
+                        </div>
+                      ))
+                  )}
+              </div>
+          ))}
+      </div>
 
         <form className="email-compose-box" onSubmit={handleReplySubmit}>
           <div className="email-compose-header">

@@ -644,7 +644,7 @@
 .email-subject-display {
     font-size: 17px;
     font-weight: bold;
-    color: rgb(50, 50, 50);
+    color: rgb(61, 61, 61);
     padding: 10px;
     padding-top: 20px;  
 }
@@ -678,14 +678,6 @@
     justify-content: flex-start; /* ✅ Aligns content to the left */
     flex-grow: 1; /* ✅ Ensures it takes up space properly */
 }
-
-.email-divider-line {
-    border: none;
-    height: 1px;
-    background-color: rgb(213, 213, 213); /* Remove default border */
-    margin-top: 10px;
-}
-
 
 /* File Icon */
 
@@ -947,7 +939,7 @@
     padding-top: 10px;
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    border-bottom: 1px solid rgb(229, 229, 229);
   }
 
   .replies-header {
@@ -959,7 +951,7 @@
   .reply-item {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: flex-start;
   }
 
   .email-user-icon {
@@ -976,12 +968,20 @@
     margin-right: 12px;
 }
 
+.email-divider-line {
+    border: none;
+    height: 1px;
+    background-color: rgb(232, 232, 232); /* Remove default border */
+    margin-top: 10px;
+}
+
+
 /* Background color for received emails */
 .email-user-icon.received {
-    background-color: #007bff;
+    background-color: #b5b5b5;
 }
 
 /* Background color for sent emails */
 .email-user-icon.sent {
-    background-color: #28a745;
+    background-color: rgb(0, 140, 255);
 }
