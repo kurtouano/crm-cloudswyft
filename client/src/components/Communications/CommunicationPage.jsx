@@ -25,7 +25,6 @@ export default function CommunicationPageNEW() {
   const intervalRef = useRef(null);
 
   // Emails & attachments
-  const [receiveloading, receiveSetLoading] = useState(false);
   const [emails, setEmails] = useState([]);
   const [sentEmails, setSentEmails] = useState([]); // Stores paginated sent emails
   const [fetchEmailError, setFetchEmailError] = useState(null);
@@ -43,7 +42,6 @@ export default function CommunicationPageNEW() {
 
   // Emails & Paginations
   const [filteredEmails, setFilteredEmails] = useState([]);
-  const [currentEmailIndex, setCurrentEmailIndex] = useState(0);
   
   const sentEmailsPerPage = 10; // Display one email at a time
   const [bestEmails, setBestEmails] = useState([]); // Store all bestEmail values
@@ -309,22 +307,64 @@ const { displayedEmails, totalPages } = getPaginatedEmails(sortedThreads, standa
   }, [sentEmails]);
 
   const fetchReplyEmails = async (threadId) => {
-    try {
-      const response = await fetch(`http://localhost:4000/api/emails/fetch-reply-emails?threadId=${threadId}`);
-      const data = await response.json();
+      try {
+          const response = await fetch(`http://localhost:4000/api/emails/fetch-reply-emails?threadId=${threadId}`);
+          const data = await response.json();
 
-      if (response.ok) {
-        setReplies((prevReplies) => ({
-          ...prevReplies,
-          [threadId]: data.replies,
-        }));
-      } else {
-        console.error("Failed to fetch replies:", data.error);
+          if (response.ok) {
+              // Fetch attachments for each reply
+              const repliesWithAttachments = await Promise.all(
+                  data.replies.map(async (reply) => {
+                      // Check if attachments are already in localStorage
+                      const storedAttachments = localStorage.getItem(`attachments_${reply._id}`);
+                      if (storedAttachments) {
+                          return {
+                              ...reply,
+                              attachments: JSON.parse(storedAttachments), // Use stored attachments
+                          };
+                      }
+
+                      // Fetch attachments from the backend
+                      const attachmentsResponse = await fetch(
+                          `http://localhost:4000/api/emails/attachments/reply/${reply._id}`
+                      );
+
+                      if (!attachmentsResponse.ok) {
+                          console.error(`📎 Attachments for reply ${reply._id}:`, attachmentsResponse.statusText);
+                          return {
+                              ...reply,
+                              attachments: [], // Return an empty array if attachments fail to fetch
+                          };
+                      }
+
+                      const attachmentsData = await attachmentsResponse.json();
+                      const attachments = attachmentsData.attachments || [];
+
+                      // Save attachments to localStorage
+                      localStorage.setItem(`attachments_${reply._id}`, JSON.stringify(attachments));
+
+                      return {
+                          ...reply,
+                          attachments, // Add attachments to the reply
+                      };
+                  })
+              );
+
+              console.log("🔄 Updating state with replies & attachments:", repliesWithAttachments);
+              // Update the replies state with attachments
+              setReplies((prevReplies) => ({
+                  ...prevReplies,
+                  [threadId]: repliesWithAttachments,
+              }));
+          } else {
+              console.error("Failed to fetch replies:", data.error);
+          }
+      } catch (error) {
+          console.error("Error fetching replies:", error);
       }
-    } catch (error) {
-      console.error("Error fetching replies:", error);
-    }
   };
+
+
 
   useEffect(() => {
     if (formDataReply.threadId) {
@@ -375,7 +415,7 @@ const { displayedEmails, totalPages } = getPaginatedEmails(sortedThreads, standa
     };
 
     fetchEmails();
-    const interval = setInterval(fetchEmails, 20000); // Auto-fetch every 20 seconds
+    const interval = setInterval(fetchEmails, 15000); // Auto-fetch every 15 seconds
     return () => clearInterval(interval);
   }, []);
 
@@ -989,50 +1029,87 @@ const handleSelectEmail = (email) => {
                   )}
 
                   {email.messageId && replies[email.threadId]?.length > 0 && (
-                    replies[email.threadId]
-                      .filter(reply => reply.originalMessageId === email.messageId) // Ensure reply belongs to this email
-                      .sort((a, b) => new Date(a.repliedAt) - new Date(b.repliedAt))
-                      .map((reply, index) => (
-                        <div key={index} className="email-replies-container">
-                          <div className="email-header-details">
-                            <div className="email-user-icon sent">
-                              {getInitials(companyDisplayName)}
-                            </div>
-
-                            <div className="email-header-info">
-                              <p className="email-sender-name">
-                                {companyDisplayName}
-                              </p>
-                              <p className="email-sender-email">
-                                {companyEmail}
-                              </p>  
-                            </div>
-
-                            {/* ✅ Corrected timestamp */}
-                            <p className="email-timestamp">
-                              {reply.repliedAt
-                                ? new Date(reply.repliedAt).toLocaleDateString("en-US", {
-                                    month: "long",
-                                    day: "numeric",
-                                    year: "numeric",
-                                }) +
-                                  " - " +
-                                  new Date(reply.repliedAt).toLocaleTimeString("en-US", {
-                                    hour: "numeric",
-                                    minute: "numeric",
-                                    hour12: true,
-                                })
-                                : "No Timestamp Available"}
-                            </p>
+                  replies[email.threadId]
+                    .filter((reply) => reply.originalMessageId === email.messageId) // Ensure reply belongs to this email
+                    .sort((a, b) => new Date(a.repliedAt) - new Date(b.repliedAt))
+                    .map((reply, index) => (
+                      <div key={index} className="email-replies-container">
+                        {/* Reply Header */}
+                        <div className="email-header-details">
+                          <div className="email-user-icon sent">
+                            {getInitials(companyDisplayName)}
                           </div>
 
-                          {/* ✅ Reply content */}
-                            <div className="email-body-container">
-                              <p className="email-body-display">{reply.replyContent || "No Content"}</p>
-                            </div>
+                          <div className="email-header-info">
+                            <p className="email-sender-name">{companyDisplayName}</p>
+                            <p className="email-sender-email">{companyEmail}</p>
+                          </div>
+
+                          {/* Timestamp */}
+                          <p className="email-timestamp">
+                            {reply.repliedAt
+                              ? new Date(reply.repliedAt).toLocaleDateString("en-US", {
+                                  month: "long",
+                                  day: "numeric",
+                                  year: "numeric",
+                                }) +
+                                " - " +
+                                new Date(reply.repliedAt).toLocaleTimeString("en-US", {
+                                  hour: "numeric",
+                                  minute: "numeric",
+                                  hour12: true,
+                                })
+                              : "No Timestamp Available"}
+                          </p>
                         </div>
-                      ))
-                  )}
+
+                        {/* Reply Content */}
+                        <div className="email-body-container">
+                          <p className="email-body-display">{reply.replyContent || "No Content"}</p>
+                        </div>
+
+                        {/* Attachments Section for Replies */}
+                        {reply.attachments && reply.attachments.length > 0 && (
+                          <div className="email-attachments-container">
+                            <p className="attachments-header">Attachments:</p>
+                            <div className="attachments-list">
+                              {reply.attachments.map((attachment, index) => (
+                                <div key={index} className="attachment-item">
+                                  {/* File Icon */}
+                                  {getFileIcon(attachment.mimeType)}
+
+                                  <div className="attachment-details">
+                                    <p className="attachment-name">{attachment.fileName}</p>
+
+                                    {/* View & Download Actions */}
+                                    <div className="attachment-actions">
+                                      <button
+                                        className="view-link"
+                                        onClick={() => handleViewAttachment(attachment, "reply")}
+                                      >
+                                        View
+                                      </button>
+
+                                      <span className="separator">|</span>
+
+                                      <button
+                                        className="download-link"
+                                        onClick={() => handleDownloadAttachment(attachment)}
+                                      >
+                                        Download
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="email-divider-line"></div>
+                      </div>
+                    ))
+                )}
               </div>
           ))}
       </div>
