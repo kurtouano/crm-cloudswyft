@@ -36,6 +36,12 @@ export const addLead = async (req, res) => {
 export const importLead = async (req, res) => {
   try {
     const { leads } = req.body;
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Microsoft Access token missing. Please log in first." });
+    }
+    const accessToken = authHeader.slice(7); // Extract the token
 
     if (!Array.isArray(leads) || leads.length === 0) {
       return res.status(400).json({ error: "Invalid data format or empty file." });
@@ -84,12 +90,11 @@ export const importLead = async (req, res) => {
       return res.status(200).json({
         message: "No new leads added. All entries already exist.",
         insertedCount: 0,
-        skippedCount: skippedCount
+        skippedCount
       });
     }
 
     const insertedLeads = [];
-    const accessToken = global.MICROSOFT_ACCESS_TOKEN; // ✅ store token after OAuth in global or db
 
     for (const lead of newLeads) {
       const newLead = new Lead({
@@ -99,15 +104,12 @@ export const importLead = async (req, res) => {
       const savedLead = await newLead.save();
       insertedLeads.push(savedLead);
 
-      if (accessToken) {
-        await sendAutoWelcomeEmail(savedLead, accessToken);
-      } else {
-        console.warn("⚠️ Microsoft token missing. Auto email not sent.");
-      }
+      await sendAutoWelcomeEmail(savedLead, accessToken);
+      console.log(`✅ Auto welcome email sent to ${savedLead.bestEmail}`);
     }
 
     res.status(201).json({
-      message: "Leads uploaded successfully and emails sent!",
+      message: "Leads uploaded successfully and welcome emails sent!",
       insertedCount: insertedLeads.length,
       skippedCount,
       insertedLeads
@@ -115,10 +117,9 @@ export const importLead = async (req, res) => {
 
   } catch (error) {
     console.error("Error saving leads:", error);
-    res.status(500).json({ error: "Failed to save leads." });
+    res.status(500).json({ error: "Failed to save leads or send emails." });
   }
 };
-
 
 
 

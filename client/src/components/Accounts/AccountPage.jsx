@@ -161,14 +161,24 @@ export default function AccountPage() {
         importDate: new Date().toISOString().split("T")[0],
       }))
       .filter((lead) =>
-        Object.values(lead).some((value) => value?.toString().trim()) // Keep only non-empty rows
+        Object.values(lead).some((value) => value?.toString().trim()) 
       );
   
     console.log("Filtered Data Before Upload:", formattedData);
   
     try {
-      const response = await axios.post("http://localhost:4000/api/leads/upload", { leads: formattedData });
-
+      const microsoftAccessToken = localStorage.getItem("microsoftAccessToken");
+      if (!microsoftAccessToken) {
+        alert("Please log in with Microsoft first to send automated emails.");
+        return;
+      }
+  
+      const response = await axios.post(
+        "http://localhost:4000/api/leads/upload",
+        { leads: formattedData },
+        { headers: { Authorization: `Bearer ${microsoftAccessToken}` } }  // ✅ Include token here
+      );
+  
       const insertedCount = response.data.insertedCount || 0;
       const skippedCount = response.data.skippedCount || 0;
   
@@ -178,7 +188,6 @@ export default function AccountPage() {
       setLeads(updatedLeads.data);
       setFilteredLeads(updatedLeads.data);
   
-      // **Reset the file input**
       event.target.value = "";
     } catch (err) {
       console.error("Error uploading leads:", err);
@@ -186,6 +195,7 @@ export default function AccountPage() {
         err.response?.data?.error || "Failed to upload leads.";
     }
   };
+  
   
   const handleChatClick = (lead) => {
     navigate(`/communications?leadEmail=${encodeURIComponent(lead.bestEmail)}`);
