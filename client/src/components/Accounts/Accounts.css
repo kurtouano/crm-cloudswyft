@@ -544,7 +544,7 @@
 
 .interaction-history-buttons button {
     padding: 10px 20px;
-    margin-bottom: 30px;
+    margin-bottom: 25px;
     cursor: pointer;
     border: none;
     color: #575757;
@@ -568,11 +568,22 @@
     width: 1420px;
     flex-direction: column;
     padding: 10px 10px;
-    background-color: white;
+    background-color: #FFFFFF;
+    border: 0.5px solid #d5d5d581;
     row-gap: 10px;
+    height: 245px;
+    border-radius: 12px;
+}
+
+.no-interactions-message {
+    font-family: "Geist";
+    font-size: 16px;
+    color: #6c6c6c;
+    margin: 10px 0 0 15px;
 }
 
 .interaction-history-item {
+    font-size: 15px;
     width: 99%;
     position: relative;
     font-family: "Roboto";
@@ -601,9 +612,21 @@
     border-radius: 5px;
 }
 
+.interaction-history-subject {
+    color: #3a3a3a;
+    max-width: 550px;
+    white-space: nowrap; /* Prevents text from wrapping */
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .interaction-history-description {
+
     color: #0000007d;
-    max-width: 1000px;
+    max-width: 520px;
+    white-space: nowrap; /* Prevents text from wrapping */
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .interaction-history-date {
