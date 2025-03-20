@@ -19,6 +19,33 @@ const Sidenav = () => {
     const navigate = useNavigate();
     const [showDropdown, setShowDropdown] = useState(false);
     const [notifications, setNotifications] = useState([]);
+    const unreadCount = notifications.filter((notif) => !notif.viewed).length;
+    const [optionsVisible, setOptionsVisible] = useState({});
+
+    const formatTimeAgo = (timestamp) => {
+        const date = new Date(timestamp);
+        if (isNaN(date)) return "Just now"; // fallback
+    
+        const now = new Date();
+        const diff = now - date;
+        const seconds = Math.floor(diff / 1000);
+        const minutes = Math.floor(diff / (1000 * 60));
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const weeks = Math.floor(diff / (1000 * 60 * 60 * 24 * 7));
+        const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30));
+        const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
+    
+        if (seconds < 60) return `${seconds}s ago`;   // 👈 show seconds!
+        if (minutes < 60) return `${minutes}m ago`;
+        if (hours < 24) return `${hours}h ago`;
+        if (days < 7) return `${days}d ago`;
+        if (weeks < 4) return `${weeks}w ago`;
+        if (months < 12) return `${months}mo ago`;
+        return `${years}y ago`;
+    };
+    
+      
 
     useEffect(() => {
         const fetchStoredNotifications = async () => {
@@ -65,14 +92,44 @@ const Sidenav = () => {
 
     const toggleDropdown = () => setShowDropdown(!showDropdown);
 
-    const handleNotificationClick = (notifIndex, leadEmail, threadId) => {
-        setNotifications((prev) =>
-            prev.map((notif, idx) => idx === notifIndex ? { ...notif, read: true } : notif)
-        );
-
-        navigate(`/communications?leadEmail=${leadEmail}&threadId=${threadId}`);
+    const handleNotificationClick = async (notifIndex, leadEmail, threadId) => {
+        try {
+            await axios.post("http://localhost:4000/api/emails/notifications/viewed", { threadId });
+    
+            // Update local state so that color changes immediately
+            setNotifications((prev) =>
+                prev.map((notif, idx) =>
+                    idx === notifIndex ? { ...notif, viewed: true } : notif
+                )
+            );
+    
+            navigate(`/communications?leadEmail=${leadEmail}&threadId=${threadId}`);
+        } catch (error) {
+            console.error("❌ Failed to mark notification as viewed:", error);
+        }
     };
+    
+    const toggleOptions = (index) => {
+        setOptionsVisible((prev) => ({
+          ...prev,
+          [index]: !prev[index]
+        }));
+      };
 
+      const handleDeleteNotification = async (notifIndex, threadId) => {
+        try {
+          await axios.post("http://localhost:4000/api/emails/notifications/delete", { threadId });
+      
+          setNotifications((prev) => prev.filter((_, idx) => idx !== notifIndex));
+      
+          // Optional: Add toast/snackbar alert: "Notification deleted. Undo"
+          // You can use Material UI Snackbar, or react-toastify here if you’d like.
+        } catch (error) {
+          console.error("❌ Error deleting notification on backend:", error);
+        }
+      };
+      
+      
 
     const handleLogout = () => {
         localStorage.removeItem("token"); // Remove CRM JWT Token
@@ -92,7 +149,7 @@ const Sidenav = () => {
                         <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
                         <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                     </svg>
-                    {notifications.length > 0 && <span className="notif-badge">{notifications.length}</span>}
+                    {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
                 </div>
 
                 {showDropdown && (
@@ -100,13 +157,41 @@ const Sidenav = () => {
                         {notifications.length > 0 ? (
                             notifications.map((notif, index) => (
                                 <div 
-                                    key={index} 
-                                    className={`notif-item ${notif.read ? "read" : "unread"}`} 
-                                    onClick={() => handleNotificationClick(index, notif.leadEmail, notif.threadId)}
+                                  key={index} 
+                                  className={`notif-item ${notif.viewed ? "read" : "unread"}`}
                                 >
-                                    {notif.message}
+                                  <div
+                                    onClick={() => handleNotificationClick(index, notif.leadEmail, notif.threadId)}
+                                    style={{ cursor: 'pointer' }}
+                                  >
+                                    <div>{notif.message}</div>
+                                    <div className="notif-time">{formatTimeAgo(notif.timestamp)}</div>
+                                  </div>
+                              
+                                  <div
+                                    className="notif-options-icon"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      toggleOptions(index);
+                                    }}
+                                    style={{ color: notif.viewed ? '#555' : '#fff' }}
+                                  >
+                                    &#x22EE;
+                                  </div>
+                              
+                                  {optionsVisible[index] && (
+                                    <div className="notif-option-menu">
+                                        <div 
+                                            className="notif-option-item" 
+                                            onClick={() => handleDeleteNotification(index, notif.threadId)}
+                                            >
+                                            Delete this notification
+                                        </div>
+                                    </div>
+                                  )}
                                 </div>
-                            ))
+                              ))
+                                                            
                         ) : (
                             <div className="notif-empty">No new notifications</div>
                         )}
