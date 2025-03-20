@@ -1,3 +1,4 @@
+import useMicrosoftAuthentication from "../../utils/AuthMicrosoft.js";
 import { useState, useEffect, useMemo } from "react";
 import ReactPaginate from "react-paginate";
 import { useNavigate } from "react-router-dom";
@@ -38,6 +39,8 @@ export default function AccountPage() {
   const [deleteModal, setDeleteModal] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const displayedLeads = filteredLeads.slice(page * rowsPerPage, (page + 1) * rowsPerPage);
+
+  useMicrosoftAuthentication(); // Ensure user is authenticated in Microsoft
 
   // Fetch leads from the backend
   useEffect(() => {
@@ -103,7 +106,6 @@ export default function AccountPage() {
     }
   };
   
-
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (!file) return;

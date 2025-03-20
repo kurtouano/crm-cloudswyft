@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import ReactPaginate from "react-paginate";
 import usersIcon from "../../assets/users.png";
@@ -7,6 +8,9 @@ import hourglassIcon from "../../assets/hourglass.png";
 import highPriorityIcon from "../../assets/highpriority.png";
 import leadIcon from "../../assets/lead-profile-icon.svg";
 import InteractionArrowIcon from "../../assets/interaction-history-arrow.svg";
+import { io } from "socket.io-client";
+
+const socket = io("http://localhost:4000");
 
 export default function LeadProfilePage() {
   const location = useLocation();
@@ -16,6 +20,10 @@ export default function LeadProfilePage() {
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 5;
 
+  const [sentEmails, setSentEmails] = useState([]);
+  const [receivedEmails, setReceivedEmails] = useState([]);
+
+
 const cardData = [
   { title: "Lead Status", value: "Email Sent", bgColor: "#2196F3", icon: usersIcon },
   { title: "Last Contact Date", value: "02/07/25", bgColor: "#1BB9F4", icon: clockIcon },
@@ -23,31 +31,43 @@ const cardData = [
   { title: "Lead Score", value: "Priority", bgColor: "#307ADB", icon: highPriorityIcon },
 ];
 
-// JSON data for interactions
-const interactionData = {
-  sent: [
-    { title: "Base", type: "Promotion", subject: "Subject base", description: "Base, this is a preview of your email, enjoy! Your subscription has resumed.", date: "6:19 PM" },
-    { title: "Base", type: "Promotion", subject: "Subject base", description: "Base, this is a preview of your email, enjoy! Your subscription has resumed.", date: "7:00 PM" },
-    { title: "Base", type: "Promotion", subject: "Subject base", description: "Base, this is a preview of your email, enjoy! Your subscription has resumed.", date: "8:45 AM" },
-    { title: "Base", type: "Promotion", subject: "Subject base", description: "Base, this is a preview of your email, enjoy! Your subscription has resumed.", date: "9:30 AM" },
-    { title: "Base", type: "Promotion", subject: "Subject base", description: "Base, this is a preview of your email, enjoy! Your subscription has resumed.", date: "10:15 AM" },
-    { title: "Base", type: "Promotion", subject: "Subject base", description: "Base, this is a preview of your email, enjoy! Your subscription has resumed.", date: "11:00 AM" },
-    { title: "Base", type: "Promotion", subject: "Subject base", description: "Base, this is a preview of your email, enjoy! Your subscription has resumed.", date: "6:19 PM" },
-    { title: "Base", type: "Promotion", subject: "Subject base", description: "Base, this is a preview of your email, enjoy! Your subscription has resumed.", date: "7:00 PM" },
-    { title: "Base", type: "Promotion", subject: "Subject base", description: "Base, this is a preview of your email, enjoy! Your subscription has resumed.", date: "8:45 AM" },
-    { title: "Base", type: "Promotion", subject: "Subject base", description: "Base, this is a preview of your email, enjoy! Your subscription has resumed.", date: "9:30 AM" },
-    { title: "Base", type: "Promotion", subject: "Subject base", description: "Base, this is a preview of your email, enjoy! Your subscription has resumed.", date: "10:15 AM" },
-    { title: "Base", type: "Promotion", subject: "Subject base", description: "Base, this is a preview of your email, enjoy! Your subscription has resumed.", date: "11:00 AM" },
-  ],
-  received: [
-    { title: "Base", type: "Inquiry", subject: "Received Subject 1", description: "Received email 1", date: "5:19 PM" },
-    { title: "Base", type: "Inquiry", subject: "Received Subject 2", description: "Received email 2", date: "4:30 PM" },
-    { title: "Base", type: "Inquiry", subject: "Received Subject 3", description: "Received email 3", date: "3:45 PM" },
-    { title: "Base", type: "Inquiry", subject: "Received Subject 4", description: "Received email 4", date: "2:15 PM" },
-    { title: "Base", type: "Inquiry", subject: "Received Subject 5", description: "Received email 5", date: "1:30 PM" },
-    { title: "Base", type: "Inquiry", subject: "Received Subject 6", description: "Received email 6", date: "12:10 PM" },
-  ],
-};
+  useEffect(() => {
+    const fetchEmails = async () => {
+      try {
+        if (!lead?.bestEmail) return; // ✅ Prevents errors if undefined
+
+        console.log("Fetching emails for:", lead.bestEmail);
+
+        const sentResponse = await fetch(`http://localhost:4000/api/emails/fetch-sent-email-raw?leadEmail=${lead.bestEmail}`);
+        const sentData = await sentResponse.json();
+        console.log("Sent Emails Data:", sentData);
+
+        const receivedResponse = await fetch(`http://localhost:4000/api/emails/fetch-reply-emails-raw?leadEmail=${lead.bestEmail}`);
+        const receivedData = await receivedResponse.json();
+        console.log("Received Emails Data:", receivedData);
+
+        setSentEmails(Array.isArray(sentData) ? sentData : []);
+        setReceivedEmails(Array.isArray(receivedData) ? receivedData : []);
+      } catch (error) {
+        console.error("Error fetching emails:", error);
+      }
+    };
+
+    fetchEmails(); 
+
+    // Listen for real-time updates from the backend
+    socket.on("new-email", (data) => {
+      console.log("New email detected:", data);
+
+      if (data.leadEmail === lead?.bestEmail) {
+        fetchEmails(); // Fetch new emails only for the active lead
+      }
+    });
+
+  return () => {
+    socket.off("new-email"); // Cleanup listener on unmount
+  };
+  }, [lead?.bestEmail]); 
 
   const handleToggle = (tab) => {
     setActiveTab(tab);
@@ -59,10 +79,22 @@ const interactionData = {
   };
 
   // Get paginated emails
-  const dataToShow = interactionData[activeTab].slice(
+  const emailsToShow = activeTab === "sent" ? sentEmails : receivedEmails;
+  const dataToShow = emailsToShow.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
+
+  const formatDate = (timestamp) => {
+    const date = new Date(timestamp);
+    return date.toLocaleString("en-US", {
+        month: "long",  // Full month name (e.g., "March")
+        day: "numeric", // Day number (e.g., "19")
+        hour: "numeric", // Hour (e.g., "5")
+        minute: "2-digit", // Minutes (e.g., "16")
+        hour12: true, // Use AM/PM format
+    }).replace("at", "-"); // Replace the comma with " -"
+  };
 
   return (
     <div className="lead-profile-container">
@@ -127,17 +159,27 @@ const interactionData = {
 
       {/* Interaction List with Pagination */}
       <div className="interaction-history-container">
-        {dataToShow.map((interaction, index) => (
-          <div key={index} className="interaction-history-item">
-            <img src={InteractionArrowIcon} className="interaction-history-icon" alt="Arrow Icon" />
-            <p className="interaction-history-title">{interaction.title}</p>
-            <p className="interaction-history-type">{interaction.type}</p>
-            <p className="interaction-history-subject">{interaction.subject}</p>
-            <p className="interaction-history-description">- {interaction.description}</p>
-            <p className="interaction-history-date">{interaction.date}</p>
-          </div>
-        ))}
+        {dataToShow.length > 0 ? (
+          dataToShow.map((interaction) => (
+            <div key={interaction._id} className="interaction-history-item">
+              <img src={InteractionArrowIcon} className="interaction-history-icon" alt="Arrow Icon" />
+              <p className="interaction-history-title">Base</p>
+              <p className="interaction-history-type">Promotions</p>
+              <p className="interaction-history-subject">{interaction.subject}</p>
+              <p className="interaction-history-description">- {interaction.message || interaction.content}</p>
+              <p className="interaction-history-date">  
+                {[interaction.timestamp, interaction.sentAt]
+                .filter(Boolean) 
+                .map(formatDate)
+                .join(" || ")}
+              </p>
+            </div>
+          ))
+        ) : (
+          <p className="no-interactions-message">No Emails found.</p>
+        )}
       </div>
+
 
       {/* Pagination */}
       <div className="pagination-container">
@@ -145,9 +187,9 @@ const interactionData = {
           breakLabel="..."
           nextLabel=">"
           onPageChange={handlePageClick}
-          pageRangeDisplayed={4}  // Show 4 pages in the middle
-          marginPagesDisplayed={1} // Show 1 page on each side (first and last)
-          pageCount={Math.ceil(interactionData[activeTab].length / itemsPerPage)}
+          pageRangeDisplayed={4}
+          marginPagesDisplayed={1}
+          pageCount={Math.ceil(emailsToShow.length / itemsPerPage) || 1} // Ensure pagination updates dynamically
           previousLabel="<"
           containerClassName="pagination"
           activeClassName="active"

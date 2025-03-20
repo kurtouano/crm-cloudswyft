@@ -1,4 +1,5 @@
-import { useEffect, useState, useMemo, useRef} from "react";
+import useMicrosoftAuthentication from "../../utils/AuthMicrosoft.js";
+import { useEffect, useState, useMemo, useCallback} from "react";
 import { useLocation } from "react-router-dom";
 import Fuse from "fuse.js"; // 🔍 Import Fuse.js
 import { FiSearch, FiEdit } from "react-icons/fi";
@@ -8,7 +9,8 @@ import { IoArrowBack, IoArrowForward, IoReturnUpBackOutline, IoChevronDownOutlin
 import { MdAttachFile, MdClose } from "react-icons/md";
 import "./Communication.css";
 
-export default function CommunicationPageNEW() {
+export default function CommunicationPageNEW () {
+  localStorage.setItem("currentPage", "communications");
   // Basic states
   const location = useLocation();
   const companyDisplayName = "Cloudswyft";
@@ -20,9 +22,6 @@ export default function CommunicationPageNEW() {
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [unreadCounts, setUnreadCounts] = useState({});
-
-  // Auth & token
-  const intervalRef = useRef(null);
 
   // Emails & attachments
   const [emails, setEmails] = useState([]);
@@ -51,24 +50,24 @@ export default function CommunicationPageNEW() {
   const [attachments, setAttachments] = useState({}); 
   const [replies, setReplies] = useState({});
 
-  const allEmails = [
+  const allEmails = [ // Merge Received and Sent Emails
     ...filteredEmails.map(email => ({ ...email, type: "received" })), 
     ...sentEmails.map(email => ({ 
         ...email, 
         type: "sent", 
-        timestamp: email.sentAt // Ensure a common timestamp field 
+        timestamp: email.sentAt 
     }))
   ];
 
+  // Sort Merged Emails by Timestamp
   allEmails.sort((a, b) => 
-    new Date(b.timestamp || 0) - new Date(a.timestamp || 0) // ✅ Avoid NaN issues
+    new Date(b.timestamp || 0) - new Date(a.timestamp || 0) 
   );
 
-  // Pagination logic
-
+  // Group Emails by Thread for Displaying in Pagination
   const groupEmailsByThread = (emails) => {
     const groupedThreads = new Map();
-    const standaloneEmails = []; // Sent emails without a thread
+    const standaloneEmails = []; 
 
     emails.forEach(email => {
         if (email.threadId) {
@@ -77,48 +76,46 @@ export default function CommunicationPageNEW() {
             }
             groupedThreads.get(email.threadId).push(email);
         } else {
-            standaloneEmails.push(email); // Keep truly standalone emails separate
+            standaloneEmails.push(email); // Place Sent Emails into Separate Pages
         }
     });
 
-    // ✅ Sort each thread by timestamp (oldest to newest)
-    groupedThreads.forEach((thread, key) => {
-        groupedThreads.set(key, thread.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)));
-    });
+  // Sort each thread by timestamp (oldest to newest)
+  groupedThreads.forEach((thread, key) => {
+      groupedThreads.set(key, thread.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)));
+  });
 
     return { groupedThreads, standaloneEmails };
-};
+  };
 
+  // Sort grouped threads by the newest mail in each thread
+  const sortThreadsByLatestEmail = (groupedThreads) => { 
+    return Array.from(groupedThreads.values()).sort((a, b) => {
+        return new Date(b[0].timestamp) - new Date(a[0].timestamp); // Sort threads by newest email
+    });
+  };
 
-// Sort threads by the latest email in each thread
-const sortThreadsByLatestEmail = (groupedThreads) => {
-  return Array.from(groupedThreads.values()).sort((a, b) => {
-      return new Date(b[0].timestamp) - new Date(a[0].timestamp); // Sort threads by newest email
-  });
-};
+  // Merge sorted threads and standalone emails for pagination
+  const getPaginatedEmails = (sortedThreads, standaloneEmails, currentPage, emailsPerPage) => {
+    const allThreads = [...sortedThreads, ...standaloneEmails.map(email => [email])]; // Treat standalone emails as mini-threads
 
+    allThreads.sort((a, b) => new Date(b[0].timestamp) - new Date(a[0].timestamp));
 
-// Merge sorted threads and standalone emails for pagination
-const getPaginatedEmails = (sortedThreads, standaloneEmails, currentPage, emailsPerPage) => {
-  const allThreads = [...sortedThreads, ...standaloneEmails.map(email => [email])]; // Treat standalone emails as mini-threads
+    const totalPages = Math.ceil(allThreads.length / emailsPerPage);
+    const startIndex = (currentPage - 1) * emailsPerPage;
+    const displayedThreads = allThreads.slice(startIndex, startIndex + emailsPerPage);
 
-  allThreads.sort((a, b) => new Date(b[0].timestamp) - new Date(a[0].timestamp));
+    // Flatten for UI display
+    const displayedEmails = displayedThreads.flat();
 
-  const totalPages = Math.ceil(allThreads.length / emailsPerPage);
-  const startIndex = (currentPage - 1) * emailsPerPage;
-  const displayedThreads = allThreads.slice(startIndex, startIndex + emailsPerPage);
+    return { displayedEmails, totalPages };
+  };
 
-  // Flatten for UI display
-  const displayedEmails = displayedThreads.flat();
+  const { groupedThreads, standaloneEmails } = groupEmailsByThread(allEmails);
+  const sortedThreads = sortThreadsByLatestEmail(groupedThreads);
+  const { displayedEmails, totalPages } = getPaginatedEmails(sortedThreads, standaloneEmails, currentPage, emailsPerPage);
 
-  return { displayedEmails, totalPages };
-};
-
-// Apply the logic
-const { groupedThreads, standaloneEmails } = groupEmailsByThread(allEmails);
-const sortedThreads = sortThreadsByLatestEmail(groupedThreads);
-const { displayedEmails, totalPages } = getPaginatedEmails(sortedThreads, standaloneEmails, currentPage, emailsPerPage);
-
+  useMicrosoftAuthentication();
 
   useEffect(() => {
     const fetchLeads = async () => {
@@ -152,103 +149,46 @@ const { displayedEmails, totalPages } = getPaginatedEmails(sortedThreads, standa
     };
   
     fetchLeads();
-  }, [location.search]);
+  }, [location.search]); 
+
+  const fetchSentEmails = useCallback(async () => {
+    if (!activeLead?.bestEmail) return;
   
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const accessToken = params.get("accessToken");
-    const expiryTime = params.get("expiry") ? Number(params.get("expiry")) : null;
+    setSentEmails([]); 
+    let allSentEmails = [];
+    let page = 1;
+    let totalEmailsFetched = 0;
+    let totalEmailsToFetch = Infinity;
   
-    const redirectToLogin = () => {
-      console.log("🔄 Access token is missing or expired. Redirecting to Microsoft login...");
-      localStorage.removeItem("microsoftAccessToken");
-      localStorage.removeItem("tokenExpiry");
+    try {
+        while (totalEmailsFetched < totalEmailsToFetch) {
+            const response = await fetch(
+                `http://localhost:4000/api/emails/sent?to=${activeLead.bestEmail}&page=${page}&limit=${sentEmailsPerPage}`
+            );
+            const data = await response.json();
   
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current); // Clear the interval before redirecting
-      }
+            if (response.ok && data.emails.length > 0) {
+                allSentEmails = [...allSentEmails, ...data.emails];
+                totalEmailsFetched += data.emails.length;
+                totalEmailsToFetch = data.totalEmails;
+                page++;
+            } else {
+                break;
+            }
+        }
   
-      window.location.href = "http://localhost:4000/api/emails/microsoft-login"; // Redirect to your login page
-    };
+        // ✅ Update UI with latest sent emails
+        setSentEmails(allSentEmails);
   
-    const checkTokenValidity = () => {
-      const storedToken = localStorage.getItem("microsoftAccessToken");
-  
-      // If token is missing, redirect to login
-      if (!storedToken) {
-        redirectToLogin();
-      }
-  
-      const storedExpiry = localStorage.getItem("tokenExpiry");
-  
-      // If token has expired, redirect to login
-      if (!storedExpiry || Date.now() > Number(storedExpiry)) {
-        redirectToLogin();
-      }
-    };
-  
-    // If the access token and expiry are in the URL params (i.e., after logging in)
-    if (accessToken && expiryTime) {
-      console.log("✅ Access Token Retrieved:", accessToken);
-      console.log("✅ Expires in:", Math.floor((expiryTime - Date.now()) / 60000), "minutes");
-  
-      localStorage.setItem("microsoftAccessToken", accessToken);
-      localStorage.setItem("tokenExpiry", expiryTime);
-  
-      window.history.replaceState({}, document.title, "/communications");
-    } else {
-      // If no access token in URL, check token validity in localStorage
-      checkTokenValidity();
+    } catch (error) {
+        console.error("Error fetching sent emails:", error);
+        setSentEmails([]);
     }
-  
-    // Start checking token validity every 60 seconds
-    intervalRef.current = setInterval(checkTokenValidity, 60000);
-  
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current); // Cleanup on component unmount
-      }
-    };
-  }, []); // Empty dependency array ensures this runs once on component mount  
+  }, [activeLead]); // ✅ Only re-run when `activeLead` changes
 
   useEffect(() => {
-      const fetchSentEmails = async () => {
-          if (!activeLead?.bestEmail) return;
-
-          setSentEmails([]); 
-          let allSentEmails = [];
-          let page = 1;
-          let totalEmailsFetched = 0;
-          let totalEmailsToFetch = Infinity;
-
-          try {
-              while (totalEmailsFetched < totalEmailsToFetch) {
-                  const response = await fetch(
-                      `http://localhost:4000/api/emails/sent?to=${activeLead.bestEmail}&page=${page}&limit=${sentEmailsPerPage}`
-                  );
-                  const data = await response.json();
-
-                  if (response.ok && data.emails.length > 0) {
-                      allSentEmails = [...allSentEmails, ...data.emails];
-                      totalEmailsFetched += data.emails.length;
-                      totalEmailsToFetch = data.totalEmails;
-                      page++;
-                  } else {
-                      break;
-                  }
-              }
-
-              // ✅ Show emails IMMEDIATELY without attachments
-              setSentEmails(allSentEmails);
-
-          } catch (error) {
-              console.error("Error fetching sent emails:", error);
-              setSentEmails([]);
-          }
-      };
-
-      fetchSentEmails();
-  }, [activeLead]); 
+    fetchSentEmails();
+  }, [fetchSentEmails]);
 
 
   useEffect(() => {
@@ -362,8 +302,6 @@ const { displayedEmails, totalPages } = getPaginatedEmails(sortedThreads, standa
           console.error("Error fetching replies:", error);
       }
   };
-
-
 
   useEffect(() => {
     if (formDataReply.threadId) {
@@ -566,6 +504,9 @@ const { displayedEmails, totalPages } = getPaginatedEmails(sortedThreads, standa
         alert("Email sent successfully!");
         setFormData({ to: "", subject: "", text: "" });
         setAttachment(null); // Clear attachment after sending
+
+        closeModal(); // Close modal after sending
+        fetchSentEmails();
       } else {
         alert(data.error || "Failed to send email");
       }
@@ -623,7 +564,7 @@ const { displayedEmails, totalPages } = getPaginatedEmails(sortedThreads, standa
     }
 
     setLoading(false);
-    };
+  };
 
   // Helper function to format timestamp
   const formatRelativeTime = (timestamp) => {
@@ -1162,3 +1103,5 @@ const handleSelectEmail = (email) => {
     </div>
   );
 }
+
+

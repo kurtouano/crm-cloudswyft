@@ -5,7 +5,6 @@ import io from "socket.io-client";
 import "./styles.css";
 import { FiGrid, FiCheckSquare, FiUsers, FiBookOpen, FiMail, FiLogOut } from "react-icons/fi";  // Sidenav Icons
 
-
 const socket = io("http://localhost:4000"); // ✅ Connect to backend WebSocket server
 
 const navItems = [
@@ -78,8 +77,8 @@ const Sidenav = () => {
     const handleLogout = () => {
         localStorage.removeItem("token"); // Remove CRM JWT Token
         localStorage.removeItem("role");  // Remove User Role
-        // localStorage.removeItem("microsoftAccessToken"); // Remove Microsoft Token
-        // localStorage.removeItem("tokenExpiry"); // Remove Token Expiry Time
+        localStorage.removeItem("microsoftAccessToken"); // Remove Microsoft Token
+        localStorage.removeItem("tokenExpiry"); // Remove Token Expiry Time
     
         window.location.href = "/"; // ✅ Force page reload to remove sidebar
     };
