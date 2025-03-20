@@ -23,6 +23,8 @@ export default function CommunicationPageNEW () {
   const [searchQuery, setSearchQuery] = useState("");
   const [unreadCounts, setUnreadCounts] = useState({});
 
+  // Auth & token
+
   // Emails & attachments
   const [emails, setEmails] = useState([]);
   const [sentEmails, setSentEmails] = useState([]); // Stores paginated sent emails
@@ -190,7 +192,6 @@ export default function CommunicationPageNEW () {
     fetchSentEmails();
   }, [fetchSentEmails]);
 
-
   useEffect(() => {
       const fetchAttachments = async () => {
           if (!sentEmails.length) return;
@@ -352,7 +353,7 @@ export default function CommunicationPageNEW () {
     };
 
     fetchEmails();
-    const interval = setInterval(fetchEmails, 15000); // Auto-fetch every 15 seconds
+    const interval = setInterval(fetchEmails, 12000); // Auto-fetch every 15 seconds
     return () => clearInterval(interval);
   }, []);
 

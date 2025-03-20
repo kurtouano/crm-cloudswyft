@@ -386,7 +386,6 @@ export async function fetchReceivedEmails(req, res) {
     if (newEmails.length > 0) {
         // Sort new emails by timestamp (latest first)
         newEmails.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
         newEmails.forEach(notif => {
             io.emit("newReplyNotification", notif);
         });
@@ -441,6 +440,7 @@ export async function fetchSentEmailsForLeadProfile(req, res) {
             .lean();
 
         res.status(200).json(sentEmails); // ✅ Send array directly
+        io.emit("new-email", { leadEmail }); // ✅ Emit WebSocket event   
     } catch (error) {
         console.error("Error fetching sent emails for lead profile:", error);
         res.status(500).json({ error: "Failed to retrieve sent emails" });

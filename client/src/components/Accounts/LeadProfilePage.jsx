@@ -1,4 +1,4 @@
-
+import useMicrosoftAuthentication from "../../utils/AuthMicrosoft.js";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import ReactPaginate from "react-paginate";
@@ -8,9 +8,6 @@ import hourglassIcon from "../../assets/hourglass.png";
 import highPriorityIcon from "../../assets/highpriority.png";
 import leadIcon from "../../assets/lead-profile-icon.svg";
 import InteractionArrowIcon from "../../assets/interaction-history-arrow.svg";
-import { io } from "socket.io-client";
-
-const socket = io("http://localhost:4000");
 
 export default function LeadProfilePage() {
   const location = useLocation();
@@ -30,6 +27,8 @@ const cardData = [
   { title: "Next Action Needed", value: "Follow Up", bgColor: "#2196F3", icon: hourglassIcon },
   { title: "Lead Score", value: "Priority", bgColor: "#307ADB", icon: highPriorityIcon },
 ];
+
+  useMicrosoftAuthentication(); // Ensure user is authenticated in Microsoft
 
   useEffect(() => {
     const fetchEmails = async () => {
@@ -55,18 +54,8 @@ const cardData = [
 
     fetchEmails(); 
 
-    // Listen for real-time updates from the backend
-    socket.on("new-email", (data) => {
-      console.log("New email detected:", data);
-
-      if (data.leadEmail === lead?.bestEmail) {
-        fetchEmails(); // Fetch new emails only for the active lead
-      }
-    });
-
-  return () => {
-    socket.off("new-email"); // Cleanup listener on unmount
-  };
+    const interval = setInterval(fetchEmails, 12000); 
+    return () => clearInterval(interval); 
   }, [lead?.bestEmail]); 
 
   const handleToggle = (tab) => {

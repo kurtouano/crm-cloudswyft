@@ -77,8 +77,8 @@ const Sidenav = () => {
     const handleLogout = () => {
         localStorage.removeItem("token"); // Remove CRM JWT Token
         localStorage.removeItem("role");  // Remove User Role
-        localStorage.removeItem("microsoftAccessToken"); // Remove Microsoft Token
-        localStorage.removeItem("tokenExpiry"); // Remove Token Expiry Time
+        //localStorage.removeItem("microsoftAccessToken"); // Remove Microsoft Token
+        //localStorage.removeItem("tokenExpiry"); // Remove Token Expiry Time
     
         window.location.href = "/"; // ✅ Force page reload to remove sidebar
     };
