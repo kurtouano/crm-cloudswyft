@@ -121,8 +121,6 @@ export const importLead = async (req, res) => {
   }
 };
 
-
-
 // 🟡 Update lead stage when moved in Kanban
 export const updateLeadStage = async (req, res) => {
   try {
@@ -179,6 +177,31 @@ export const deleteLead = async (req, res) => {
     res.status(500).json({ message: "Error deleting lead", error });
   }
 };
+
+export async function updateLeadStatus(req, res) {
+  let { leadID } = req.params;
+  const { status } = req.body;
+
+  try {
+    leadID = parseInt(leadID); // Convert to number
+
+    const updatedLead = await Lead.findOneAndUpdate(
+      { leadID: leadID }, // Ensure matching field name
+      { status },
+      { new: true }
+    );
+
+    if (!updatedLead) {
+      console.log("Lead not found for ID:", leadID);
+      return res.status(404).json({ error: "Lead not found" });
+    }
+
+    res.json({ message: "Status updated successfully", lead: updatedLead });
+  } catch (error) {
+    console.error("Error updating lead status:", error);
+    res.status(500).json({ error: error.message });
+  }
+}
 
 
 

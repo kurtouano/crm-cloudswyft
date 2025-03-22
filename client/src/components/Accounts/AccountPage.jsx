@@ -19,13 +19,6 @@ import chatIcon from "../../assets/bubble-chat.png";
 import userIcon from "../../assets/user-circle.png";
 import { FiDownload } from "react-icons/fi";
 
-const cardData = [
-  { title: "Total Number of Leads", value: "50", bgColor: "#2196F3", icon: usersIcon },
-  { title: "Conversion Rate", value: "12.5%", bgColor: "#1BB9F4", icon: clockIcon },
-  { title: "Recent Activity", value: "23 Interactions", bgColor: "#2196F3", icon: hourglassIcon },
-  { title: "High Priority Leads", value: "8 Urgent", bgColor: "#307ADB", icon: highPriorityIcon },
-];
-
 const rowsPerPage = 10;
 
 export default function AccountPage() {
@@ -38,6 +31,8 @@ export default function AccountPage() {
   const [selectedLead, setSelectedLead] = useState(null);
   const [deleteModal, setDeleteModal] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedFilter, setSelectedFilter] = useState(""); // State for selected filter
+
   const displayedLeads = filteredLeads.slice(page * rowsPerPage, (page + 1) * rowsPerPage);
 
   useMicrosoftAuthentication(); // Ensure user is authenticated in Microsoft
@@ -47,8 +42,10 @@ export default function AccountPage() {
     const fetchLeads = async () => {
       try {
         const response = await axios.get("http://localhost:4000/api/leads"); 
-        setLeads(response.data);
-        setFilteredLeads(response.data);
+        // Sort leads by createdAt in descending order (newest first)
+        const sortedLeads = response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setLeads(sortedLeads);
+        setFilteredLeads(sortedLeads); // Set filteredLeads to the sorted leads
         setError(null); // Clear any previous errors
       } catch (err) {
         console.error("Error fetching leads:", err); // Log for debugging
@@ -61,23 +58,95 @@ export default function AccountPage() {
     fetchLeads();
   }, []);
 
-  // Memoize Fuse.js instance
-  const fuse = useMemo(() => {
-    return new Fuse(leads, { keys: ["leadName", "company"], threshold: 0.3 });
+  // Filter leads based on selected filter
+  useEffect(() => {
+    let filtered = leads;
+  
+    // Apply status filter
+    if (selectedFilter === "new") {
+      const today = new Date();
+      const sevenDaysAgo = new Date(today.setDate(today.getDate() - 7));
+      filtered = leads.filter((lead) => {
+        const leadDate = new Date(lead.createdAt);
+        return leadDate >= sevenDaysAgo;
+      });
+    } else if (selectedFilter === "active") {
+      filtered = leads.filter((lead) => lead.status === "active");
+    } else if (selectedFilter === "successful") {
+      filtered = leads.filter((lead) => lead.status === "successful");
+    } else if (selectedFilter === "lost") {
+      filtered = leads.filter((lead) => lead.status === "lost");
+    }
+  
+    // Apply search query to the filtered leads
+    if (searchQuery) {
+      const fuse = new Fuse(filtered, { keys: ["leadName", "company"], threshold: 0.3 });
+      const results = fuse.search(searchQuery).map(({ item }) => item);
+      filtered = results;
+    }
+  
+    // Sort the final filtered leads by createdAt in descending order (newest first)
+    filtered = [...filtered].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  
+    setFilteredLeads(filtered);
+    setPage(0); // Reset to the first page after filtering
+  }, [selectedFilter, searchQuery, leads]);
+
+  const cardData = useMemo(() => {
+    const totalLeads = leads.length;
+    const highPriorityLeads = leads.filter((lead) => lead.priority === "High").length;
+    const conversionRate = totalLeads > 0 ? ((leads.filter((lead) => lead.status === "Converted").length / totalLeads) * 100).toFixed(2) + "%" : "0%";
+    const recentActivity = `${leads.filter((lead) => lead.lastInteraction).length} Interactions`;
+  
+    return [
+      { title: "Total Number of Leads", value: totalLeads, bgColor: "#2196F3", icon: usersIcon },
+      { title: "Conversion Rate", value: conversionRate, bgColor: "#1BB9F4", icon: clockIcon },
+      { title: "Recent Activity", value: recentActivity, bgColor: "#2196F3", icon: hourglassIcon },
+      { title: "High Priority Leads", value: `${highPriorityLeads} Urgent`, bgColor: "#307ADB", icon: highPriorityIcon },
+    ];
   }, [leads]);
 
   // Handle search input change
   const handleSearch = (event) => {
     const query = event.target.value;
     setSearchQuery(query);
-
-    if (!query) {
-      setFilteredLeads(leads);
-    } else {
-      const results = fuse.search(query).map(({ item }) => item);
-      setFilteredLeads(results);
+  
+    // Apply the search query to the already filtered leads
+    let filtered = leads;
+  
+    // Apply status filter first
+    if (selectedFilter === "new") {
+      const today = new Date();
+      const sevenDaysAgo = new Date(today.setDate(today.getDate() - 7));
+      filtered = leads.filter((lead) => {
+        const leadDate = new Date(lead.createdAt);
+        return leadDate >= sevenDaysAgo;
+      });
+    } else if (selectedFilter === "active") {
+      filtered = leads.filter((lead) => lead.status === "active");
+    } else if (selectedFilter === "successful") {
+      filtered = leads.filter((lead) => lead.status === "successful");
+    } else if (selectedFilter === "lost") {
+      filtered = leads.filter((lead) => lead.status === "lost");
     }
-    setPage(0);
+  
+    // Apply search query to the filtered leads
+    if (query) {
+      const fuse = new Fuse(filtered, { keys: ["leadName", "company"], threshold: 0.3 });
+      const results = fuse.search(query).map(({ item }) => item);
+      filtered = results;
+    }
+  
+    // Sort the final filtered leads by createdAt in descending order (newest first)
+    filtered = [...filtered].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  
+    setFilteredLeads(filtered);
+    setPage(0); // Reset to the first page after filtering
+  };
+
+  // Handle filter dropdown change
+  const handleFilterChange = (event) => {
+    setSelectedFilter(event.target.value);
   };
 
   const handlePageClick = (event) => {
@@ -198,10 +267,10 @@ export default function AccountPage() {
     }
   };
   
-  
   const handleChatClick = (lead) => {
     navigate(`/communications?leadEmail=${encodeURIComponent(lead.bestEmail)}`);
   };
+
   return (
     <div className="accounts-container">
       {/* Cards Section */}
@@ -219,9 +288,8 @@ export default function AccountPage() {
         ))}
       </div>
 
-            {/* Search Filter Section */}
+      {/* Search Filter Section */}
       <div className="search-container-row">
-
         <div className="search-container">
           <input 
             type="text" 
@@ -232,11 +300,16 @@ export default function AccountPage() {
           />
 
           <div className="dropdown-container">
-            <select className="search-dropdown">
+            <select 
+              className="search-dropdown"
+              value={selectedFilter}
+              onChange={handleFilterChange}
+            >
               <option value="">Select Status</option>
-              <option value="new">New</option>
-              <option value="in-progress">In Progress</option>
-              <option value="closed">Closed</option>
+              <option value="new">New (Last 7 Days)</option> {/* Newest for the last 7 Days*/}
+              <option value="active">Active</option>
+              <option value="successful">Closed - Successful</option>
+              <option value="lost">Closed - Lost</option>
             </select>
             <img src={arrowRightIcon} alt="Dropdown Icon" className="dropdown-icon" />
           </div>
@@ -249,10 +322,10 @@ export default function AccountPage() {
         <p className="import-error-display"></p>
 
         <label className="accounts-import-btn">
-          <FiDownload />
+          <p>Import Leads</p>
+          <FiDownload className="accounts-import-btn-icon"/>
           <input type="file" accept=".csv, .xlsx" onChange={handleFileUpload} style={{ display: "none" }} />
         </label>
-
       </div>
 
       {/* Loading & Error Handling */}
@@ -262,107 +335,104 @@ export default function AccountPage() {
       {/* Lead Cards Section */}
       {!loading && !error && (
         <>
-      {/* Lead Cards Section */}
-      <div className="lead-cards-container">
-        {displayedLeads.map((lead, index) => (
-          <div key={index} className="lead-card">
-          {/* Three-dot menu */}
-          <div 
-            className="options-icon clickable"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedLead(selectedLead === lead.leadID ? null : lead.leadID);
-            }}
-          >
-            ⋮
-          </div>
-        
-            {selectedLead === lead.leadID && (
-              <div className="lead-dropdown-menu">
-                <button 
-                  className="delete-lead-btn" 
-                  onClick={() => openDeleteModal(lead)} // ✅ Open delete modal
+          <div className="lead-cards-container">
+            {displayedLeads.map((lead, index) => (
+              <div key={index} className="lead-card">
+                {/* Three-dot menu */}
+                <div 
+                  className="options-icon clickable"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedLead(selectedLead === lead.leadID ? null : lead.leadID);
+                  }}
                 >
-                  Delete Lead
-                </button>
+                  ⋮
+                </div>
+              
+                {selectedLead === lead.leadID && (
+                  <div className="lead-dropdown-menu">
+                    <button 
+                      className="delete-lead-btn" 
+                      onClick={() => openDeleteModal(lead)} // ✅ Open delete modal
+                    >
+                      Delete Lead
+                    </button>
+                  </div>
+                )}
+
+                {/* Lead Details */}
+                <div className="lead-info">
+                  <h3 className="lead-name">{lead.leadName}</h3>
+                  <span className="company-badge">{lead.company}</span>
+                  
+                  <div className="lead-details">
+                    <p>Lead ID</p>
+                    <p className="lead-value">{lead.leadID}</p>
+                  </div>
+                  <div className="lead-details">
+                    <p>Join Date</p>
+                    <p className="lead-value">
+                      {lead.importDate ? lead.importDate.split("T")[0] : "N/A"}
+                    </p>
+                  </div>
+                </div>
+              
+                {/* Action Icons */}
+                <div className="lead-actions">
+                  <div 
+                    className="chat-icon clickable"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleChatClick(lead);
+                    }}
+                  >
+                    <img src={chatIcon} alt="Chat" />
+                  </div>
+
+                  <div 
+                    className="user-icon clickable"
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      navigate("/lead-profile", { state: { lead } });
+                    }} 
+                  >
+                    <img src={userIcon} alt="Profile" />
+                  </div>
+                </div>
               </div>
-            )}
-
-        
-          {/* Lead Details */}
-          <div className="lead-info">
-            <h3 className="lead-name">{lead.leadName}</h3>
-            <span className="company-badge">{lead.company}</span>
-            
-            <div className="lead-details">
-              <p>Lead ID</p>
-              <p className="lead-value">{lead.leadID}</p>
-            </div>
-            <div className="lead-details">
-              <p>Join Date</p>
-              <p className="lead-value">
-                {lead.importDate ? lead.importDate.split("T")[0] : "N/A"}
-              </p>
-            </div>
+            ))}
           </div>
-        
-          {/* Action Icons */}
-          <div className="lead-actions">
-            <div 
-              className="chat-icon clickable"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleChatClick(lead);
-              }}
-            >
-              <img src={chatIcon} alt="Chat" />
-            </div>
 
-            <div 
-              className="user-icon clickable"
-              onClick={(e) => { 
-                e.stopPropagation(); 
-                navigate("/lead-profile", { state: { lead } });
-              }} 
-            >
-              <img src={userIcon} alt="Profile" />
+          {/* Floating Delete Confirmation Modal */}
+          {deleteModal && (
+            <div className="modal-overlay">
+              <div className="modal-content">
+                <h3>Delete Lead</h3>
+                <p>Are you sure you want to delete <strong>{deleteModal.leadName}</strong>?</p>
+                <div className="modal-buttons">
+                  <button className="cancel-btn" onClick={() => setDeleteModal(null)}>Cancel</button>
+                  <button className="delete-btn" onClick={handleDeleteLead}>Delete</button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-        
-        ))}
-      </div>
+          )}
 
-      {/* Floating Delete Confirmation Modal */}
-      {deleteModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>Delete Lead</h3>
-            <p>Are you sure you want to delete <strong>{deleteModal.leadName}</strong>?</p>
-            <div className="modal-buttons">
-              <button className="cancel-btn" onClick={() => setDeleteModal(null)}>Cancel</button>
-              <button className="delete-btn" onClick={handleDeleteLead}>Delete</button>
-            </div>
+          {/* Pagination */}
+          <div className="pagination-container">
+            <ReactPaginate
+              breakLabel="..."
+              nextLabel=">"
+              onPageChange={handlePageClick}
+              pageRangeDisplayed={4}
+              marginPagesDisplayed={1}
+              pageCount={Math.ceil(filteredLeads.length / rowsPerPage)}
+              previousLabel="<"
+              containerClassName="pagination"
+              activeClassName="active"
+            />
           </div>
-        </div>
+        </>
       )}
-
-      {/* Pagination */}
-      <div className="pagination-container">
-        <ReactPaginate
-          breakLabel="..."
-          nextLabel=">"
-          onPageChange={handlePageClick}
-          pageRangeDisplayed={4}
-          marginPagesDisplayed={1}
-          pageCount={Math.ceil(filteredLeads.length / rowsPerPage)}
-          previousLabel="<"
-          containerClassName="pagination"
-          activeClassName="active"
-        />
-      </div>
-      </>
-    )}
     </div>
   );
 }

@@ -144,15 +144,27 @@
 }
 
 .accounts-import-btn {  
-    padding: 9px 35px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 9px 15px;
     background-color: white;
     border: 1px solid rgba(187, 187, 187, 0.506);
     border-radius: 5px;
     color: rgb(38, 38, 38);
     font-size: 16px;
     cursor: pointer;
-
     transition: all 0.25s;
+}
+
+.accounts-import-btn p {
+    font-size: 14px;
+    color: #7f7f7f; 
+    margin-right: 5px;
+}
+
+.accounts-import-btn-icon {
+    height: 14px;
 }
 
 .accounts-import-btn:hover {
@@ -424,6 +436,7 @@
 /* Lead Profile */
 
 .lead-profile-container {
+    position: relative;
     margin-top: 20px; 
     display: flex;
     flex-direction: column; 
@@ -431,17 +444,85 @@
     align-items: flex-start;
 }
 
+.lead-profile-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    font-size: 26px;
+    font-weight: 600;
+    padding-bottom: 20px;
+    justify-content: space-between;
+}
+
 .lead-profile-header-text {
     display: flex;
     flex-direction: row;
-    font-size: 26px;
-    column-gap: 5px;
-    font-weight: 600;
-    padding-bottom: 20px;
 }
 
 .lead-profile-back-button {
+    margin-right: 10px;
     cursor: pointer;
+}
+
+.custom-dropdown {
+    display: flex;
+    flex-direction: row;
+    position: relative;
+    font-size: 14px;
+    background-color: transparent;
+    border: 0px solid rgb(33, 150, 243);
+    color: white;
+    cursor: pointer;
+
+    transition: color 0.2s;
+}
+
+.custom-dropdown:hover {
+    color: rgb(237, 237, 237);
+}
+
+.dropdown-header {
+    margin-top: 4px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.custom-dropdown svg {
+    margin-left: 8px;
+    width: 18px;
+    height: 18px;
+}
+
+.dropdown-arrow {
+    width: 18px;
+    height: 18px;
+}
+
+.dropdown-options {
+    border-radius: 5px;
+    color: black;
+    position: absolute;
+    top: 28px;
+    left: -7px;
+    background-color: white;
+    overflow: hidden;
+}
+
+.dropdown-option {
+    font-size: 14px;
+    padding: 5px 8px;
+    width: 140px;
+}
+
+.dropdown-option.active {
+    background-color: rgb(173, 173, 173); /* Blue background for active option */
+    color: white; /* White text for better contrast */
+} 
+
+.dropdown-option:hover {
+    background-color: rgb(200, 200, 200);
+    color: rgb(255, 255, 255);
 }
 
 .lead-profile-container-row {
@@ -574,6 +655,10 @@
     height: 245px;
     border-radius: 12px;
 }
+
+.interaction-history-item.disabled {
+    pointer-events: none;
+  }
 
 .no-interactions-message {
     font-family: "Geist";

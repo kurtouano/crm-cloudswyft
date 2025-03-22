@@ -10,6 +10,7 @@ import { MdAttachFile, MdClose } from "react-icons/md";
 import "./Communication.css";
 
 export default function CommunicationPageNEW () {
+  useMicrosoftAuthentication();
   localStorage.setItem("currentPage", "communications");
   // Basic states
   const location = useLocation();
@@ -116,8 +117,6 @@ export default function CommunicationPageNEW () {
   const { groupedThreads, standaloneEmails } = groupEmailsByThread(allEmails);
   const sortedThreads = sortThreadsByLatestEmail(groupedThreads);
   const { displayedEmails, totalPages } = getPaginatedEmails(sortedThreads, standaloneEmails, currentPage, emailsPerPage);
-
-  useMicrosoftAuthentication();
 
   useEffect(() => {
     const fetchLeads = async () => {

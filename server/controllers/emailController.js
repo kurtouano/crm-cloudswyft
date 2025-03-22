@@ -279,7 +279,7 @@ export async function fetchReceivedEmails(req, res) {
 
     // Fetch emails from Microsoft Graph API
     const graphResponse = await axios.get(
-        "https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?$top=15&$expand=attachments",
+        "https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?$top=40&$expand=attachments",
         { headers: { Authorization: `Bearer ${accessToken}` } }
     );
 
@@ -454,7 +454,7 @@ export async function fetchReceivedEmailsForLeadProfile(req, res) {
 
         const receivedEmails = await ReceivedEmail.find({ sender: leadEmail })
             .sort({ _id: -1 })
-            .select("subject sender timestamp message")
+            .select("subject sender timestamp message threadId")
             .lean();
 
         res.status(200).json(receivedEmails); // ✅ Send array directly

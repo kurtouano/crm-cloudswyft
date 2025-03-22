@@ -10,6 +10,7 @@ const LeadSchema = new mongoose.Schema(
     bestEmail: { type: String, required: true }, // Remove required: true
     leadID: { type: Number, unique: true }, // Auto-incremented number
     importDate: { type: Date, default: Date.now }, 
+    status: { type: String, required: true, default: "active" },
     stage: {
       type: String,
       enum: [
