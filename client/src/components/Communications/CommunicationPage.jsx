@@ -823,8 +823,6 @@ const handleSelectEmail = (email) => {
         <div className="email-header">
           {/* Left Side Icons */}
           <div className="email-header-left">
-              <IoArrowBack className="email-nav-icon circle-icon" />
-              <IoTrashOutline className="email-nav-icon" />
           </div>
 
           {/* Pagination Controls */}
@@ -852,8 +850,6 @@ const handleSelectEmail = (email) => {
 
           {/* Right Side Icons */}
           <div className="email-header-right">
-              <IoArrowForward className="email-nav-icon circle-icon" />
-              <IoExpandOutline className="email-nav-icon" />
               <IoEllipsisVerticalOutline className="email-nav-icon" />
           </div>
         </div>
@@ -1067,8 +1063,6 @@ const handleSelectEmail = (email) => {
               />
             </div>
             <div className="email-actions-icons">
-              <IoTrashOutline className="email-icon" />
-              <IoExpandOutline className="email-icon" />
             </div>
           </div>
 

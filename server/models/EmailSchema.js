@@ -5,9 +5,9 @@ const receivedEmailSchema = new mongoose.Schema({
     threadId: { type: String, required: true },
     subject: { type: String, required: true },
     sender: { type: String, required: true },
-    senderName: { type: String, required: true }, // Sender name
-    message: { type: String, required: true }, // Cleaned text version
-    html: { type: String }, // Raw HTML content
+    senderName: { type: String, required: true },
+    message: { type: String, required: true },
+    html: { type: String },
     attachments: [
         {
             fileName: { type: String, required: true },
@@ -16,7 +16,10 @@ const receivedEmailSchema = new mongoose.Schema({
         }
     ],
     timestamp: { type: Date, default: Date.now },
+    viewed: { type: Boolean, default: false },
+    notificationDeleted: { type: Boolean, default: false } 
 });
+
 
 const replyEmailSchema = new mongoose.Schema({
     threadId: { type: String, required: true }, 

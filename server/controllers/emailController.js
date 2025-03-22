@@ -403,28 +403,28 @@ export async function fetchReceivedEmails(req, res) {
 
 export async function fetchNotifications(req, res) {
     try {
-        // Fetch received emails sorted by latest first
-        const storedEmails = await ReceivedEmail.find().sort({ timestamp: -1 }); // ✅ Ensure latest emails come first
-
+        const storedEmails = await ReceivedEmail.find({ notificationDeleted: { $ne: true } }) 
+            .sort({ timestamp: -1 });
+  
         if (!storedEmails || storedEmails.length === 0) {
-            console.warn("⚠️ No received emails found in the database.");
             return res.status(200).json({ success: true, notifications: [] });
         }
-
+  
         const notifications = storedEmails.map(email => ({
             message: `New reply from ${email.senderName || "Unknown"} – Click to view the conversation!`,
             leadEmail: email.sender,
-            threadId: email.threadId
+            threadId: email.threadId,
+            viewed: email.viewed,
+            timestamp: email.timestamp,
         }));
-
-        console.log(`📩 Retrieved ${notifications.length} notifications from the database.`);
-
+  
         res.status(200).json({ success: true, notifications });
     } catch (error) {
         console.error("❌ Error fetching notifications:", error);
-        res.status(500).json({ error: "Failed to fetch notifications", details: error.message });
+        res.status(500).json({ error: "Failed to fetch notifications" });
     }
-}
+  }
+  
 
 
 //// LEAD PROFILE PAGE CONTROLLER
@@ -464,3 +464,33 @@ export async function fetchReceivedEmailsForLeadProfile(req, res) {
     }
 }
 
+export async function markNotificationAsViewed(req, res) {
+    try {
+        const { threadId } = req.body;
+        if (!threadId) return res.status(400).json({ error: "Thread ID is required" });
+
+        await ReceivedEmail.updateMany({ threadId }, { viewed: true });
+
+        res.status(200).json({ success: true, message: "Notification marked as viewed." });
+    } catch (error) {
+        console.error("❌ Error updating viewed status:", error);
+        res.status(500).json({ error: "Failed to mark notification as viewed." });
+    }
+}
+
+
+export async function deleteNotification(req, res) {
+    try {
+      const { threadId } = req.body;
+      if (!threadId) return res.status(400).json({ error: "Thread ID is required" });
+  
+      await ReceivedEmail.updateMany({ threadId }, { notificationDeleted: true });
+  
+      res.status(200).json({ success: true, message: "Notification hidden from frontend." });
+    } catch (error) {
+      console.error("❌ Error updating notificationDeleted:", error);
+      res.status(500).json({ error: "Failed to hide notification." });
+    }
+}
+
+  

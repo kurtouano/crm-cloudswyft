@@ -2,9 +2,9 @@ import express from "express";
 import { sendEmail, replyEmail, handleMicrosoftLogin, 
     handleOAuthRedirect, fetchReceivedEmails, getSentEmail, 
     fetchNotifications, getEmailAttachments, fetchSentReplyEmails, fetchAttachmentsForReply, 
-    fetchReceivedEmailsForLeadProfile, fetchSentEmailsForLeadProfile } 
+    fetchReceivedEmailsForLeadProfile, fetchSentEmailsForLeadProfile, markNotificationAsViewed, deleteNotification} 
     from "../controllers/emailController.js";
-
+ 
 const router = express.Router();
 
 router.get("/received", fetchReceivedEmails); // Fetch Recevied Emails
@@ -17,6 +17,8 @@ router.get("/auth/callback", handleOAuthRedirect); // Callback route after user 
 router.get("/attachments/:emailId", getEmailAttachments); // Fetch Received Email Attachments
 router.get("/attachments/reply/:emailId", fetchAttachmentsForReply); // Fetch Sent Reply Attachments
 router.get("/notifications", fetchNotifications); // Fetch Notifications
+router.post('/notifications/viewed', markNotificationAsViewed);
+router.post("/notifications/delete", deleteNotification);
 
 router.get("/fetch-sent-email-raw", fetchSentEmailsForLeadProfile);  // Fetch Reply Emails for Lead Profile
 router.get("/fetch-reply-emails-raw", fetchReceivedEmailsForLeadProfile);  // Fetch Reply Emails for Lead Profile
