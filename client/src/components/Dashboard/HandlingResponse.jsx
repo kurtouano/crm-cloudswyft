@@ -1,15 +1,24 @@
+import { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
-const responseData = [
-  { hours: "0 -3", responses: 11 },
-  { hours: "4-6", responses: 12 },
-  { hours: "7-9", responses: 11 },
-  { hours: "10-13", responses: 18 },
-  { hours: "14-17", responses: 10 },
-  { hours: "18-24", responses: 25 },
-];
+const HandlingResponse = () => {
+  const [responseData, setResponseData] = useState([]);
 
-export default function HandlingResponse() {
+  useEffect(() => {
+    // Fetch handling time data from the backend
+    const fetchData = async () => {
+      try {
+        const response = await fetch("http://localhost:4000/api/analytics/handling-time");
+        const data = await response.json();
+        setResponseData(data);
+      } catch (error) {
+        console.error("Error fetching handling time data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <div className="handling-response-container">
       <h3 className="handling-response-title">Handling Time</h3>
@@ -24,7 +33,7 @@ export default function HandlingResponse() {
           />
           <YAxis 
             tick={{ fontSize: 12, fill: "#4F4F4F" }} 
-            label={{ value: "Number of Responses", angle: -90, position: "insideLeft", dy: 65,dx: 8, fontSize: 12, fill: "#4F4F4F" }}
+            label={{ value: "Number of Responses", angle: -90, position: "insideLeft", dy: 65, dx: 8, fontSize: 12, fill: "#4F4F4F" }}
           />
           <Tooltip cursor={{ fill: "transparent" }} />
           <Bar dataKey="responses" fill="#00A3FF" barSize={30} radius={[4, 4, 0, 0]} />
@@ -32,4 +41,6 @@ export default function HandlingResponse() {
       </ResponsiveContainer>
     </div>
   );
-}
+};
+
+export default HandlingResponse;

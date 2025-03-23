@@ -5,7 +5,7 @@ import Fuse from "fuse.js"; // 🔍 Import Fuse.js
 import { FiSearch, FiEdit } from "react-icons/fi";
 import { FaStar,FaFilePdf, FaFileWord, FaFileExcel, FaFileImage, FaFileAlt } from "react-icons/fa";
 import { CgProfile } from "react-icons/cg";
-import { IoArrowBack, IoArrowForward, IoReturnUpBackOutline, IoChevronDownOutline, IoTrashOutline, IoExpandOutline, IoEllipsisVerticalOutline } from "react-icons/io5";
+import { IoArrowBack, IoArrowForward, IoReturnUpBackOutline, IoChevronDownOutline, IoEllipsisVerticalOutline } from "react-icons/io5";
 import { MdAttachFile, MdClose } from "react-icons/md";
 import "./Communication.css";
 

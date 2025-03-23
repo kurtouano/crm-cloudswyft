@@ -7,6 +7,7 @@ import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
 import leadRoutes from "./routes/leadRoutes.js";
 import emailRoutes from "./routes/emailRoutes.js";
+import analyticsRoutes from "./routes/analyticsRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -27,6 +28,7 @@ mongoose
   .catch((err) => console.log("MongoDB connection error:", err));
 
 app.use("/api/auth", authRoutes);
+app.use("/api/analytics", analyticsRoutes);
 app.use("/api/leads", leadRoutes);
 app.use("/api/emails", emailRoutes);
 

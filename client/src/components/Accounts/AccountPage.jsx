@@ -95,7 +95,7 @@ export default function AccountPage() {
   const cardData = useMemo(() => {
     const totalLeads = leads.length;
     const highPriorityLeads = leads.filter((lead) => lead.priority === "High").length;
-    const conversionRate = totalLeads > 0 ? ((leads.filter((lead) => lead.status === "Converted").length / totalLeads) * 100).toFixed(2) + "%" : "0%";
+    const conversionRate = totalLeads > 0 ? ((leads.filter((lead) => lead.status === "successful").length / totalLeads) * 100).toFixed(2) + "%" : "0%";
     const recentActivity = `${leads.filter((lead) => lead.lastInteraction).length} Interactions`;
   
     return [
