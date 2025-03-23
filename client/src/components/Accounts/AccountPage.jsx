@@ -32,6 +32,7 @@ export default function AccountPage() {
   const [deleteModal, setDeleteModal] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState(""); // State for selected filter
+  const [userRole, setUserRole] = useState(localStorage.getItem("role"));
 
   const displayedLeads = filteredLeads.slice(page * rowsPerPage, (page + 1) * rowsPerPage);
 
@@ -91,6 +92,16 @@ export default function AccountPage() {
     setFilteredLeads(filtered);
     setPage(0); // Reset to the first page after filtering
   }, [selectedFilter, searchQuery, leads]);
+
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setUserRole(localStorage.getItem("role"));
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
 
   const cardData = useMemo(() => {
     const totalLeads = leads.length;
@@ -321,11 +332,13 @@ export default function AccountPage() {
         
         <p className="import-error-display"></p>
 
-        <label className="accounts-import-btn">
-          <p>Import Leads</p>
-          <FiDownload className="accounts-import-btn-icon"/>
-          <input type="file" accept=".csv, .xlsx" onChange={handleFileUpload} style={{ display: "none" }} />
-        </label>
+         {userRole === "admin" && (
+            <label className="accounts-import-btn">
+              <p>Import Leads</p>
+              <FiDownload className="accounts-import-btn-icon"/>
+              <input type="file" accept=".csv, .xlsx" onChange={handleFileUpload} style={{ display: "none" }} />
+            </label>
+          )}
       </div>
 
       {/* Loading & Error Handling */}
