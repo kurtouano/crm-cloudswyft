@@ -1,5 +1,5 @@
 import Lead from "../models/LeadSchema.js";
-import { sendAutoWelcomeEmail } from "./sendAutoWelcomeEmail.js";
+import { sendAutoWelcomeEmail } from "../utils/sendAutoWelcomeEmail.js";
 
 // 🟢 Get all leads
 export const getLeads = async (req, res) => {
@@ -202,6 +202,31 @@ export async function updateLeadStatus(req, res) {
     res.status(500).json({ error: error.message });
   }
 }
+
+export const updateLeadTemperature = async (req, res) => {
+  const { leadId, temperature } = req.body;
+
+  if (!leadId || !temperature) {
+    return res.status(400).json({ error: "Missing leadId or temperature" });
+  }
+
+  try {
+    const updatedLead = await Lead.findByIdAndUpdate(
+      leadId,  // Make sure this matches your schema's ID field
+      { temperature },
+      { new: true }
+    );
+
+    if (!updatedLead) {
+      return res.status(404).json({ error: "Lead not found" });
+    }
+
+    res.status(200).json(updatedLead);
+  } catch (error) {
+    console.error("Error updating lead temperature:", error);
+    res.status(500).json({ error: "Failed to update lead temperature" });
+  }
+};
 
 
 

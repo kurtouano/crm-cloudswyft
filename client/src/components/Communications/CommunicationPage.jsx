@@ -567,26 +567,55 @@ export default function CommunicationPageNEW () {
   };
 
   // Helper function to format timestamp
-  const formatRelativeTime = (timestamp) => {
-    if (!timestamp) return "N/A";
-    const emailDate = new Date(timestamp);
+  const formatRelativeTime = (timestamp, leadId, leadCreatedAt) => {
     const now = new Date();
-    const timeDiff = now - emailDate; // in milliseconds
-
-    const minutes = Math.floor(timeDiff / (1000 * 60));
-    const hours = Math.floor(timeDiff / (1000 * 60 * 60));
-    const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-
-    if (minutes < 1) {
-      return "Just now";
-    } else if (minutes < 60) {
-      return `${minutes} min${minutes > 1 ? "s" : ""} ago`;
-    } else if (hours < 24) {
-      return `${hours} hr${hours > 1 ? "s" : ""} ago`;
-    } else {
-      return `${days} day${days > 1 ? "s" : ""} ago`;
+    const createdDate = new Date(leadCreatedAt);
+    const daysSinceCreation = Math.floor((now - createdDate) / (1000 * 60 * 60 * 24));
+  
+    // Case 1: No emails exist
+    if (!timestamp) {
+      if (daysSinceCreation >= 7) { 
+        updateLeadTemperature(leadId, "cold");
+        return "Needs follow up";
+      }
+      return "No Response";
     }
+  
+    // Case 2: Emails exist - check last email timestamp
+    const emailDate = new Date(timestamp);
+    const daysSinceLastEmail = Math.floor((now - emailDate) / (1000 * 60 * 60 * 24));
+  
+    if (daysSinceLastEmail >= 7) {
+      updateLeadTemperature(leadId, "cold");
+      return "Needs follow up";
+    }
+  
+    // Format relative time for recent emails
+    const minutes = Math.floor((now - emailDate) / (1000 * 60));
+    const hours = Math.floor((now - emailDate) / (1000 * 60 * 60));
+  
+    if (minutes < 1) return "Just now";
+    if (minutes < 60) return `${minutes} min${minutes > 1 ? "s" : ""} ago`;
+    if (hours < 24) return `${hours} hr${hours > 1 ? "s" : ""} ago`;
+    return `${daysSinceLastEmail} day${daysSinceLastEmail > 1 ? "s" : ""} ago`;
   };
+  
+
+    const updateLeadTemperature = async (leadId, temperature) => {
+      if (!leadId) return; 
+    
+      try {
+        await fetch(`http://localhost:4000/api/leads/updateLeadTemp`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ leadId, temperature }),
+        });
+      } catch (error) {
+        console.error("Error updating lead temperature:", error);
+      }
+    };
 
   const handleViewAttachment = (attachment, type) => {
     try {
@@ -798,7 +827,7 @@ const handleSelectEmail = (email) => {
                     <CgProfile className="inbox-body-header-icon" />
                     <p className="inbox-body-lead-type"> {lead.leadName || "Unknown Lead"}</p>
                     <p className="inbox-body-last-message-time">
-                      {lastEmail ? formatRelativeTime(lastEmail.timestamp) : "No email"}
+                      {formatRelativeTime(lastEmail?.timestamp, lead._id, lead.createdAt)}
                     </p>
                   </div>
                   <p className="inbox-body-company-name">{lead.company}</p>

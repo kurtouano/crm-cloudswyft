@@ -5,6 +5,7 @@ import { ConfidentialClientApplication } from "@azure/msal-node";  // Use Confid
 import { SentEmail, ReceivedEmail, ReplyEmail } from "../models/EmailSchema.js";  
 import Lead from "../models/LeadSchema.js";
 import * as cheerio from 'cheerio';
+import { clearHandlingTimeCache } from './analyticsController.js';
 
 dotenv.config();
 
@@ -168,6 +169,7 @@ export async function replyEmail(req, res) {
         });
 
         await repliedEmail.save();
+        clearHandlingTimeCache(); 
 
         res.status(200).json({ success: true, message: "Email replied successfully!", replyMessageId });
     } catch (error) {
@@ -355,6 +357,7 @@ export async function fetchReceivedEmails(req, res) {
                         leadEmail: email.from.emailAddress.address,
                         threadId: conversationId
                     });
+                    clearHandlingTimeCache();
                 }
 
                 return await ReceivedEmail.findOneAndUpdate(

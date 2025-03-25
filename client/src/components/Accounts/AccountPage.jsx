@@ -13,7 +13,6 @@ import usersIcon from "../../assets/users.png";
 import clockIcon from "../../assets/clock.png";
 import hourglassIcon from "../../assets/hourglass.png";
 import highPriorityIcon from "../../assets/highpriority.png";
-import searchIcon from "../../assets/search.png";
 import arrowRightIcon from "../../assets/arrow-right.png";
 import chatIcon from "../../assets/bubble-chat.png"; 
 import userIcon from "../../assets/user-circle.png";
@@ -324,10 +323,6 @@ export default function AccountPage() {
             </select>
             <img src={arrowRightIcon} alt="Dropdown Icon" className="dropdown-icon" />
           </div>
-
-          <button className="search-button">
-            <img src={searchIcon} alt="Search" className="search-icon" />
-          </button>
         </div>
         
         <p className="import-error-display"></p>
@@ -375,8 +370,8 @@ export default function AccountPage() {
 
                 {/* Lead Details */}
                 <div className="lead-info">
-                  <h3 className="lead-name">{lead.leadName}</h3>
-                  <span className="company-badge">{lead.company}</span>
+                  <h3 className="lead-name">{lead.company}</h3>
+                  <span className="company-badge">{lead.leadName}</span>
                   
                   <div className="lead-details">
                     <p>Lead ID</p>
@@ -418,10 +413,10 @@ export default function AccountPage() {
 
           {/* Floating Delete Confirmation Modal */}
           {deleteModal && (
-            <div className="modal-overlay">
-              <div className="modal-content">
-                <h3>Delete Lead</h3>
-                <p>Are you sure you want to delete <strong>{deleteModal.leadName}</strong>?</p>
+            <div className="modal-overlay-accounts">
+              <div className="modal-content-accounts">
+                <h3>Confirm Deletion</h3>
+                <p>Are you sure you want to delete <strong><br></br>{deleteModal.leadName}</strong>?</p>
                 <div className="modal-buttons">
                   <button className="cancel-btn" onClick={() => setDeleteModal(null)}>Cancel</button>
                   <button className="delete-btn" onClick={handleDeleteLead}>Delete</button>

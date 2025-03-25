@@ -178,7 +178,7 @@
     justify-content: flex-start;
     align-items: flex-start;
     width: 100%;
-    max-width: 1200px; 
+    height: 500px;
     margin-top: 20px;
 }
 
@@ -352,9 +352,8 @@
     cursor: pointer;
   }
   
-
   /* Modal Styling */
-.modal-overlay {
+.modal-overlay-accounts {
     position: fixed;
     top: 0;
     left: 0;
@@ -368,7 +367,7 @@
   }
   
   /* Modal Box */
-  .modal-content {
+  .modal-content-accounts {
     background: white;
     padding: 25px;
     border-radius: 10px;
@@ -378,14 +377,14 @@
   }
   
   /* Modal Title */
-  .modal-content h3 {
+  .modal-content-accounts h3 {
     font-size: 20px;
     font-weight: 600;
     margin-bottom: 10px;
   }
   
   /* Modal Text */
-  .modal-content p {
+  .modal-content-accounts p {
     font-size: 16px;
     color: #333;
   }
