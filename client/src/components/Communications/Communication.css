@@ -351,18 +351,21 @@
 }
 
 .email-received-space {
-    height: 500px;
+    height: 450px;
     padding: 20px 20px;
     overflow-y: scroll;
     background: #fff;
- 
+}
+
+.email-received-space img {
+    width: 500px;
 }
 
 .email-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 12px;
+    padding: 5px 12px;
     background-color: #F5F5F5;
     border-radius: 8px;
 }
@@ -398,19 +401,18 @@
 
 .email-compose-box {
     background-color: #fff;
-    padding: 12px 20px;
+    padding: 10px 15px;
     border-radius: 10px;
     box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
-    gap: 10px;
 }
 
 .email-compose-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 10px;
+    padding: 5px 5px;
     background-color: #F5F5F5;
     border-radius: 8px;
 }
@@ -418,16 +420,34 @@
 .email-left-icons {
     display: flex;
     align-items: center;
-    gap: 10px;
+}
+
+.email-recipient-span {
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+    margin-right: 10px;
+    color: rgb(82, 82, 82);
+}
+
+.email-recipient-span svg {
+    height: 17px;
+    width: 17px;
+    color: #59595ab1;
 }
 
 .email-recipient {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
     border-radius: 4px;
     background-color: #1e28f110;
-    padding: 6px 12px;
-    color: #1E27F1;
-    font-size: 14px;
+    padding: 6px 10px;
+    color: #2759fd;
+    font-size: 13px;
+    font-family: "Open sans";
     font-weight: 400;
+    width: 170px;
     white-space: normal;
     border: none;
     user-select: none;
@@ -622,7 +642,7 @@
 
 
 .email-sender-name {
-    font-size: 18px;
+    font-size: 17px;
     font-weight: bold;
     color: #000;
     margin-bottom: 2px;
@@ -642,21 +662,26 @@
 
 /* Email Subject */
 .email-subject-display {
-    font-size: 17px;
+    font-size: 16px;
     font-weight: bold;
     color: rgb(61, 61, 61);
     padding: 10px;
-    padding-top: 20px;  
+    padding-top: 15px;  
 }
 
 /* Email Body */
 .email-body-container {
     padding: 10px;
     margin-bottom: 12px;
+    white-space: pre-line;
+}
+
+.email-body-container p{
+    white-space: pre-line;
 }
 
 .email-body-display {
-    font-size: 14px;
+    font-size: 13.5px;
     color: #242424;
     line-height: 1.6;
     white-space: pre-wrap;
@@ -878,6 +903,10 @@
     border: none;
   }
 
+  .attachment-modal-content img {
+    width: 100%;
+  }
+
   .attachment-modal-header {
     display: flex;
     justify-content: space-between;
@@ -962,8 +991,8 @@
     font-size: 16px;
     font-weight: bold;
     text-transform: uppercase;
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     margin-right: 12px;
 }

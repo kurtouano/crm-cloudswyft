@@ -2,11 +2,13 @@ import useMicrosoftAuthentication from "../../utils/AuthMicrosoft.js";
 import { useEffect, useState, useMemo, useCallback} from "react";
 import { useLocation } from "react-router-dom";
 import Fuse from "fuse.js"; // 🔍 Import Fuse.js
-import { FiSearch, FiEdit } from "react-icons/fi";
+import { FiSearch, FiEdit, FiUser } from "react-icons/fi";
 import { FaStar,FaFilePdf, FaFileWord, FaFileExcel, FaFileImage, FaFileAlt } from "react-icons/fa";
 import { CgProfile } from "react-icons/cg";
-import { IoArrowBack, IoArrowForward, IoReturnUpBackOutline, IoChevronDownOutline, IoEllipsisVerticalOutline } from "react-icons/io5";
-import { MdAttachFile, MdClose } from "react-icons/md";
+import { IoArrowBack, IoArrowForward, IoEllipsisVerticalOutline } from "react-icons/io5";
+import { MdAttachFile, MdClose} from "react-icons/md";
+import TipTap from "../../utils/TextEditor.jsx";
+import DOMPurify from 'dompurify';
 import "./Communication.css";
 
 export default function CommunicationPageNEW () {
@@ -33,6 +35,7 @@ export default function CommunicationPageNEW () {
   const [attachment, setAttachment] = useState(null);
   const [sortedLeads, setSortedLeads] = useState([]);
   const [attachmentsLoading, setAttachmentsLoading] = useState({});
+  const [resetEditor, setResetEditor] = useState(false);
 
   // Email Form states
   const [formData, setFormData] = useState({ to: "", subject: "", text: "" });
@@ -204,10 +207,11 @@ export default function CommunicationPageNEW () {
                       loadingState[email._id] = true; // ✅ Mark email as loading
                       setAttachmentsLoading((prev) => ({ ...prev, ...loadingState }));
 
-                      // Check if attachments are already in localStorage
-                      const storedAttachments = localStorage.getItem(`attachments_${email._id}`);
-                      if (storedAttachments) {
-                          attachmentsData[email._id] = JSON.parse(storedAttachments);
+                      // Check if attachments are already in cache
+                      const cachedAttachments = await getAttachments(email._id);
+
+                      if (cachedAttachments) {
+                           attachmentsData[email._id] = cachedAttachments;
                       } else {
                           try {
                               const response = await fetch(
@@ -217,8 +221,8 @@ export default function CommunicationPageNEW () {
 
                               if (response.ok) {
                                   attachmentsData[email._id] = data.attachments;
-                                  // Store attachments in localStorage
-                                  localStorage.setItem(`attachments_${email._id}`, JSON.stringify(data.attachments));
+                                  // Store attachments in cache
+                                  await storeAttachments(email._id, data.attachments);
                               } else {
                                   attachmentsData[email._id] = [];
                               }
@@ -230,10 +234,10 @@ export default function CommunicationPageNEW () {
                   })
               );
 
-              setAttachments((prevAttachments) => ({
-                  ...prevAttachments,
-                  ...attachmentsData,
-              }));
+              setAttachments((prev) => ({ ...prev, ...attachmentsData }));
+              setAttachmentsLoading((prev) => 
+                Object.keys(prev).reduce((acc, key) => ({ ...acc, [key]: false }), {})
+              );
           } catch (error) {
               console.error("Error fetching email attachments:", error);
           } finally {
@@ -247,60 +251,57 @@ export default function CommunicationPageNEW () {
   }, [sentEmails]);
 
   const fetchReplyEmails = async (threadId) => {
-      try {
-          const response = await fetch(`http://localhost:4000/api/emails/fetch-reply-emails?threadId=${threadId}`);
-          const data = await response.json();
-
-          if (response.ok) {
-              // Fetch attachments for each reply
-              const repliesWithAttachments = await Promise.all(
-                  data.replies.map(async (reply) => {
-                      // Check if attachments are already in localStorage
-                      const storedAttachments = localStorage.getItem(`attachments_${reply._id}`);
-                      if (storedAttachments) {
-                          return {
-                              ...reply,
-                              attachments: JSON.parse(storedAttachments), // Use stored attachments
-                          };
-                      }
-
-                      // Fetch attachments from the backend
-                      const attachmentsResponse = await fetch(
-                          `http://localhost:4000/api/emails/attachments/reply/${reply._id}`
-                      );
-
-                      if (!attachmentsResponse.ok) {
-                          console.error(`📎 Attachments for reply ${reply._id}:`, attachmentsResponse.statusText);
-                          return {
-                              ...reply,
-                              attachments: [], // Return an empty array if attachments fail to fetch
-                          };
-                      }
-
-                      const attachmentsData = await attachmentsResponse.json();
-                      const attachments = attachmentsData.attachments || [];
-
-                      // Save attachments to localStorage
-                      localStorage.setItem(`attachments_${reply._id}`, JSON.stringify(attachments));
-
-                      return {
-                          ...reply,
-                          attachments, // Add attachments to the reply
-                      };
-                  })
-              );
-
-              // Update the replies state with attachments
-              setReplies((prevReplies) => ({
-                  ...prevReplies,
-                  [threadId]: repliesWithAttachments,
-              }));
-          } else {
-              console.error("Failed to fetch replies:", data.error);
-          }
-      } catch (error) {
-          console.error("Error fetching replies:", error);
+    try {
+      const response = await fetch(`http://localhost:4000/api/emails/fetch-reply-emails?threadId=${threadId}`);
+      const data = await response.json();
+  
+      if (response.ok) {
+        const repliesWithAttachments = await Promise.all(
+          data.replies.map(async (reply) => {
+            // Check IndexedDB first
+            const cachedAttachments = await getAttachments(reply._id);
+            
+            if (cachedAttachments) {
+              return {
+                ...reply,
+                attachments: cachedAttachments
+              };
+            }
+  
+            // Fetch from backend if not cached
+            const attachmentsResponse = await fetch(
+              `http://localhost:4000/api/emails/attachments/reply/${reply._id}`
+            );
+  
+            if (!attachmentsResponse.ok) {
+              console.error(`Attachments fetch failed for reply ${reply._id}`);
+              return {
+                ...reply,
+                attachments: []
+              };
+            }
+  
+            const attachmentsData = await attachmentsResponse.json();
+            const attachments = attachmentsData.attachments || [];
+  
+            // Store in IndexedDB
+            await storeAttachments(reply._id, attachments);
+  
+            return {
+              ...reply,
+              attachments
+            };
+          })
+        );
+  
+        setReplies((prevReplies) => ({
+          ...prevReplies,
+          [threadId]: repliesWithAttachments,
+        }));
       }
+    } catch (error) {
+      console.error("Error fetching replies:", error);
+    }
   };
 
   useEffect(() => {
@@ -329,8 +330,8 @@ export default function CommunicationPageNEW () {
         if (response.ok) {
           setEmails(data.emails);
 
-        const threadIds = [...new Set(data.emails.map(email => email.threadId).filter(Boolean))];
-        threadIds.forEach(threadId => fetchReplyEmails(threadId));
+          const threadIds = [...new Set(data.emails.map(email => email.threadId).filter(Boolean))];
+          threadIds.forEach(threadId => fetchReplyEmails(threadId));
 
           // Calculate unread email count per lead
           const counts = data.emails.reduce((acc, email) => {
@@ -340,6 +341,17 @@ export default function CommunicationPageNEW () {
             return acc;
           }, {});
 
+          const emailsWithAttachments = data.emails.map(email => {
+            if (email.attachments && email.attachments.length > 0) {
+              setAttachments(prev => ({
+                ...prev,
+                [email._id]: email.attachments
+              }));
+            }
+            return email;
+          });
+
+          setEmails(emailsWithAttachments);
           setUnreadCounts(counts);
         } else {
           setEmails([]);
@@ -447,14 +459,15 @@ export default function CommunicationPageNEW () {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
+      reader.onload = (event) => {
+        const contentBytes = event.target.result.split(',')[1]; // Get base64 part
         setAttachment({
           fileName: file.name,
           mimeType: file.type,
-          contentBytes: reader.result.split(",")[1], // Extract Base64 data
+          contentBytes: contentBytes,
         });
       };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -520,50 +533,57 @@ export default function CommunicationPageNEW () {
   const handleReplySubmit = async (e) => {
     e.preventDefault();
     const microsoftAccessToken = localStorage.getItem("microsoftAccessToken");
-
+  
     if (!microsoftAccessToken) {
       alert("Please log in via Microsoft first.");
       return;
     }
-
+  
     setLoading(true);
-
+  
     try {
+      // Ensure attachments is always an array
+      const attachments = attachment ? [attachment] : [];
+      
       const res = await fetch("http://localhost:4000/api/emails/reply-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          content: formDataReply.text, // Reply message
+          content: formDataReply.text,
           token: microsoftAccessToken,
-          messageId: formDataReply.messageId, // Required for threading the reply
-          threadId: formDataReply.threadId,  // Include threadId
-          attachments: attachment ? [attachment] : [], // Include attachment if available
+          messageId: formDataReply.messageId,
+          threadId: formDataReply.threadId,
+          attachments: attachments,
         }),
       });
-
+  
       const data = await res.json();
-
-      if (res.ok) {
-        alert("Reply sent successfully!");
-        setFormDataReply({ messageId: "", text: "", threadId: "" }); // Reset reply form
-        setAttachment(null); // Clear attachment
-
-        // Append the reply to the specific email's replies
-        setReplies((prevReplies) => ({
-          ...prevReplies,
-          [formDataReply.messageId]: [
-            ...(prevReplies[formDataReply.messageId] || []),
-            { content: formDataReply.text, timestamp: new Date().toISOString() },
-          ],
-        }));
-      } else {
-        alert(data.error || "Failed to send reply");
+  
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to send reply");
       }
+  
+      alert("Reply sent successfully!");
+      setFormDataReply({ messageId: "", text: "", threadId: "" });
+      setAttachment(null);
+      setResetEditor(prev => !prev);
+  
+      setReplies((prevReplies) => ({
+        ...prevReplies,
+        [formDataReply.messageId]: [
+          ...(prevReplies[formDataReply.messageId] || []),
+          { 
+            content: formDataReply.text, 
+            timestamp: new Date().toISOString() 
+          },
+        ],
+      }));
     } catch (error) {
       console.error("Error sending reply:", error);
+      alert(`Error sending reply: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   // Helper function to format timestamp
@@ -599,23 +619,106 @@ export default function CommunicationPageNEW () {
     if (hours < 24) return `${hours} hr${hours > 1 ? "s" : ""} ago`;
     return `${daysSinceLastEmail} day${daysSinceLastEmail > 1 ? "s" : ""} ago`;
   };
-  
 
-    const updateLeadTemperature = async (leadId, temperature) => {
-      if (!leadId) return; 
-    
-      try {
-        await fetch(`http://localhost:4000/api/leads/updateLeadTemp`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ leadId, temperature }),
-        });
-      } catch (error) {
-        console.error("Error updating lead temperature:", error);
-      }
-    };
+  const initDB = () => {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open('EmailAttachmentsDB', 1);
+  
+      request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains('attachments')) {
+          const store = db.createObjectStore('attachments', { keyPath: 'emailId' });
+          store.createIndex('cachedAt', 'cachedAt', { unique: false });
+        }
+      };
+  
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  };
+  
+  const storeAttachments = async (emailId, attachments) => {
+    const db = await initDB();
+    const tx = db.transaction('attachments', 'readwrite');
+    tx.objectStore('attachments').put({ 
+      emailId, 
+      attachments,
+      cachedAt: Date.now() 
+    });
+    return tx.complete;
+  };
+  
+  const getAttachments = async (emailId) => {
+    const db = await initDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction('attachments');
+      const request = tx.objectStore('attachments').get(emailId);
+      request.onsuccess = () => resolve(request.result?.attachments || null);
+      request.onerror = () => resolve(null);
+    });
+  };
+  
+  // Cache cleanup system
+  const cleanExpiredAttachments = async (maxAge = 7 * 24 * 60 * 60 * 1000) => {
+    const db = await initDB();
+    const tx = db.transaction('attachments', 'readwrite');
+    const store = tx.objectStore('attachments');
+    const index = store.index('cachedAt');
+    const range = IDBKeyRange.upperBound(Date.now() - maxAge);
+  
+    return new Promise((resolve) => {
+      const request = index.openCursor(range);
+      const deletedItems = [];
+  
+      request.onsuccess = (event) => {
+        const cursor = event.target.result;
+        if (cursor) {
+          deletedItems.push(cursor.value.emailId);
+          cursor.delete();
+          cursor.continue();
+        } else {
+          if (deletedItems.length > 0) {
+            console.log(`Cleaned ${deletedItems.length} expired attachments`);
+          }
+          resolve(deletedItems);
+        }
+      };
+  
+      request.onerror = () => resolve([]);
+    });
+  };
+
+  useEffect(() => {
+    // Run immediately on mount
+    cleanExpiredAttachments().catch(error => {
+      console.error('Initial attachment cleanup failed:', error);
+    });
+
+    // Set up weekly interval
+    const interval = setInterval(() => {
+      cleanExpiredAttachments().catch(error => {
+        console.error('Scheduled attachment cleanup failed:', error);
+      });
+    }, 7 * 24 * 60 * 60 * 1000); // 7 days in milliseconds
+
+    return () => clearInterval(interval);
+  }, []); 
+
+  const updateLeadTemperature = async (leadId, temperature) => {
+    if (!leadId) return; 
+  
+    try {
+      await fetch(`http://localhost:4000/api/leads/updateLeadTemp`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ leadId, temperature }),
+      });
+    } catch (error) {
+      console.error("Error updating lead temperature:", error);
+    }
+  };
 
   const handleViewAttachment = (attachment, type) => {
     try {
@@ -931,36 +1034,36 @@ const handleSelectEmail = (email) => {
                   </div>
       
                   {/* Attachments Section */}
-                  {attachments[email._id] && attachments[email._id].length > 0 && (
+                  {(email.attachments || attachments[email._id] || []).length > 0 && (
                       <div className="email-attachments-container">
-                          <p className="attachments-header">Attachments:</p>
-                          <div className="attachments-list">
-                              {attachments[email._id].map((attachment, index) => (
-                                  <div key={index} className="attachment-item">
-                                      {/* File Icon */}
-                                      {getFileIcon(attachment.mimeType)}
-      
-                                      <div className="attachment-details">
-                                          <p className="attachment-name">{attachment.fileName}</p>
-      
-                                          {/* View & Download Actions */}
-                                          <div className="attachment-actions">
-                                              <button className="view-link" onClick={() => handleViewAttachment(attachment, email.type)}>
-                                                  View
-                                              </button>
-      
-                                              <span className="separator">|</span>
-      
-                                              <button className="download-link" onClick={() => handleDownloadAttachment(attachment)}>
-                                                  Download
-                                              </button>
-                                          </div>
-                                      </div>
-                                  </div>
-                              ))}
-                          </div>
+                        <p className="attachments-header">Attachments:</p>
+                        <div className="attachments-list">
+                          {(email.attachments || attachments[email._id]).map((attachment, index) => (
+                            <div key={index} className="attachment-item">
+                              {/* File Icon */}
+                              {getFileIcon(attachment.mimeType)}
+                              
+                              <div className="attachment-details">
+                                <p className="attachment-name">{attachment.fileName}</p>
+                                
+                                {/* View & Download Actions */}
+                                <div className="attachment-actions">
+                                  <button className="view-link" onClick={() => handleViewAttachment(attachment, email.type)}>
+                                    View
+                                  </button>
+                                  
+                                  <span className="separator">|</span>
+                                  
+                                  <button className="download-link" onClick={() => handleDownloadAttachment(attachment)}>
+                                    Download
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                  )}
+                    )}
       
                   <div className="email-divider-line"></div>
       
@@ -1030,7 +1133,7 @@ const handleSelectEmail = (email) => {
 
                         {/* Reply Content */}
                         <div className="email-body-container">
-                          <p className="email-body-display">{reply.replyContent || "No Content"}</p>
+                          <p className="email-body-display" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(reply.replyContentHtml) }}></p>
                         </div>
 
                         {/* Attachments Section for Replies */}
@@ -1079,12 +1182,12 @@ const handleSelectEmail = (email) => {
           ))}
       </div>
 
-        <form className="email-compose-box" onSubmit={handleReplySubmit}>
+      <form className="email-compose-box" onSubmit={handleReplySubmit}>
           <div className="email-compose-header">
             <div className="email-left-icons">
-              <IoReturnUpBackOutline className="email-icon" />
-              <IoChevronDownOutline className="email-icon" />
-              <input className={`email-recipient ${formData.to ? "" : "empty"}`}
+            <span className="email-recipient-span"><FiUser /> </span>
+              <input 
+                className={`email-recipient ${formData.to ? "" : "empty"}`}
                 type="email"
                 name="to"
                 value={formData.to}
@@ -1095,33 +1198,46 @@ const handleSelectEmail = (email) => {
             </div>
           </div>
 
-          {/* Message Body */}
-          <textarea
-            name="text"
-            className="email-body"
-            value={formDataReply.text}
-              onChange={(e) => setFormDataReply({ ...formDataReply, text: e.target.value })}
-            placeholder="Write your message..."
+          {/* Replace textarea with TipTap editor */}
+          <TipTap 
+            content={formDataReply.text || ""}
+            onUpdate={(html) => setFormDataReply(prev => ({ ...prev, text: html }))}
+            resetTrigger={resetEditor}
+            handleFileChange={handleFileChange}
           />
 
           {/* Send Button & Attachments */}
           <div className="email-actions">
-            <button className="send-button" type="submit" disabled={loading}>{loading ? "Sending..." : "Send"}</button>
+            <button 
+              className="send-button" 
+              type="submit" 
+              disabled={loading}
+            >
+              {loading ? "Sending..." : "Send"}
+            </button>
             
             {attachment && (
               <div className="email-attach-preview">
                 <p>{attachment.fileName}</p>
-                <MdClose className="email-attach-remove-icon" onClick={() => setAttachment(null)} />
+                <MdClose 
+                  className="email-attach-remove-icon" 
+                  onClick={() => setAttachment(null)} 
+                />
               </div>
             )}
 
             <label className="email-attach-label">
               <MdAttachFile className="email-attach-icon" />
-              <input type="file" className="email-attach-input" onChange={handleFileChange}  key={attachment ? attachment.fileName : "file-input"}/>
+              <input 
+                type="file" 
+                className="email-attach-input" 
+                onChange={handleFileChange}
+                key={attachment ? attachment.fileName : "file-input"}
+              />
             </label>
           </div>
-
         </form>
+        
       </div>
     </div>
   );

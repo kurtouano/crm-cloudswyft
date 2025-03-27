@@ -5,10 +5,10 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Salesflow from "./pages/Salesflow";
 import Accounts from "./pages/Accounts";
-import Employees from "./pages/Employees";
 import Communications from "./pages/Communications";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import LeadProfile from "./pages/LeadProfile"
+import SalesTeam from "./pages/SalesTeam";
 
 export default function App() {
   return (
@@ -44,7 +44,7 @@ function MainLayout() {
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/sales-flow" element={<ProtectedRoute><Salesflow /></ProtectedRoute>} />
           <Route path="/accounts" element={<ProtectedRoute><Accounts /></ProtectedRoute>} />
-          <Route path="/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />
+          <Route path="/sales-team" element={<ProtectedRoute><SalesTeam /></ProtectedRoute>} />
           <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
           <Route path="/lead-profile" element={<ProtectedRoute><LeadProfile /></ProtectedRoute>} />
 

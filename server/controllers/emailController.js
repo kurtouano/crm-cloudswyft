@@ -122,26 +122,31 @@ export async function sendEmail(req, res) {
 
 export async function replyEmail(req, res) {
     try {
-        const { messageId, threadId, content, token, attachments } = req.body;
-
+        const { messageId, threadId, content, token, attachments = [] } = req.body;
+        
         if (!messageId || !content || !token || !threadId) {
             return res.status(400).json({ error: "Missing required fields (messageId, threadId, content, or token)" });
         }
 
-        const formattedContentForEmail = content.replace(/\n/g, "<br>");
-        const formattedContentForDB = content;
+        // Filter out image attachments (we'll handle them in the HTML)
+        const nonImageAttachments = attachments.filter(
+            file => !file.mimeType?.includes('image')
+        );
 
         // Format attachments for Microsoft Graph API
-        const formattedAttachments = attachments?.map((file) => ({
+        const formattedAttachments = nonImageAttachments.map((file) => ({
             "@odata.type": "#microsoft.graph.fileAttachment",
             name: file.fileName,
             contentType: file.mimeType,
-            contentBytes: file.contentBytes, // Base64 encoded content
-        })) || [];
+            contentBytes: file.contentBytes,
+        }));
+
+        // Replace newlines with <br> tags for proper HTML formatting
+        const formattedContent = content.replace(/\n/g, "<br>");
 
         // Reply Email Data
         const emailData = {
-            comment: formattedContentForEmail, // Microsoft API requires "comment" for replies
+            comment: formattedContent,
             message: {
                 attachments: formattedAttachments,
             }
@@ -152,7 +157,10 @@ export async function replyEmail(req, res) {
             `https://graph.microsoft.com/v1.0/me/messages/${messageId}/reply`,
             emailData,
             {
-                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                headers: { 
+                    Authorization: `Bearer ${token}`, 
+                    "Content-Type": "application/json",
+                },
             }
         );
 
@@ -161,20 +169,31 @@ export async function replyEmail(req, res) {
 
         // Save reply email to database
         const repliedEmail = new ReplyEmail({
-            threadId, // Store threadId for proper threading
-            originalMessageId: messageId, // The email being replied to
-            replyContent: formattedContentForDB,
+            threadId,
+            originalMessageId: messageId,
+            replyContentHtml: content,
+            replyContentText: content.replace(/<[^>]*>?/gm, ''),
             repliedAt: new Date(),
-            attachments,
+            attachments: nonImageAttachments,
         });
 
         await repliedEmail.save();
         clearHandlingTimeCache(); 
 
-        res.status(200).json({ success: true, message: "Email replied successfully!", replyMessageId });
+        res.status(200).json({ 
+            success: true, 
+            message: "Email replied successfully!", 
+            replyMessageId 
+        });
     } catch (error) {
         console.error("Error replying to email:", error.response?.data || error.message);
-        res.status(500).json({ error: "Failed to send reply" });
+        
+        // More detailed error response
+        res.status(500).json({ 
+            error: "Failed to send reply",
+            details: error.response?.data || error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 }
 
