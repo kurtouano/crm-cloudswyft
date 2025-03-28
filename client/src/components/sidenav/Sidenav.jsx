@@ -10,7 +10,7 @@ const socket = io("http://localhost:4000"); // ✅ Connect to backend WebSocket 
 const navItems = [
     { path: "/dashboard", name: "Dashboard", icon: <FiGrid className="nav-react-icons"/>},
     { path: "/sales-flow", name: "Sales Flow", icon: <FiCheckSquare className="nav-react-icons"/> },
-    { path: "/employees", name: "Sales Team", icon: <FiUsers className="nav-react-icons"/> },
+    { path: "/sales-team", name: "Sales Team", icon: <FiUsers className="nav-react-icons"/> },
     { path: "/accounts", name: "Accounts", icon: <FiBookOpen className="nav-react-icons"/> },
     { path: "/communications", name: "Communications", icon: <FiMail className="nav-react-icons"/> },
 ];

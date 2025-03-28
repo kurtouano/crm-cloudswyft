@@ -1,0 +1,230 @@
+.salesteam-header-text {
+    padding-bottom: 20px;
+    font-family: "Open Sans";
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.4px;
+  }
+  
+  .salesteam-page-container {
+    margin-left: 17%;
+    padding: 25px 50px 50px 50px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .salesteam-horizontal-alignment {
+    display: flex;
+    flex-direction: row;
+    column-gap: 50px;
+  }
+  
+.salesteam-page-container .table-container {
+    width: 70%;
+    margin: 20px 0 0 0;
+}
+
+.salesteam-page-container table {
+    width: 100%;
+    border-collapse: collapse;
+
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    border: 0.45px solid #DADADA;
+    border-radius: 8px 8px 0 0;
+    background-color: white;
+}
+
+.table-header-container {
+    height: 40px;
+    font-size: 14px;
+    font-family: "Open Sans", sans-serif;
+    background-color: #d0cfcf; 
+  }
+
+  .table-header-list {
+    font-weight: 400;
+    text-align: center;
+    background-color: #F6F6F6;
+    color: black; 
+    padding: 10px; 
+  }
+
+  .table-body-list-container {
+    height: 45px;
+    border-top: 0.45px solid #DADADA;
+  }
+
+  .table-body-list {
+    text-align: center;
+    font-weight: 400;
+    color: #818181;
+  }
+
+  .lead-stage {
+    text-transform: capitalize;
+  }
+
+  .table-body-list tr {
+    background-color: white;
+  }
+  
+  .table-body-list th, .table-body-list td {
+    border: white;
+    text-align: left;
+  }
+
+  .table-body-list td {
+    color: #818181;
+  }
+  
+  .table-body-list th {
+    background-color: #fff;
+  }
+
+  .font-geist {
+    font-family: 'Geist', sans-serif;
+    color: #4F4F4F;
+    font-weight: 500;
+  }
+  
+  .pagination-container {
+    display: flex;
+    justify-content: center;
+    padding-top: 15px;
+    width: 100%;
+  }
+  
+  .pagination {
+    display: flex;
+    list-style-type: none;
+    column-gap: 8px;
+    font-family: "Poppins";
+  }
+  
+  .pagination li {
+    font-size: 12px;
+  }
+
+  .pagination-container {
+    justify-content: right;
+  }
+  
+  .pagination li.active a {
+    font-weight: bold;
+    background-color: #2196F3;
+    color: white;
+  }
+  
+  .pagination a {
+    border-radius: 4px;
+    padding: 3px 8px;
+    cursor: pointer;
+    background-color: #F5F5F5;
+    border: 1px solid #EEEEEE;
+    
+    transition: 0.25s all;
+  }
+
+  .pagination a:hover{
+    background-color: #e7e5e5;
+  }
+
+  .register-employee-container {
+    width: 35%;
+    background-color: #FFFFFF;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+    font-family: "Open Sans", sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* ✅ Center all form items */
+  }
+  
+  .form-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 25px;
+    color: #101357;
+    width: 100%;
+  }
+  
+  .form-group {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .form-label {
+    width: 89%;
+    font-size: 14px;
+    color: #141B34;
+    margin-bottom: 6px;
+  }
+  
+  .form-input {
+    width: 80%;
+    padding: 12px 14px;
+    margin-bottom: 20px;
+    border: 2px solid #D1D5DB;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: "Open Sans", sans-serif;
+    background-color: #fff;
+    color: #1f2937;
+    transition: border-color 0.3s ease;
+  }
+  
+  .form-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+  }
+  
+  .save-btn {
+    width: 25%;
+    padding: 12px 0;
+    background-color: #2196F3;
+    color: white;
+    font-weight: 600;
+    font-size: 15px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.25s ease;
+    margin-top: 10px;
+  }
+  
+  .save-btn:hover {
+    background-color: #1c86e2;
+  }
+  
+
+  .success-box {
+    width: 80%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 2px solid #28a745;
+    background-color: #e6ffed;
+    color: #218838;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  
+  .error-box {
+    width: 80%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 2px solid #dc3545;
+    background-color: #ffe6e6;
+    color: #a71d2a;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  

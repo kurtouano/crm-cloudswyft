@@ -1,12 +1,23 @@
 import mongoose from "mongoose";
 
-// User Schema for authentication
 const userSchema = new mongoose.Schema(
   {
+    name: {
+      type: String,
+      required: true,
+    },
     email: {
       type: String,
       required: true,
       unique: true,
+    },
+    employeeId: {
+      type: String,
+      required: function () {
+        return this.role === "employee"; 
+      },
+      unique: true,
+      match: /^CS\d{4}$/, 
     },
     password: {
       type: String,
@@ -15,7 +26,11 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       required: true,
-      enum: ["admin", "employee"], // Only allows admin or employee
+      enum: ["admin", "employee"],
+      default: "employee",
+    },
+    lastLogin: {
+      type: Date,
     },
   },
   { timestamps: true }
