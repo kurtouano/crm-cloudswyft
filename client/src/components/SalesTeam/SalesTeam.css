@@ -12,6 +12,20 @@
     display: flex;
     flex-direction: column;
   }
+
+  .salesteam-chart-card-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: flex-start; 
+    margin-top: 30px;
+    gap: 50px; 
+  }
+  
+  .salescard-box {
+    width: 160px;
+    height: 110px;
+  }
   
   .salesteam-horizontal-alignment {
     display: flex;
@@ -228,3 +242,107 @@
     font-weight: 600;
   }
   
+  .salesteam-productivity-card-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: flex-start;
+    margin-top: 30px;
+    gap: 50px;
+  }
+
+  
+  .productivity-chart-container {
+    width: 58%;
+    padding: 30px;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.05);
+    margin-top: 30px;
+    font-family: "Open Sans", sans-serif;
+  }
+  
+  .productivity-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 30px;
+    margin-bottom: 20px;
+  }
+
+  
+  .productivity-chart-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #05004E; /* 💡 Matches image */
+    margin-bottom: 16px;
+  }
+  
+  
+  .productivity-custom-legend {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  
+  .productivity-legend-item {
+    display: flex;
+    align-items: center;
+  }
+  
+  .productivity-legend-line {
+    width: 18px;
+    height: 4px;
+    margin-right: 6px;
+    border-radius: 2px;
+  }
+  
+  .productivity-legend-text {
+    color: #5a5a5a;
+  }
+  
+  .salescard-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2x2 layout */
+    gap: 20px;
+    max-width: 420px;
+    margin-top: 30px;
+  }
+  
+  .salescard-box {
+    margin-top: 50px;
+    width: 250px;
+    height: 180px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: "Open Sans", sans-serif;
+    box-shadow: 0px 1px 6px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+  }
+  
+  .salescard-box:hover {
+    transform: translateY(-3px);
+    box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.08);
+  }
+  
+  .salescard-title {
+    font-size: 19px;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  
+  .salescard-value {
+    font-size: 32px;
+    font-weight: 700;
+  }
+  
+
+  .productivity-header-wrapper {
+    position: relative;
+  }

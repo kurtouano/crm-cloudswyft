@@ -6,7 +6,7 @@ import "./SalesTeam.css";
 export default function TeamsTable() {
   const [leads, setLeads] = useState([]);
   const [page, setPage] = useState(0);
-  const rowsPerPage = 6; 
+  const rowsPerPage = 7; 
 
   useEffect(() => {
     const fetchEmployees = async () => {
