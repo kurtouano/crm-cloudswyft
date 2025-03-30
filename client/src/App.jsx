@@ -4,6 +4,7 @@ import Sidenav from "./components/sidenav/Sidenav";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Salesflow from "./pages/Salesflow";
+import SalesTeam from "./pages/SalesTeam";
 import Accounts from "./pages/Accounts";
 import Communications from "./pages/Communications";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -43,8 +44,9 @@ function MainLayout() {
           {/* Protected Routes - Requires Authentication */}
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/sales-flow" element={<ProtectedRoute><Salesflow /></ProtectedRoute>} />
-          <Route path="/accounts" element={<ProtectedRoute><Accounts /></ProtectedRoute>} />
           <Route path="/sales-team" element={<ProtectedRoute><SalesTeam /></ProtectedRoute>} />
+          <Route path="/accounts" element={<ProtectedRoute><Accounts /></ProtectedRoute>} />
+
           <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
           <Route path="/lead-profile" element={<ProtectedRoute><LeadProfile /></ProtectedRoute>} />
 
