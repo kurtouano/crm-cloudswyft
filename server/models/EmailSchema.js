@@ -24,7 +24,8 @@ const receivedEmailSchema = new mongoose.Schema({
 const replyEmailSchema = new mongoose.Schema({
     threadId: { type: String, required: true }, 
     originalMessageId: { type: String }, // Links reply to the original email
-    replyContent: { type: String, required: true }, // The reply text from cloudswyft 
+    replyContentHtml: { type: String, required: true }, // The reply text from cloudswyft 
+    replyContentText: { type: String }, // The reply text from cloudswyft 
     repliedAt: { type: Date, default: Date.now }, 
     attachments: [
         {

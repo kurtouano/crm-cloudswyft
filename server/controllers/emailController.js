@@ -87,7 +87,7 @@ export async function sendEmail(req, res) {
         const emailData = {
             message: {
                 subject,
-                body: { contentType: "Text", content },
+                body: { contentType: "HTML", content },
                 toRecipients: [{ emailAddress: { address: to } }],
                 attachments: formattedAttachments // Attachments included here
             },
@@ -122,59 +122,73 @@ export async function sendEmail(req, res) {
 
 export async function replyEmail(req, res) {
     try {
-        const { messageId, threadId, content, token, attachments } = req.body;
-
+        const { messageId, threadId, content, token, attachments = [] } = req.body;
+        
         if (!messageId || !content || !token || !threadId) {
             return res.status(400).json({ error: "Missing required fields (messageId, threadId, content, or token)" });
         }
 
-        const formattedContentForEmail = content.replace(/\n/g, "<br>");
-        const formattedContentForDB = content;
+        const processedContent = content
+            .replace(/<p><\/p>/g, '<br>') // Replace empty paragraphs with line breaks
+            .replace(/<p>/g, '<p style="margin:0 0 0 0;">') // Add consistent paragraph spacing
+            .replace(/<h1>/g, '<h1 style="margin:0 0 0 0;">'); // Add consistent paragraph spacing
 
-        // Format attachments for Microsoft Graph API
-        const formattedAttachments = attachments?.map((file) => ({
+        // Format all attachments for Microsoft Graph API (including images)
+        const formattedAttachments = attachments.map((file) => ({
             "@odata.type": "#microsoft.graph.fileAttachment",
             name: file.fileName,
             contentType: file.mimeType,
-            contentBytes: file.contentBytes, // Base64 encoded content
-        })) || [];
+            contentBytes: file.contentBytes,
+        }));
 
-        // Reply Email Data
+        // Create the email data with attachments
         const emailData = {
-            comment: formattedContentForEmail, // Microsoft API requires "comment" for replies
             message: {
+                body: {
+                    contentType: "HTML",
+                    content: processedContent, // Ensures HTML rendering
+                },
                 attachments: formattedAttachments,
             }
         };
+        
 
         // Send reply via Microsoft Graph API
         const response = await axios.post(
             `https://graph.microsoft.com/v1.0/me/messages/${messageId}/reply`,
             emailData,
             {
-                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                headers: { 
+                    Authorization: `Bearer ${token}`, 
+                    "Content-Type": "application/json",
+                },
             }
         );
 
-        // Extract the message ID of the sent reply
-        const replyMessageId = response.data?.id || null;
-
-        // Save reply email to database
+        // Save reply email to database with all attachments
         const repliedEmail = new ReplyEmail({
-            threadId, // Store threadId for proper threading
-            originalMessageId: messageId, // The email being replied to
-            replyContent: formattedContentForDB,
+            threadId,
+            originalMessageId: messageId,
+            replyContentHtml: content,
+            replyContentText: content.replace(/<[^>]*>?/gm, ''),
             repliedAt: new Date(),
-            attachments,
+            attachments: attachments, // Include all attachments
         });
 
         await repliedEmail.save();
         clearHandlingTimeCache(); 
 
-        res.status(200).json({ success: true, message: "Email replied successfully!", replyMessageId });
+        res.status(200).json({ 
+            success: true, 
+            message: "Email replied successfully!", 
+            replyMessageId: response.data?.id || null
+        });
     } catch (error) {
         console.error("Error replying to email:", error.response?.data || error.message);
-        res.status(500).json({ error: "Failed to send reply" });
+        res.status(500).json({ 
+            error: "Failed to send reply",
+            details: error.response?.data || error.message,
+        });
     }
 }
 
