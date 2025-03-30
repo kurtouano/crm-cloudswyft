@@ -265,10 +265,10 @@
   .productivity-header-row {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    gap: 30px;
+    justify-content: space-between; /* ← change this */
     margin-bottom: 20px;
   }
+  
 
   
   .productivity-chart-title {
@@ -345,4 +345,45 @@
 
   .productivity-header-wrapper {
     position: relative;
+  }
+
+
+  .specialist-salescard-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2x2 layout */
+    gap: 20px;
+    max-width: 420px;
+    margin-top: 20px;
+  }
+
+  .employee-dropdown {
+    margin-bottom: 20px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: "Open Sans", sans-serif;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    width: 240px;
+    height: 57px;
+    outline: none;
+    cursor: pointer;
+  }
+  
+  .download-link {
+    font-size: 13px;
+    font-weight: bolder;
+    color: #696969;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-top: 5px;
+  }
+  
+  /* Add these to override all states */
+  .download-link:visited,
+  .download-link:active,
+  .download-link:focus,
+  .download-link:hover {
+    color: #696969;
   }
