@@ -3,10 +3,15 @@ import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Underline from '@tiptap/extension-underline';
 import TextStyle from '@tiptap/extension-text-style';
+import Color from '@tiptap/extension-color';
 import Image from '@tiptap/extension-image';
 import Placeholder from '@tiptap/extension-placeholder';
+import { Table } from '@tiptap/extension-table';
+import { TableCell } from '@tiptap/extension-table-cell';
+import { TableHeader } from '@tiptap/extension-table-header';
+import { TableRow } from '@tiptap/extension-table-row';
 import { Extension } from '@tiptap/core';
-import { FaBold, FaItalic, FaUnderline, FaLink, FaImage, FaPaperclip, FaFilePdf, FaFileWord, FaFileExcel, FaFileAlt, FaListOl, FaListUl, FaHeading, FaFont } from 'react-icons/fa';
+import { FaBold, FaItalic, FaUnderline, FaLink, FaPaperclip, FaFilePdf, FaFileWord, FaFileExcel, FaFileAlt, FaListOl, FaListUl, FaHeading, FaFont, FaImage, FaPalette, FaFillDrip, FaTable } from 'react-icons/fa';
 import PropTypes from 'prop-types';
 import { useState, useEffect, useRef } from "react";
 import Downshift from 'downshift';
@@ -54,28 +59,128 @@ const FontFamily = Extension.create({
   },
 });
 
+const BackgroundColor = Extension.create({
+  name: 'backgroundColor',
+  addOptions() {
+    return {
+      types: ['textStyle'],
+    };
+  },
+  addGlobalAttributes() {
+    return [
+      {
+        types: this.options.types,
+        attributes: {
+          backgroundColor: {
+            default: null,
+            parseHTML: element => element.style.backgroundColor || null,
+            renderHTML: attributes => {
+              if (!attributes.backgroundColor) {
+                return {};
+              }
+              return { style: `background-color: ${attributes.backgroundColor}` };
+            },
+          },
+        },
+      },
+    ];
+  },
+  addCommands() {
+    return {
+      setBackgroundColor: backgroundColor => ({ chain }) => {
+        return chain()
+          .setMark('textStyle', { backgroundColor })
+          .run();
+      },
+      unsetBackgroundColor: () => ({ chain }) => {
+        return chain()
+          .setMark('textStyle', { backgroundColor: null })
+          .removeEmptyTextStyle()
+          .run();
+      },
+    };
+  },
+});
+
 const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange }) => {
+  const [fileInputKey, setFileInputKey] = useState(Date.now());
+  const [fontColor, setFontColor] = useState('#000000');
+  const [bgColor, setBgColor] = useState('#ffffff');
+  const [showColorPicker, setShowColorPicker] = useState(null);
+  const [showTableDropdown, setShowTableDropdown] = useState(false);
+  
   // Canned messages data
   const [cannedMessages] = useState([
     {
-      id: 'newsletter1',
-      name: 'Newsletter 1',
-      content: '<p>Thank you for subscribing to our newsletter! Here are this week\'s updates...</p>'
+      id: 'interested-lead-followup',
+      name: 'Interested Lead Follow-Up',
+      content: `
+        <p>Dear <span style="color:#1155cc;">[First Name]</span>,</p>
+        <p>Thank you for your interest in [Product/Service].</p>
+        <p>Next steps:</p>
+        <p>• [Next Step 1]<br>• [Next Step 2]</p>
+        <p>Please let me know if you have any questions.</p>
+        <p>Best regards,<br>[Your Name]</p>
+      `
     },
     {
-      id: 'newsletter2',
-      name: 'Newsletter 2',
-      content: '<p>Special offer just for you! Use code SPECIAL20 for 20% off...</p>'
+      id: 'standard-followup',
+      name: 'Standard Follow-Up',
+      content: `
+        <p>Dear <span style="color:#1155cc;">[First Name]</span>,</p>
+        <p>I wanted to follow up regarding our recent conversation about [Topic].</p>
+        <p>Please let me know if you have any questions.</p>
+        <p>Best regards,<br>[Your Name]</p>
+      `
     },
     {
-      id: 'followup',
-      name: 'Follow-up',
-      content: '<p>Just following up on our previous conversation. Let me know if you have any questions!</p>'
+      id: 'thank-you',
+      name: 'Thank You Note',
+      content: `
+        <p>Dear <span style="color:#1155cc;">[First Name]</span>,</p>
+        <p>Thank you for [specific reason].</p>
+        <p>We appreciate your [business/partnership/support].</p>
+        <p>Best regards,<br>[Your Name]</p>
+      `
     },
     {
-      id: 'trademarks',
-      name: 'Cloudswyft Trademarks',
-      content: '<p>Cloudswyft Global Systems, Inc.</p>'
+      id: 'follow-up-newsletter',
+      name: 'Follow Up Newsletter',
+      content: `
+          <h1>
+            <span style="color:#ffffff;background-color:#4a6bdf;border-radius:4px;display:inline-block;font-size:20px;font-weight:bold;">Quick Follow-Up</span>
+          </h1> <br>
+          <p>
+            Hi <span style="color:#4a6bdf;">[First Name]</span>,
+          </p>
+          <p>
+            I noticed we haven't connected since my last email about <span style="background-color:#f3f6ff;padding:2px 6px;">[Your Product/Service]</span>. Here's a quick reminder of how we can help:
+          </p>
+          <p>
+            <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" alt="Business solution" style="max-width:100%;height:auto;">
+          </p>
+          <p>
+            <span style="background-color:#f3f6ff;padding:8px 12px;display:inline-block;">
+              • Solve <span style="color:#4a6bdf;font-weight:bold;">[Specific Pain Point]</span><br>
+              • Save <span style="color:#4a6bdf;font-weight:bold;">X hours/week</span><br>
+              • Boost <span style="color:#4a6bdf;font-weight:bold;">[Relevant Metric] by Y%</span>
+            </span>
+          </p><br>
+          <p>
+            Would <span style="background-color:#fff8e6;padding:2px 4px;">15 minutes next week</span> work to explore this further?
+          </p>
+          <p>
+            <a href="[Calendly Link]" style="color:#ffffff;background-color:#4a6bdf;padding:12px 24px;border-radius:4px;text-decoration:none;display:inline-block;font-weight:bold;">Schedule a Call</a>
+          </p>
+          <p>
+            If now's not the right time, just reply "not now" - no hard feelings!
+          </p><br>
+          <p>
+            Best,<br>
+            <span style="font-weight:bold;">[Your Name]</span><br>
+            <span style="color:#7f8c8d;">Cloudswyft Global Systems, Inc.</span>
+          </p>
+      `
     }
   ]);
 
@@ -85,12 +190,17 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange }) => {
   const [showHeadingsDropdown, setShowHeadingsDropdown] = useState(false);
   const [showFontsDropdown, setShowFontsDropdown] = useState(false);
   const editorRef = useRef(null);
-
+  
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
         heading: {
           levels: [1, 2, 3],
+        },
+        paragraph: {
+          HTMLAttributes: {
+            style: 'margin: 0; padding: 0;',
+          },
         },
       }),
       Link.configure({
@@ -103,15 +213,23 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange }) => {
       }),
       Underline,
       TextStyle,
+      Color,
+      BackgroundColor,
       FontFamily, 
       Image.configure({
         inline: true,
-        allowBase64: true, // Allow base64 images as fallback
+        allowBase64: true,
         HTMLAttributes: {
           class: 'embedded-image',
           style: 'display: inline-block; max-width: 100%; height: auto;',
         },
       }),
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
       Placeholder.configure({
         placeholder: 'Send a Message',
         emptyEditorClass: 'is-editor-empty',
@@ -198,11 +316,30 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange }) => {
         from: editor.state.selection.from - 1,
         to: editor.state.selection.from
       });
-      editor.commands.insertContent(content);
+      editor.commands.insertContent(content.trim());
       setShowSuggestions(false);
       editor.commands.focus();
     }
   };
+
+  // Table functions
+  const insertTable = () => {
+    editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+    setShowTableDropdown(false);
+  };
+
+  const addColumnBefore = () => editor?.chain().focus().addColumnBefore().run();
+  const addColumnAfter = () => editor?.chain().focus().addColumnAfter().run();
+  const deleteColumn = () => editor?.chain().focus().deleteColumn().run();
+  const addRowBefore = () => editor?.chain().focus().addRowBefore().run();
+  const addRowAfter = () => editor?.chain().focus().addRowAfter().run();
+  const deleteRow = () => editor?.chain().focus().deleteRow().run();
+  const deleteTable = () => editor?.chain().focus().deleteTable().run();
+  const mergeCells = () => editor?.chain().focus().mergeCells().run();
+  const splitCell = () => editor?.chain().focus().splitCell().run();
+  const toggleHeaderColumn = () => editor?.chain().focus().toggleHeaderColumn().run();
+  const toggleHeaderRow = () => editor?.chain().focus().toggleHeaderRow().run();
+  const toggleHeaderCell = () => editor?.chain().focus().toggleHeaderCell().run();
 
   // List functions
   const toggleOrderedList = () => editor?.chain().focus().toggleOrderedList().run();
@@ -220,28 +357,45 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange }) => {
     setShowFontsDropdown(false);
   };
 
+  // Color functions
+  const applyTextColor = () => {
+    editor?.chain().focus().setColor(fontColor).run();
+    setShowColorPicker(null);
+  };
+
+  const applyBackgroundColor = () => {
+    editor?.chain().focus().setBackgroundColor(bgColor).run();
+    setShowColorPicker(null);
+  };
+
+  const resetTextColor = () => {
+    editor?.chain().focus().unsetColor().run();
+    setShowColorPicker(null);
+  };
+
+  const resetBackgroundColor = () => {
+    editor?.chain().focus().unsetBackgroundColor().run();
+    setShowColorPicker(null);
+  };
+
   const addLink = () => {
     if (!editor) return;
   
     const previousUrl = editor.getAttributes('link').href;
     const url = window.prompt('Enter URL', previousUrl);
   
-    // User cancelled
     if (url === null) return;
   
-    // Remove link if empty
     if (url === '') {
       editor.chain().focus().extendMarkRange('link').unsetLink().run();
       return;
     }
   
-    // Basic URL validation
     let finalUrl = url;
     if (!/^https?:\/\//i.test(url)) {
       finalUrl = `https://${url}`;
     }
   
-    // Set the link
     editor
       .chain()
       .focus()
@@ -250,47 +404,41 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange }) => {
       .run();
   };
 
+  const addImageFromUrl = () => {
+    if (!editor) return;
+    
+    const url = window.prompt('Enter the image URL');
+    
+    if (url) {
+      let finalUrl = url;
+      if (!/^https?:\/\//i.test(url)) {
+        finalUrl = `https://${url}`;
+      }
+      
+      editor
+        .chain()
+        .focus()
+        .setImage({ src: finalUrl })
+        .run();
+    }
+  };
+
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
   
-    // For images, create a preview immediately
-    if (file.type.includes('image')) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        // Insert image directly as base64 for immediate display
-        editor?.chain().focus()
-          .setImage({ src: event.target.result })
-          .run();
-        
-        // DON'T call handleFileChange for images - we don't want them as attachments
-      };
-      reader.readAsDataURL(file);
-    } else {
-      // Handle non-image files as before
-      handleFileChange(e);
-      const fileIcon = getFileIconHtml(file.type);
-      
-      editor?.chain().focus()
-        .insertContent(`
-          <div class="file-attachment" data-filename="${file.name}">
-            <span class="file-icon-container">${fileIcon}</span>
-            <span class="file-name">${file.name}</span>
-          </div>
-        `)
-        .run();
-    }
+    handleFileChange(e);
+    
+    editor?.chain().focus()
+      .insertContent(`
+        <div class="file-attachment" data-filename="${file.name}">
+          <span class="file-name">${file.name}</span>
+        </div>
+      `)
+      .run();
+
+    setFileInputKey(Date.now());
   };
-  
-  const getFileIconHtml = (type) => {
-    if (type.includes('pdf')) return '<i class="fas fa-file-pdf pdf-icon"></i>';
-    if (type.includes('word') || type.includes('msword') || type.includes('docx')) 
-      return '<i class="fas fa-file-word word-icon"></i>';
-    if (type.includes('excel') || type.includes('spreadsheet') || type.includes('xlsx')) 
-      return '<i class="fas fa-file-excel excel-icon"></i>';
-    return '<i class="fas fa-file-alt generic-icon"></i>';
-  };
-  
 
   return (
     <div className="email-editor">
@@ -305,7 +453,7 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange }) => {
           <FaBold />
         </button>
         <button
-        type="button"
+          type="button"
           onClick={() => editor?.chain().focus().toggleItalic().run()}
           className={editor?.isActive('italic') ? 'active' : ''}
           title="Italic"
@@ -372,11 +520,88 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange }) => {
           </button>
           {showFontsDropdown && (
             <div className="dropdown-menu">
-              <button onClick={() => setFont('Arial')}>Arial</button>
-              <button onClick={() => setFont('Times New Roman')}>Times New Roman</button>
-              <button onClick={() => setFont('Courier New')}>Courier New</button>
-              <button onClick={() => setFont('Georgia')}>Georgia</button>
-              <button onClick={() => setFont('Verdana')}>Verdana</button>
+              <button type="button" onClick={() => setFont('Arial')}>Arial</button>
+              <button type="button" onClick={() => setFont('Times New Roman')}>Times New Roman</button>
+              <button type="button" onClick={() => setFont('Courier New')}>Courier New</button>
+              <button type="button" onClick={() => setFont('Georgia')}>Georgia</button>
+              <button type="button" onClick={() => setFont('Verdana')}>Verdana</button>
+            </div>
+          )}
+        </div>
+
+        {/* Text Color Picker */}
+        <div className="dropdown-container">
+          <button
+            type="button"
+            onClick={() => setShowColorPicker(showColorPicker === 'text' ? null : 'text')}
+            title="Text Color"
+          >
+            <FaPalette />
+          </button>
+          {showColorPicker === 'text' && (
+            <div className="dropdown-menu color-picker">
+              <input 
+                type="color" 
+                value={fontColor}
+                onChange={(e) => setFontColor(e.target.value)}
+              />
+              <button type="button" onClick={applyTextColor}>Apply</button>
+              <button type="button" onClick={resetTextColor}>Reset</button>
+            </div>
+          )}
+        </div>
+
+        {/* Background Color Picker */}
+        <div className="dropdown-container">
+          <button
+            type="button"
+            onClick={() => setShowColorPicker(showColorPicker === 'background' ? null : 'background')}
+            title="Background Color"
+          >
+            <FaFillDrip />
+          </button>
+          {showColorPicker === 'background' && (
+            <div className="dropdown-menu color-picker">
+              <input 
+                type="color" 
+                value={bgColor}
+                onChange={(e) => setBgColor(e.target.value)}
+              />
+              <button type="button" onClick={applyBackgroundColor}>Apply</button>
+              <button type="button" onClick={resetBackgroundColor}>Reset</button>
+            </div>
+          )}
+        </div>
+
+        {/* Table controls */}
+        <div className="dropdown-container">
+          <button
+            type="button"
+            onClick={() => setShowTableDropdown(!showTableDropdown)}
+            className={editor?.isActive('table') ? 'active' : ''}
+            title="Table"
+          >
+            <FaTable />
+          </button>
+          {showTableDropdown && (
+            <div className="dropdown-menu">
+              <button type="button" onClick={insertTable}>Insert Table</button>
+              {editor?.isActive('table') && (
+                <>
+                  <button type="button" onClick={addColumnBefore}>Add Column Before</button>
+                  <button type="button" onClick={addColumnAfter}>Add Column After</button>
+                  <button type="button" onClick={deleteColumn}>Delete Column</button>
+                  <button type="button" onClick={addRowBefore}>Add Row Before</button>
+                  <button type="button" onClick={addRowAfter}>Add Row After</button>
+                  <button type="button" onClick={deleteRow}>Delete Row</button>
+                  <button type="button" onClick={deleteTable}>Delete Table</button>
+                  <button type="button" onClick={mergeCells}>Merge Cells</button>
+                  <button type="button" onClick={splitCell}>Split Cell</button>
+                  <button type="button" onClick={toggleHeaderColumn}>Toggle Header Column</button>
+                  <button type="button" onClick={toggleHeaderRow}>Toggle Header Row</button>
+                  <button type="button" onClick={toggleHeaderCell}>Toggle Header Cell</button>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -384,14 +609,20 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange }) => {
         <button type="button" onClick={addLink} title="Insert Link">
           <FaLink />
         </button>
+        
+        <button type="button" onClick={addImageFromUrl} title="Insert Image from URL">
+          <FaImage />
+        </button>
+        
         <label htmlFor="file-upload" title="Attach File" className="file-upload-label">
           <FaPaperclip />
           <input
             id="file-upload"
+            key={fileInputKey}
             type="file"
             onChange={handleFileUpload}
             style={{ display: 'none' }}
-            accept="*/*"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.txt,.csv,image/*"
           />
         </label>
       </div>

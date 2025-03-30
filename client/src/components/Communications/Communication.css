@@ -538,7 +538,7 @@
     align-items: center;
     gap: 10px;
     position: absolute;
-    right: 25px;
+    right: 0;
     font-size: 12px;
     top: 5px;
     color: rgb(123, 123, 123);
@@ -671,23 +671,38 @@
 
 /* Email Body */
 .email-body-container {
+    max-width: 850px;
     padding: 10px;
     margin-bottom: 12px;
-    white-space: pre-line;
-}
-
-.email-body-container p{
-    white-space: pre-line;
+    overflow-x: hidden;
 }
 
 .email-body-display {
     font-size: 13.5px;
     color: #242424;
-    line-height: 1.6;
-    white-space: pre-wrap;
+    white-space: normal;
     word-wrap: break-word;
 }
 
+.email-body-display table {
+    border: none;
+}
+
+.email-body-display {
+    img {
+      max-width: 100%;
+      height: auto;
+      display: inline-block;
+    }
+  }
+
+  .email-body-display p:empty::before {
+    content: "";
+    display: inline-block;
+    height: 1em;
+  }
+
+  
 /* Attachments Container */
 .email-attachment-container {
     display: flex;

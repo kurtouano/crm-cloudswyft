@@ -55,6 +55,7 @@ export default function CommunicationPageNEW () {
   const [currentPage, setCurrentPage] = useState(1);
   const [attachments, setAttachments] = useState({}); 
   const [replies, setReplies] = useState({});
+  const [updateLeadTemp, setUpdateLeadTemp] = useState(0);
 
   const allEmails = [ // Merge Received and Sent Emails
     ...filteredEmails.map(email => ({ ...email, type: "received" })), 
@@ -604,12 +605,7 @@ export default function CommunicationPageNEW () {
     // Case 2: Emails exist - check last email timestamp
     const emailDate = new Date(timestamp);
     const daysSinceLastEmail = Math.floor((now - emailDate) / (1000 * 60 * 60 * 24));
-  
-    if (daysSinceLastEmail >= 7) {
-      updateLeadTemperature(leadId, "cold");
-      return "Needs follow up";
-    }
-  
+
     // Format relative time for recent emails
     const minutes = Math.floor((now - emailDate) / (1000 * 60));
     const hours = Math.floor((now - emailDate) / (1000 * 60 * 60));
@@ -657,52 +653,6 @@ export default function CommunicationPageNEW () {
       request.onerror = () => resolve(null);
     });
   };
-  
-  // Cache cleanup system
-  const cleanExpiredAttachments = async (maxAge = 7 * 24 * 60 * 60 * 1000) => {
-    const db = await initDB();
-    const tx = db.transaction('attachments', 'readwrite');
-    const store = tx.objectStore('attachments');
-    const index = store.index('cachedAt');
-    const range = IDBKeyRange.upperBound(Date.now() - maxAge);
-  
-    return new Promise((resolve) => {
-      const request = index.openCursor(range);
-      const deletedItems = [];
-  
-      request.onsuccess = (event) => {
-        const cursor = event.target.result;
-        if (cursor) {
-          deletedItems.push(cursor.value.emailId);
-          cursor.delete();
-          cursor.continue();
-        } else {
-          if (deletedItems.length > 0) {
-            console.log(`Cleaned ${deletedItems.length} expired attachments`);
-          }
-          resolve(deletedItems);
-        }
-      };
-  
-      request.onerror = () => resolve([]);
-    });
-  };
-
-  useEffect(() => {
-    // Run immediately on mount
-    cleanExpiredAttachments().catch(error => {
-      console.error('Initial attachment cleanup failed:', error);
-    });
-
-    // Set up weekly interval
-    const interval = setInterval(() => {
-      cleanExpiredAttachments().catch(error => {
-        console.error('Scheduled attachment cleanup failed:', error);
-      });
-    }, 7 * 24 * 60 * 60 * 1000); // 7 days in milliseconds
-
-    return () => clearInterval(interval);
-  }, []); 
 
   const updateLeadTemperature = async (leadId, temperature) => {
     if (!leadId) return; 
@@ -1225,16 +1175,6 @@ const handleSelectEmail = (email) => {
                 />
               </div>
             )}
-
-            <label className="email-attach-label">
-              <MdAttachFile className="email-attach-icon" />
-              <input 
-                type="file" 
-                className="email-attach-input" 
-                onChange={handleFileChange}
-                key={attachment ? attachment.fileName : "file-input"}
-              />
-            </label>
           </div>
         </form>
         

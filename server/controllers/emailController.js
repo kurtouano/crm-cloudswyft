@@ -87,7 +87,7 @@ export async function sendEmail(req, res) {
         const emailData = {
             message: {
                 subject,
-                body: { contentType: "Text", content },
+                body: { contentType: "HTML", content },
                 toRecipients: [{ emailAddress: { address: to } }],
                 attachments: formattedAttachments // Attachments included here
             },
@@ -128,29 +128,30 @@ export async function replyEmail(req, res) {
             return res.status(400).json({ error: "Missing required fields (messageId, threadId, content, or token)" });
         }
 
-        // Filter out image attachments (we'll handle them in the HTML)
-        const nonImageAttachments = attachments.filter(
-            file => !file.mimeType?.includes('image')
-        );
+        const processedContent = content
+            .replace(/<p><\/p>/g, '<br>') // Replace empty paragraphs with line breaks
+            .replace(/<p>/g, '<p style="margin:0 0 0 0;">') // Add consistent paragraph spacing
+            .replace(/<h1>/g, '<h1 style="margin:0 0 0 0;">'); // Add consistent paragraph spacing
 
-        // Format attachments for Microsoft Graph API
-        const formattedAttachments = nonImageAttachments.map((file) => ({
+        // Format all attachments for Microsoft Graph API (including images)
+        const formattedAttachments = attachments.map((file) => ({
             "@odata.type": "#microsoft.graph.fileAttachment",
             name: file.fileName,
             contentType: file.mimeType,
             contentBytes: file.contentBytes,
         }));
 
-        // Replace newlines with <br> tags for proper HTML formatting
-        const formattedContent = content.replace(/\n/g, "<br>");
-
-        // Reply Email Data
+        // Create the email data with attachments
         const emailData = {
-            comment: formattedContent,
             message: {
+                body: {
+                    contentType: "HTML",
+                    content: processedContent, // Ensures HTML rendering
+                },
                 attachments: formattedAttachments,
             }
         };
+        
 
         // Send reply via Microsoft Graph API
         const response = await axios.post(
@@ -164,17 +165,14 @@ export async function replyEmail(req, res) {
             }
         );
 
-        // Extract the message ID of the sent reply
-        const replyMessageId = response.data?.id || null;
-
-        // Save reply email to database
+        // Save reply email to database with all attachments
         const repliedEmail = new ReplyEmail({
             threadId,
             originalMessageId: messageId,
             replyContentHtml: content,
             replyContentText: content.replace(/<[^>]*>?/gm, ''),
             repliedAt: new Date(),
-            attachments: nonImageAttachments,
+            attachments: attachments, // Include all attachments
         });
 
         await repliedEmail.save();
@@ -183,16 +181,13 @@ export async function replyEmail(req, res) {
         res.status(200).json({ 
             success: true, 
             message: "Email replied successfully!", 
-            replyMessageId 
+            replyMessageId: response.data?.id || null
         });
     } catch (error) {
         console.error("Error replying to email:", error.response?.data || error.message);
-        
-        // More detailed error response
         res.status(500).json({ 
             error: "Failed to send reply",
             details: error.response?.data || error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 }
