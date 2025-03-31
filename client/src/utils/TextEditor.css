@@ -175,7 +175,7 @@
   left: 0;
 }
 
-.dropdown-menu {
+.dropdown-menu-table {
   overflow-y: scroll;
 }
 
@@ -284,7 +284,8 @@
   width: 100%;
 }
 
-.tableWrapper table,.tableWrapper td, .tableWrapper th  {
+.tableWrapper table, .tableWrapper td, .tableWrapper th{
+  width: 100%;
   border: 1px solid rgb(216, 216, 216);
 }
 

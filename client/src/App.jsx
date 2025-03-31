@@ -9,7 +9,6 @@ import Accounts from "./pages/Accounts";
 import Communications from "./pages/Communications";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import LeadProfile from "./pages/LeadProfile"
-import SalesTeam from "./pages/SalesTeam";
 
 export default function App() {
   return (

@@ -115,32 +115,32 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange }) => {
       id: 'interested-lead-followup',
       name: 'Interested Lead Follow-Up',
       content: `
-        <p>Dear <span style="color:#1155cc;">[First Name]</span>,</p>
+        <p>Dear <span style="color:#1155cc;">[First Name]</span>,</p> <br>
         <p>Thank you for your interest in [Product/Service].</p>
         <p>Next steps:</p>
         <p>• [Next Step 1]<br>• [Next Step 2]</p>
-        <p>Please let me know if you have any questions.</p>
-        <p>Best regards,<br>[Your Name]</p>
+        <p>Please let me know if you have any questions.</p><br>
+        <p>Best regards,<br>Cloudswyft</p>
       `
     },
     {
       id: 'standard-followup',
       name: 'Standard Follow-Up',
       content: `
-        <p>Dear <span style="color:#1155cc;">[First Name]</span>,</p>
+        <p>Dear <span style="color:#1155cc;">[First Name]</span>,</p><br>
         <p>I wanted to follow up regarding our recent conversation about [Topic].</p>
-        <p>Please let me know if you have any questions.</p>
-        <p>Best regards,<br>[Your Name]</p>
+        <p>Please let me know if you have any questions.</p><br>
+        <p>Best regards,<br>Cloudswyft</p>
       `
     },
     {
       id: 'thank-you',
       name: 'Thank You Note',
       content: `
-        <p>Dear <span style="color:#1155cc;">[First Name]</span>,</p>
+        <p>Dear <span style="color:#1155cc;">[First Name]</span>,</p><br>
         <p>Thank you for [specific reason].</p>
-        <p>We appreciate your [business/partnership/support].</p>
-        <p>Best regards,<br>[Your Name]</p>
+        <p>We appreciate your [business/partnership/support].</p><br>
+        <p>Best regards,<br>Cloudswyft</p>
       `
     },
     {
@@ -287,7 +287,7 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange }) => {
       '\n'
     );
     
-    if (textBefore === '/') {
+    if (textBefore === '`') {
       const { top, left } = editor.view.coordsAtPos(from);
       setSuggestionPosition({ 
         top: top + window.scrollY, 
@@ -584,7 +584,7 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange }) => {
             <FaTable />
           </button>
           {showTableDropdown && (
-            <div className="dropdown-menu">
+            <div className="dropdown-menu dropdown-menu-table">
               <button type="button" onClick={insertTable}>Insert Table</button>
               {editor?.isActive('table') && (
                 <>
@@ -647,12 +647,12 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange }) => {
             getMenuProps,
             getItemProps,
             highlightedIndex,
-            selectedItem,
             isOpen,
           }) => (
             <div
               style={{
                 position: 'absolute',
+                fontSize: '14px',
                 top: `${suggestionPosition.top + 20}px`,
                 left: `${suggestionPosition.left}px`,
                 background: 'white',
@@ -660,9 +660,9 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange }) => {
                 borderRadius: '4px',
                 boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
                 zIndex: 1000,
-                maxHeight: '300px',
-                overflowY: 'auto',
-                width: '300px',
+                maxHeight: '200px',
+                overflowY: 'scroll',
+                width: '250px',
               }}
             >
               <ul {...getMenuProps()} style={{ listStyle: 'none', padding: 0, margin: 0 }}>
@@ -678,20 +678,10 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange }) => {
                           padding: '8px 12px',
                           cursor: 'pointer',
                           borderBottom: '1px solid #eee',
-                          fontWeight: selectedItem === item ? 'bold' : 'normal',
                         },
                       })}
                     >
                       <div style={{ fontWeight: 'bold' }}>{item.name}</div>
-                      <div style={{ 
-                        fontSize: '0.8em', 
-                        color: '#666',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}>
-                        {item.content.replace(/<[^>]*>/g, '')}
-                      </div>
                     </li>
                   ))}
               </ul>

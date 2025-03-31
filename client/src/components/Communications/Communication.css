@@ -685,8 +685,23 @@
 }
 
 .email-body-display table {
+    margin: 0 !important;
+    text-align: left !important;
     border: none;
-}
+  }
+
+  .email-body-display ul, .email-body-display ol {
+    padding-inline-start: 40px;
+  }
+  .email-body-display li {
+    margin-left: 2em;
+  }
+  
+  .email-body-display th {
+    text-align: left !important;
+    display: inline-block;
+    padding: 4px 8px;
+  }
 
 .email-body-display {
     img {
@@ -864,6 +879,7 @@
   }
   
   .view-link, .download-link {
+    text-transform: capitalize;
     color: #007bff;
     text-decoration: none;
     font-weight: 500;
@@ -873,6 +889,7 @@
   }
   
   .view-link:hover, .download-link:hover {
+    color: #8e8e8e;
     text-decoration: underline;
   }
   
