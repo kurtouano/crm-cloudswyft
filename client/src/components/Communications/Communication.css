@@ -191,7 +191,7 @@
 /* Styling for Star Icon */
 .inbox-body-reply-type-star {
     position: absolute;
-    color: #b0b0b0;
+    color: #d2d2d2;
     font-size: 16px;
     right: 0;
     bottom: 0;
@@ -686,23 +686,24 @@
     word-wrap: break-word;
 }
 
-.email-body-display table {
-    margin: 0 !important;
-    text-align: left !important;
-    border: none;
-  }
-
 .email-body-display ul, .email-body-display ol {
 padding-inline-start: 40px;
 }
-.email-body-display li {
-margin-left: 2em;
+
+.email-body-display table {
+    display: inline-block;
+  width: 100%; /* Ensure table uses full width */
+  border-collapse: collapse; /* Remove spacing between cells */
+  margin: 0;
+  border: none;
 }
 
-.email-body-display th {
-text-align: left !important;
-display: inline-block;
-padding: 4px 8px;
+.email-body-display th,
+.email-body-display td {
+  padding: 4px 12px; /* Consistent padding */
+  text-align: left;
+  vertical-align: middle; /* Center content vertically */
+  border: none;
 }
 
 .email-body-display a {

@@ -368,6 +368,8 @@ export default function AccountPage() {
                   </div>
                 )}
 
+                <div className={`lead-temp-indicator ${lead.temperature || "warm"}`}  />
+
                 {/* Lead Details */}
                 <div className="lead-info">
                   <h3 className="lead-name">{lead.company}</h3>

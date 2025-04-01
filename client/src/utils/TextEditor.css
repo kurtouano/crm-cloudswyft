@@ -1,7 +1,7 @@
 .email-editor {
   border-radius: 4px;
   background: white;
-  //background: #008cff;
+  /* background: #008cff; */
   margin: 5px 0;
   width: 100%;
 }
@@ -73,22 +73,12 @@
 /* Enhanced List Styling */
 .ProseMirror ul,
 .ProseMirror ol {
-  padding-left: 2em;
-  margin: 0.5em 0;
-}
-
-.ProseMirror ul {
-  list-style-type: disc;
-}
-
-.ProseMirror ol {
-  list-style-type: decimal;
+  padding-left: 40px;
+  margin: 0;
 }
 
 .ProseMirror li {
   position: relative;
-  padding-left: 0.5em;
-  margin-bottom: 0.2em;
 }
 
 .ProseMirror ol {
@@ -290,9 +280,9 @@
   border: 1px solid rgb(216, 216, 216);
 }
 
-.tiptap th {
-  background-color: #f2f2f2;
+.tableWrapper td, .tableWrapper th {
   text-align: left;
+  padding: 4px 12px;
 }
 
 /* Alignment classes */

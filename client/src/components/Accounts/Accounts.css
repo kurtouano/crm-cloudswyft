@@ -337,6 +337,29 @@
     background-color: #e7e5e5;
 }
 
+.lead-temp-indicator {
+    width: 6px;
+    height: 6px;
+    position: absolute;
+    top: 25px;
+    left: 25px;
+    border-radius: 50%;
+}
+
+/* Cold - Blue */
+.lead-temp-indicator.cold {
+    background-color: #48a3ff; /* Dodger Blue */
+}
+
+.lead-temp-indicator.warm {
+    background-color: #ffc252; /* Orange */
+}
+
+/* Hot - Red */
+.lead-temp-indicator.hot {
+    background-color: #ff40409d; /* Red */
+}
+
 .lead-dropdown-menu {
     position: absolute;
     top: 40px;

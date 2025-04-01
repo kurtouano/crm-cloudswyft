@@ -135,8 +135,10 @@ export async function replyEmail(req, res) {
             .replace(/<h1>/g, '<h1 style="margin:0 0 0 0;">') // Remove headings spacing
             .replace(/<h2>/g, '<h2 style="margin:0 0 0 0;">') // Remove headings spacing
             .replace(/<h3>/g, '<h3 style="margin:0 0 0 0;">') // Remove headings spacing
-            .replace(/<ol>/g, '<ol style="margin:0 0 0 0;">')
-            .replace(/<ul>/g, '<ul style="margin:0 0 0 0;">')
+            .replace(/<ol>/g, '<ol style="margin:0 0 0 0; padding: 0 0 0 20px;">')
+            .replace(/<ul>/g, '<ul style="margin:0 0 0 0; padding: 0 0 0 20px;">')
+            .replace(/<th colspan="1" rowspan="1">/g, '<th style="padding: 0 12px;">')
+            .replace(/<td colspan="1" rowspan="1">/g, '<td style="padding: 0 12px;">')
 
         // Format all attachments for Microsoft Graph API (including images)
         const formattedAttachments = attachments.map((file) => ({
