@@ -12,6 +12,7 @@ const LeadSchema = new mongoose.Schema(
     importDate: { type: Date, default: Date.now }, 
     status: { type: String, required: true, default: "active" },
     temperature: { type: String, required: true, default: "warm" },
+    starred: {type: Boolean, default: false},
     stage: {
       type: String,
       enum: [

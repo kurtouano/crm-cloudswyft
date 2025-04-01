@@ -1,5 +1,5 @@
 import useMicrosoftAuthentication from "../../utils/AuthMicrosoft.js";
-import { useEffect, useState, useMemo, useCallback} from "react";
+import { useEffect, useState, useMemo, useCallback, useRef} from "react";
 import { useLocation } from "react-router-dom";
 import Fuse from "fuse.js"; // 🔍 Import Fuse.js
 import { FiSearch, FiEdit, FiUser } from "react-icons/fi";
@@ -55,7 +55,8 @@ export default function CommunicationPageNEW () {
   const [currentPage, setCurrentPage] = useState(1);
   const [attachments, setAttachments] = useState({}); 
   const [replies, setReplies] = useState({});
-  const [updateLeadTemp, setUpdateLeadTemp] = useState(0);
+  const temperatureUpdates = useRef(new Set());
+  const [starredLeads, setStarredLeads] = useState({});
 
   const allEmails = [ // Merge Received and Sent Emails
     ...filteredEmails.map(email => ({ ...email, type: "received" })), 
@@ -372,9 +373,14 @@ export default function CommunicationPageNEW () {
   useEffect(() => {
     const sortLeads = (leadsToSort) => {
       return [...leadsToSort].sort((a, b) => {
+        // Starred leads always come first
+        if (a.starred && !b.starred) return -1;
+        if (!a.starred && b.starred) return 1;
+        
+        // For leads with same star status, sort by last interaction
         const aLastEmail = emails.find(email => email.sender.toLowerCase() === a.bestEmail.toLowerCase());
         const bLastEmail = emails.find(email => email.sender.toLowerCase() === b.bestEmail.toLowerCase());
-  
+        
         return (bLastEmail ? new Date(bLastEmail.timestamp) : 0) - (aLastEmail ? new Date(aLastEmail.timestamp) : 0);
       });
     };
@@ -382,9 +388,9 @@ export default function CommunicationPageNEW () {
     if (leads.length > 0) {
       const sorted = sortLeads(leads);
       setSortedLeads(sorted);
-      setFilteredLeads(sorted); // ✅ Initialize filteredLeads with sorted data
+      setFilteredLeads(sorted);
     }
-  }, [leads, emails]); // ✅ Runs when leads or emails update
+  }, [leads, emails]);
 
   useEffect(() => {
     if (activeLead) {
@@ -588,32 +594,163 @@ export default function CommunicationPageNEW () {
   };
 
   // Helper function to format timestamp
-  const formatRelativeTime = (timestamp, leadId, leadCreatedAt) => {
-    const now = new Date();
-    const createdDate = new Date(leadCreatedAt);
-    const daysSinceCreation = Math.floor((now - createdDate) / (1000 * 60 * 60 * 24));
-  
-    // Case 1: No emails exist
-    if (!timestamp) {
-      if (daysSinceCreation >= 7) { 
-        updateLeadTemperature(leadId, "cold");
-        return "Needs follow up";
-      }
-      return "No Response";
-    }
-  
-    // Case 2: Emails exist - check last email timestamp
-    const emailDate = new Date(timestamp);
-    const daysSinceLastEmail = Math.floor((now - emailDate) / (1000 * 60 * 60 * 24));
+  const formatRelativeTime = (timestamp, leadId, leadCreatedAt, currentTemperature) => {
+  const now = new Date();
+  const createdDate = new Date(leadCreatedAt);
+  const diffTime = now - createdDate;
+  const daysSinceCreation = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-    // Format relative time for recent emails
-    const minutes = Math.floor((now - emailDate) / (1000 * 60));
-    const hours = Math.floor((now - emailDate) / (1000 * 60 * 60));
+  // Case 1: No messages exist
+  if (!timestamp) {
+    if (daysSinceCreation >= 7) {
+      if (currentTemperature !== 'cold') {
+        updateLeadTemperature(leadId, "cold");
+      }
+      return `No response - ${daysSinceCreation} days`;
+    }
+    return `No response - ${daysSinceCreation} day${daysSinceCreation !== 1 ? 's' : ''}`;
+  }
+
+  // Case 2: Messages exist
+  const messageDate = new Date(timestamp);
+  const daysSinceLastMessage = Math.floor((now - new Date(timestamp)) / (1000 * 60 * 60 * 24));
+
+  if (daysSinceLastMessage >= 7) {
+    if (currentTemperature !== 'cold') {  // Only update if not already cold
+      updateLeadTemperature(leadId, "cold");
+    }
+    return `Needs follow-up`;
+  }
+  
+    // Format relative time for recent messages
+    const minutes = Math.floor((now - messageDate) / (1000 * 60));
+    const hours = Math.floor((now - messageDate) / (1000 * 60 * 60));
   
     if (minutes < 1) return "Just now";
     if (minutes < 60) return `${minutes} min${minutes > 1 ? "s" : ""} ago`;
     if (hours < 24) return `${hours} hr${hours > 1 ? "s" : ""} ago`;
-    return `${daysSinceLastEmail} day${daysSinceLastEmail > 1 ? "s" : ""} ago`;
+    return `${daysSinceLastMessage} day${daysSinceLastMessage > 1 ? "s" : ""} ago`;
+  };
+
+  // Helper function to get last interaction timestamp
+  const getLastInteractionTimestamp = (lead, emails, sentEmails) => {
+    // Get all received emails from this lead
+    const receivedFromLead = emails.filter(
+      email => email.sender.toLowerCase() === lead.bestEmail.toLowerCase()
+    );
+
+    // Get all sent emails to this lead
+    const sentToLead = sentEmails.filter(
+      email => email.to.toLowerCase() === lead.bestEmail.toLowerCase()
+    );
+
+    // Combine and sort all interactions
+    const allInteractions = [...receivedFromLead, ...sentToLead].sort((a, b) => 
+      new Date(b.timestamp || b.sentAt) - new Date(a.timestamp || a.sentAt)
+    );
+
+    return allInteractions[0]?.timestamp || allInteractions[0]?.sentAt || null;
+  };
+
+  // Update the lead temperature in database
+  const updateLeadTemperature = useCallback(async (leadId, temperature) => {
+    // Skip if already updated or updating
+    if (temperatureUpdates.current.has(leadId)) return;
+  
+    try {
+      temperatureUpdates.current.add(leadId); // Mark as in-progress
+      
+      const response = await fetch(`http://localhost:4000/api/leads/updateLeadTemp/${leadId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ temperature })
+      });
+  
+      if (!response.ok) {
+        temperatureUpdates.current.delete(leadId); // Allow retry on failure
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Update failed');
+      }
+  
+      return await response.json();
+    } catch (error) {
+      console.error('Update error:', error.message);
+      throw error;
+    }
+  }, []);
+
+  const getLastMessagePreview = (lead, emails) => {
+    // Filter emails for this lead
+    const leadEmails = emails.filter(
+      email => email.sender.toLowerCase() === lead.bestEmail.toLowerCase()
+    );
+  
+    // Get the most recent email
+    const lastEmail = leadEmails.reduce((latest, current) => {
+      return (!latest || new Date(current.timestamp) > new Date(latest.timestamp))
+        ? current
+        : latest;
+    }, null);
+  
+    // If no emails exist, return the default message or lead.lastMessage
+    if (!lastEmail) {
+      return lead.lastMessage || "No recent messages";
+    }
+  
+    // Clean and truncate the message
+    const cleanMessage = lastEmail.message
+      .replace(/<[^>]+>/g, '') // Remove HTML tags
+      .replace(/\n/g, ' ')      // Replace newlines with spaces
+      .trim();
+  
+    // Truncate to 100 characters with ellipsis if needed
+    return cleanMessage.length > 100 
+      ? cleanMessage.substring(0, 100) + '...' 
+      : cleanMessage;
+  };
+
+  const toggleStarLead = async (leadId, e) => {
+    e.stopPropagation();
+    
+    // Get current starred status before toggling
+    const currentLead = leads.find(lead => lead._id === leadId);
+    const newStarredStatus = !currentLead?.starred;
+  
+    // Optimistically update all lead states
+    const updateLeadStates = (newStatus) => {
+      setLeads(prev => prev.map(lead => 
+        lead._id === leadId ? { ...lead, starred: newStatus } : lead
+      ));
+      setFilteredLeads(prev => prev.map(lead =>
+        lead._id === leadId ? { ...lead, starred: newStatus } : lead
+      ));
+      setSortedLeads(prev => prev.map(lead =>
+        lead._id === leadId ? { ...lead, starred: newStatus } : lead
+      ));
+    };
+  
+    // Immediately update UI
+    updateLeadStates(newStarredStatus);
+  
+    try {
+      const response = await fetch(`http://localhost:4000/api/leads/toggleStar/${leadId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (!response.ok) {
+        // Revert if API fails
+        updateLeadStates(!newStarredStatus);
+        throw new Error('Failed to toggle star');
+      }
+  
+      // After successful API call, trigger a re-sort
+      setLeads(prev => [...prev]); // This will trigger the sorting useEffect
+      setFilteredLeads(prev => [...prev]);
+      
+    } catch (error) {
+      console.error("Error toggling star:", error);
+    }
   };
 
   const initDB = () => {
@@ -652,22 +789,6 @@ export default function CommunicationPageNEW () {
       request.onsuccess = () => resolve(request.result?.attachments || null);
       request.onerror = () => resolve(null);
     });
-  };
-
-  const updateLeadTemperature = async (leadId, temperature) => {
-    if (!leadId) return; 
-  
-    try {
-      await fetch(`http://localhost:4000/api/leads/updateLeadTemp`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ leadId, temperature }),
-      });
-    } catch (error) {
-      console.error("Error updating lead temperature:", error);
-    }
   };
 
   const handleViewAttachment = (attachment, type) => {
@@ -859,38 +980,30 @@ const handleSelectEmail = (email) => {
             <p>No leads found.</p>
           ) : (
             filteredLeads.map((lead) => {
-              // Get emails for this lead
-              const leadEmails = emails.filter(
-                (email) => email.sender.toLowerCase() === lead.bestEmail.toLowerCase()
-              );
-
-              const lastEmail = leadEmails.reduce((latest, current) => {
-                return (!latest || new Date(current.timestamp) > new Date(latest.timestamp))
-                  ? current
-                  : latest;
-              }, null);
+              const lastInteraction = getLastInteractionTimestamp(lead, emails, sentEmails);
               
               return (
-                <div key={lead._id} className={`inbox-body-list-container ${
-                  activeLead?._id === lead._id ? "active" : ""
-                  }`}
-                  onClick={() => handleLeadClick(lead)}
+                <div key={lead._id} className={`inbox-body-list-container ${activeLead?._id === lead._id ? "active" : ""}`}
+                    onClick={() => handleLeadClick(lead)}
                 >
                   <div className="inbox-body-header">
                     <CgProfile className="inbox-body-header-icon" />
                     <p className="inbox-body-lead-type"> {lead.leadName || "Unknown Lead"}</p>
                     <p className="inbox-body-last-message-time">
-                      {formatRelativeTime(lastEmail?.timestamp, lead._id, lead.createdAt)}
+                      {formatRelativeTime(lastInteraction, lead._id, lead.createdAt, lead.temperature)}
                     </p>
                   </div>
                   <p className="inbox-body-company-name">{lead.company}</p>
                   <div className="inbox-body-reply-preview-container">
                     <p className="inbox-body-reply-preview">
-                      {lead.lastMessage ||
-                        "No recent message Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ex tellus, maximus pharetra tellus ac, ultrices."}
+                      {getLastMessagePreview(lead, emails) || "No recent message"}
                     </p>
-                    <FaStar className="inbox-body-reply-type-star" />
+                    <FaStar 
+                      className={`inbox-body-reply-type-star ${lead.starred ? "starred-active" : ""}`}
+                      onClick={(e) => toggleStarLead(lead._id, e)}
+                    />
                   </div>
+
                 </div>
               );
             })

@@ -191,13 +191,15 @@
 /* Styling for Star Icon */
 .inbox-body-reply-type-star {
     position: absolute;
-    color: #F8E116;
+    color: #b0b0b0;
     font-size: 16px;
     right: 0;
     bottom: 0;
 }
 
-
+.starred-active {
+    color: #F8E116 !important;
+}
 
 /* Modal Overlay */
 .modal-overlay {
@@ -690,18 +692,22 @@
     border: none;
   }
 
-  .email-body-display ul, .email-body-display ol {
-    padding-inline-start: 40px;
-  }
-  .email-body-display li {
-    margin-left: 2em;
-  }
-  
-  .email-body-display th {
-    text-align: left !important;
-    display: inline-block;
-    padding: 4px 8px;
-  }
+.email-body-display ul, .email-body-display ol {
+padding-inline-start: 40px;
+}
+.email-body-display li {
+margin-left: 2em;
+}
+
+.email-body-display th {
+text-align: left !important;
+display: inline-block;
+padding: 4px 8px;
+}
+
+.email-body-display a {
+    text-decoration: none;
+}
 
 .email-body-display {
     img {

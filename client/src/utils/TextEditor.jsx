@@ -11,12 +11,61 @@ import { TableCell } from '@tiptap/extension-table-cell';
 import { TableHeader } from '@tiptap/extension-table-header';
 import { TableRow } from '@tiptap/extension-table-row';
 import { Extension } from '@tiptap/core';
+import Paragraph from '@tiptap/extension-paragraph'
 import { FaBold, FaItalic, FaUnderline, FaLink, FaPaperclip, FaFilePdf, FaFileWord, FaFileExcel, FaFileAlt, FaListOl, FaListUl, FaHeading, FaFont, FaImage, FaPalette, FaFillDrip, FaTable } from 'react-icons/fa';
 import PropTypes from 'prop-types';
 import { useState, useEffect, useRef } from "react";
 import Downshift from 'downshift';
 import "./TextEditor.css";
 
+const CustomParagraph = Paragraph.extend({
+  name: 'paragraph',
+  addOptions() {
+    return {
+      HTMLAttributes: {
+        style: null, // Explicitly allow style attributes
+      },
+    };
+  },
+  parseHTML() {
+    return [
+      {
+        tag: 'div',
+        getAttrs: (node) => ({
+          style: node.getAttribute('style'),
+          // Preserve all attributes for nested elements
+          ...(node.innerHTML.includes('<span') && {
+            'data-has-spans': true,
+          }),
+        }),
+      },
+      { tag: 'p' },
+    ];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ['div', HTMLAttributes, 0];
+  },
+  addAttributes() {
+    return {
+      style: {
+        default: null,
+        // Parse styles recursively for nested elements
+        parseHTML: (element) => {
+          const styles = element.getAttribute('style');
+          if (styles) return styles;
+          
+          // Handle nested elements (e.g., spans)
+          const nested = element.querySelector('[style]');
+          return nested ? nested.getAttribute('style') : null;
+        },
+        renderHTML: (attributes) => {
+          if (!attributes.style) return {};
+          return { style: attributes.style };
+        },
+      },
+    };
+  },
+});
 const FontFamily = Extension.create({
   addOptions() {
     return {
@@ -112,15 +161,76 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange }) => {
   // Canned messages data
   const [cannedMessages] = useState([
     {
+      id: 'test-div',
+      name: 'test-div',
+      content: `
+<div style=" 
+  font-family: Arial, sans-serif;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  text-align: center;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+">
+  <h1><span style="
+    color: #1155cc;
+    font-weight: bold;
+    display: block;
+  ">LIMITED TIME OFFER!</span>
+  </h1>
+  <br><br>
+  
+  <span style="
+    color: #1155cc;
+    font-size: 20px;
+    font-weight: bold;
+    display: block;
+  ">GET 50% OFF ALL COURSES</span>
+  <br><br>
+  
+  <span style="
+    color: #333333;
+    font-size: 16px;
+    display: block;
+  ">Upgrade your skills with our premium courses at half the price.</span>
+  <br><br>
+  
+  <span style="
+    color: #d32f2f;
+    font-weight: bold;
+    display: block;
+  ">This exclusive offer expires in 48 hours!</span>
+  <br><br>
+  
+  <span style="
+    background-color: #1155cc;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 4px;
+    display: inline-block;
+    font-weight: bold;
+  ">CLAIM YOUR DISCOUNT NOW</span>
+  <br><br><br>
+  
+  <span style="
+    color: #666666;
+    font-size: 14px;
+    display: block;
+  ">Don't miss this opportunity to boost your career with Cloudswyft!</span>
+</div>
+  `
+    },
+    {
       id: 'interested-lead-followup',
       name: 'Interested Lead Follow-Up',
       content: `
-        <p>Dear <span style="color:#1155cc;">[First Name]</span>,</p> <br>
-        <p>Thank you for your interest in [Product/Service].</p>
-        <p>Next steps:</p>
-        <p>• [Next Step 1]<br>• [Next Step 2]</p>
-        <p>Please let me know if you have any questions.</p><br>
-        <p>Best regards,<br>Cloudswyft</p>
+          <p>Dear <span style="color:#1155cc">[First Name]</span>,</p><br><br>
+          <p>Thank you for your interest in [Product/Service].</p>
+          <p>Next steps:</p>
+          <p>• [Next Step 1]<br>• [Next Step 2]</p>
+          <p>Please let me know if you have any questions.</p><br>
+          <p>Best regards,<br>Cloudswyft</p>
       `
     },
     {
@@ -153,7 +263,7 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange }) => {
           <p>
             Hi <span style="color:#4a6bdf;">[First Name]</span>,
           </p>
-          <p>
+          <p style="color: black">
             I noticed we haven't connected since my last email about <span style="background-color:#f3f6ff;padding:2px 6px;">[Your Product/Service]</span>. Here's a quick reminder of how we can help:
           </p>
           <p>
@@ -166,19 +276,21 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange }) => {
               • Boost <span style="color:#4a6bdf;font-weight:bold;">[Relevant Metric] by Y%</span>
             </span>
           </p><br>
-          <p>
+
+          <p style="color: black">
             Would <span style="background-color:#fff8e6;padding:2px 4px;">15 minutes next week</span> work to explore this further?
           </p>
           <p>
-            <a href="[Calendly Link]" style="color:#ffffff;background-color:#4a6bdf;padding:12px 24px;border-radius:4px;text-decoration:none;display:inline-block;font-weight:bold;">Schedule a Call</a>
+            <a href="[Calendly Link]" style="color:white;background-color:#4a6bdf;padding:6px 15px; display: inline-block; text-decoration: none;font-weight:bold;">
+            <span style="color: white; display: inline-block;">Schedule a Call</span></a>
           </p>
           <p>
             If now's not the right time, just reply "not now" - no hard feelings!
           </p><br>
-          <p>
+          
+          <p style="color: black">
             Best,<br>
-            <span style="font-weight:bold;">[Your Name]</span><br>
-            <span style="color:#7f8c8d;">Cloudswyft Global Systems, Inc.</span>
+            <span>Cloudswyft Global Systems, Inc.</span>
           </p>
       `
     }
@@ -197,12 +309,9 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange }) => {
         heading: {
           levels: [1, 2, 3],
         },
-        paragraph: {
-          HTMLAttributes: {
-            style: 'margin: 0; padding: 0;',
-          },
-        },
+        paragraph: false,
       }),
+      CustomParagraph,
       Link.configure({
         openOnClick: true,
         autolink: true,

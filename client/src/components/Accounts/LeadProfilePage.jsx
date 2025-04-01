@@ -199,12 +199,12 @@ export default function LeadProfilePage() {
                 <p className="profile-basic-title">Basic Information</p>
               </div>
               <div className="profile-body-list">
-                <p className="profile-body"><span>Full Name: </span> {lead.leadName}</p>
                 <p className="profile-body"><span>Company Name: </span> {lead.company}</p>
                 <p className="profile-body"><span>Industry: </span> {lead.industry}</p>
+                <p className="profile-body"><span>Company Address: </span> {lead.companyAddress}</p>
                 <p className="profile-body"><span>Name of President: </span> {lead.nameOfPresident}</p>
                 <p className="profile-body"><span>Name of HR Head: </span> {lead.nameOfHrHead}</p>
-                <p className="profile-body"><span>Company Address: </span> {lead.companyAddress}</p>
+                <p className="profile-body"><span>Lead Temperature: </span> {lead.temperature}</p>
               </div>
             </div>
 
@@ -213,6 +213,7 @@ export default function LeadProfilePage() {
                 <p className="profile-basic-title">Contact Information</p>
               </div>
               <div className="profile-body-list">
+                <p className="profile-body"><span>Full Name: </span> {lead.leadName}</p>
                 <p className="profile-body"><span>Best Email: </span>{lead.bestEmail}</p>
                 <p className="profile-body"><span>Phone: </span>{lead.phone}</p>
                 <p className="profile-body"><span>Social Media: </span>{lead.social}</p>

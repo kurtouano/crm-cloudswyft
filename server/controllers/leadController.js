@@ -1,5 +1,5 @@
 import Lead from "../models/LeadSchema.js";
-import { sendAutoWelcomeEmail } from "../utils/sendAutoWelcomeEmail.js";
+// import { sendAutoWelcomeEmail } from "../utils/sendAutoWelcomeEmail.js";
 
 // 🟢 Get all leads
 export const getLeads = async (req, res) => {
@@ -104,12 +104,12 @@ export const importLead = async (req, res) => {
       const savedLead = await newLead.save();
       insertedLeads.push(savedLead);
 
-      await sendAutoWelcomeEmail(savedLead, accessToken);
-      console.log(`✅ Auto welcome email sent to ${savedLead.bestEmail}`);
+      // await sendAutoWelcomeEmail(savedLead, accessToken);
+      // console.log(`✅ Auto welcome email sent to ${savedLead.bestEmail}`);
     }
 
     res.status(201).json({
-      message: "Leads uploaded successfully and welcome emails sent!",
+      message: "Leads uploaded successfully!",
       insertedCount: insertedLeads.length,
       skippedCount,
       insertedLeads
@@ -204,7 +204,8 @@ export async function updateLeadStatus(req, res) {
 }
 
 export const updateLeadTemperature = async (req, res) => {
-  const { leadId, temperature } = req.body;
+  const { leadId } = req.params; // Get from URL params
+  const { temperature } = req.body;
 
   if (!leadId || !temperature) {
     return res.status(400).json({ error: "Missing leadId or temperature" });
@@ -212,7 +213,7 @@ export const updateLeadTemperature = async (req, res) => {
 
   try {
     const updatedLead = await Lead.findByIdAndUpdate(
-      leadId,  // Make sure this matches your schema's ID field
+      leadId,
       { temperature },
       { new: true }
     );
@@ -228,5 +229,43 @@ export const updateLeadTemperature = async (req, res) => {
   }
 };
 
+export const updateLeadStar = async (req, res) => {
+  try {
+    const { leadID } = req.params;
+
+    // Find the lead and toggle its starred status
+    const lead = await Lead.findById(leadID);
+    
+    if (!lead) {
+      return res.status(404).json({
+        success: false,
+        error: 'Lead not found'
+      });
+    }
+
+    // Toggle the starred value
+    lead.starred = !lead.starred;
+    
+    // Save the updated lead
+    const updatedLead = await lead.save();
+
+    res.status(200).json({
+      success: true,
+      data: {
+        _id: updatedLead._id,
+        starred: updatedLead.starred,
+        leadName: updatedLead.leadName,
+        bestEmail: updatedLead.bestEmail
+      }
+    });
+
+  } catch (error) {
+    console.error('Error toggling lead star:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Server Error'
+    });
+  }
+};
 
 

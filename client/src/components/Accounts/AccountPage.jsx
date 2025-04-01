@@ -321,7 +321,7 @@ export default function AccountPage() {
               <option value="successful">Closed - Successful</option>
               <option value="lost">Closed - Lost</option>
             </select>
-            <img src={arrowRightIcon} alt="Dropdown Icon" className="dropdown-icon" />
+            <img src={arrowRightIcon} alt="Dropdown Icon" className="status-dropdown-icon" />
           </div>
         </div>
         
