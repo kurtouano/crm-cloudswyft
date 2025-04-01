@@ -128,10 +128,15 @@ export async function replyEmail(req, res) {
             return res.status(400).json({ error: "Missing required fields (messageId, threadId, content, or token)" });
         }
 
+        // Remove some automatic stylings caused by Tiptap rich text editor 
         const processedContent = content
             .replace(/<p><\/p>/g, '<br>') // Replace empty paragraphs with line breaks
             .replace(/<p>/g, '<p style="margin:0 0 0 0;">') // Add consistent paragraph spacing
-            .replace(/<h1>/g, '<h1 style="margin:0 0 0 0;">'); // Add consistent paragraph spacing
+            .replace(/<h1>/g, '<h1 style="margin:0 0 0 0;">') // Remove headings spacing
+            .replace(/<h2>/g, '<h2 style="margin:0 0 0 0;">') // Remove headings spacing
+            .replace(/<h3>/g, '<h3 style="margin:0 0 0 0;">') // Remove headings spacing
+            .replace(/<ol>/g, '<ol style="margin:0 0 0 0;">')
+            .replace(/<ul>/g, '<ul style="margin:0 0 0 0;">')
 
         // Format all attachments for Microsoft Graph API (including images)
         const formattedAttachments = attachments.map((file) => ({
