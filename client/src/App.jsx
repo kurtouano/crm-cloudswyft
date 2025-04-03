@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 import Sidenav from "./components/sidenav/Sidenav";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -14,6 +15,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <MainLayout />
+      <Toaster position="top-right" reverseOrder={false} /> {/* 🧠 Global Toasts */}
     </BrowserRouter>
   );
 }

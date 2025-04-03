@@ -1,14 +1,16 @@
 import useMicrosoftAuthentication from "../../utils/AuthMicrosoft.js";
+import { toast } from "react-hot-toast";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import ReactPaginate from "react-paginate";
 import usersIcon from "../../assets/users.png";
 import clockIcon from "../../assets/clock.png";
-import { FiChevronUp, FiChevronDown } from "react-icons/fi";
+import { FiChevronUp, FiChevronDown} from "react-icons/fi";
 import hourglassIcon from "../../assets/hourglass.png";
 import highPriorityIcon from "../../assets/highpriority.png";
 import leadIcon from "../../assets/lead-profile-icon.svg";
 import InteractionArrowIcon from "../../assets/interaction-history-arrow.svg";
+import { MdEdit } from "react-icons/md";
 
 export default function LeadProfilePage() {
   useMicrosoftAuthentication(); // Ensure user is authenticated in Microsoft
@@ -26,6 +28,66 @@ export default function LeadProfilePage() {
   const [status, setStatus] = useState(lead.status);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State for dropdown visibility
   const [activeOption, setActiveOption] = useState("");
+
+
+  // 🆕 Editing states
+  const [leadData, setLeadData] = useState({ ...lead });
+  const [isEditingBasic, setIsEditingBasic] = useState(false);
+  const [isEditingContact, setIsEditingContact] = useState(false);
+  const [editedLead, setEditedLead] = useState({ ...lead });
+
+  const handleEditToggle = (section) => {
+    if (section === "basic") setIsEditingBasic(true);
+    else if (section === "contact") setIsEditingContact(true);
+  };
+
+  const handleInputChange = (field, value) => {
+    setEditedLead((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const cancelEdit = () => {
+    setEditedLead({ ...leadData });
+    setIsEditingBasic(false);
+    setIsEditingContact(false);
+  };
+  
+
+  const saveChanges = async () => {
+    try {
+      // Clone and sanitize edited lead
+      const sanitizedLead = { ...editedLead };
+  
+      // If leadID is a string like "LID-055", strip it or remove it completely
+      if (typeof sanitizedLead.leadID === "string") {
+        delete sanitizedLead.leadID;
+      }
+  
+      const response = await fetch(`http://localhost:4000/api/leads/update/${lead._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(sanitizedLead),
+      });
+  
+      if (response.ok) {
+        const updated = await response.json();
+        setIsEditingBasic(false);
+        setIsEditingContact(false);
+        setEditedLead(updated);
+        setLeadData(updated); // 👈 force UI to show updated info
+        toast.success("Lead updated successfully!");
+      } else {
+        toast.error("Failed to update lead.");
+      }
+    } catch (error) {
+      console.error("Error saving lead:", error);
+      toast.error("⚠️ An error occurred while saving.");
+    }
+  };
+  
+  
+  
 
   // Change Status of Lead in DB
   const handleStatusChange = async (newStatus) => {
@@ -83,8 +145,8 @@ export default function LeadProfilePage() {
   };
 
   useEffect(() => {
-    setStatus(lead.status); // Update status if lead.status changes (e.g., after refresh)
-  }, [lead.status]); // Runs when lead.status updates
+    setStatus(leadData.status); // Update status if lead.status changes (e.g., after refresh)
+  }, [leadData.status]); // Runs when lead.status updates
 
   useEffect(() => {
     const fetchEmails = async () => {
@@ -191,37 +253,71 @@ export default function LeadProfilePage() {
           <div className="lead-profile-details-container">
             <div className="lead-profile-name-container">
               <img src={leadIcon} className="lead-profile-icon" alt="Lead Icon" />
-              <p className="lead-profile-name">{lead.name}</p>
+              <p className="lead-profile-name">{leadData.leadName}</p>
             </div>
 
             <div className="lead-profile-basic-information">
-              <div className="profile-basic-title-container">
+              <div className="profile-basic-title-container" style={{ position: "relative" }}>
                 <p className="profile-basic-title">Basic Information</p>
+                {!isEditingBasic && <MdEdit className="edit-icon" onClick={() => handleEditToggle("basic")} />}
               </div>
               <div className="profile-body-list">
-                <p className="profile-body"><span>Company Name: </span> {lead.company}</p>
-                <p className="profile-body"><span>Industry: </span> {lead.industry}</p>
-                <p className="profile-body"><span>Company Address: </span> {lead.companyAddress}</p>
-                <p className="profile-body"><span>Name of President: </span> {lead.nameOfPresident}</p>
-                <p className="profile-body"><span>Name of HR Head: </span> {lead.nameOfHrHead}</p>
-                <p className="profile-body"><span>Lead Temperature: </span> {lead.temperature}</p>
+                {["company", "industry", "companyAddress", "nameOfPresident", "nameOfHrHead", "temperature"].map((field) => (
+                  <p className="profile-body" key={field}>
+                    <span>{field.replace(/([A-Z])/g, " $1")}: </span>
+                    {isEditingBasic ? (
+                      <input
+                        value={editedLead[field] || ""}
+                        onChange={(e) => handleInputChange(field, e.target.value)}
+                        style={{ border: "1px solid #ccc", borderRadius: "5px", padding: "2px 5px" }}
+                      />
+                    ) : (
+                      <span>{leadData[field]}</span>
+                    )}
+                  </p>
+                ))}
               </div>
             </div>
 
+
+
             <div className="lead-profile-basic-information">
-              <div className="profile-basic-title-container">
+              <div className="profile-basic-title-container" style={{ position: "relative" }}>
                 <p className="profile-basic-title">Contact Information</p>
+                {!isEditingContact && <MdEdit className="edit-icon" onClick={() => handleEditToggle("contact")} />}
               </div>
               <div className="profile-body-list">
-                <p className="profile-body"><span>Full Name: </span> {lead.leadName}</p>
-                <p className="profile-body"><span>Best Email: </span>{lead.bestEmail}</p>
-                <p className="profile-body"><span>Phone: </span>{lead.phone}</p>
-                <p className="profile-body"><span>Social Media: </span>{lead.social}</p>
-                <p className="profile-body"><span>Website: </span>{lead.website}</p>
+                {["leadName", "bestEmail", "phone", "social", "website"].map((field) => (
+                  <p className="profile-body" key={field}>
+                    <span>{field.replace(/([A-Z])/g, " $1")}: </span>
+                    {isEditingContact ? (
+                      <input
+                        value={editedLead[field] || ""}
+                        onChange={(e) => handleInputChange(field, e.target.value)}
+                        style={{ border: "1px solid #ccc", borderRadius: "5px", padding: "2px 5px" }}
+                      />
+                    ) : (
+                      <span>{leadData[field]}</span>
+                    )}
+                  </p>
+                ))}
+
               </div>
+             
             </div>
+
+          
           </div>
         </div>
+
+    <div className="editButtons">
+            {(isEditingBasic || isEditingContact) && (
+              <div className="lead-profile-edit-actions">
+                <button onClick={saveChanges} className="lead-profile-save-btn">Save</button>
+                <button onClick={cancelEdit} className="lead-profile-cancel-btn">Cancel</button>
+              </div>
+            )}
+    </div>
 
         {/* Interaction History Section */}
         <p className="interaction-header-title">Interaction History</p>

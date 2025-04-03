@@ -121,6 +121,29 @@ export const importLead = async (req, res) => {
   }
 };
 
+
+export const updateLeadDetails = async (req, res) => {
+  const { id } = req.params;
+  const updateData = req.body;
+
+  try {
+    const updatedLead = await Lead.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updatedLead) {
+      return res.status(404).json({ message: "Lead not found" });
+    }
+
+    res.status(200).json(updatedLead);
+  } catch (error) {
+    console.error("Error updating lead details:", error);
+    res.status(500).json({ message: "Failed to update lead", error });
+  }
+};
+
+
 // 🟡 Update lead stage when moved in Kanban
 export const updateLeadStage = async (req, res) => {
   try {

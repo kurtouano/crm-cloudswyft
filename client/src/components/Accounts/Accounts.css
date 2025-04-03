@@ -569,7 +569,7 @@
     border-radius: 12px;
     box-shadow: 0 0 1px 1px rgba(174, 174, 174, 0.205);
     width: 342px;
-    height: 250px;
+    height: 280px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -598,7 +598,7 @@
     align-items: flex-start;
     justify-content: start;
     width: 522px;
-    height: 250px;
+    height: 280px;
     background-color: white;
     border-radius: 12px;
     box-shadow: 0 0 1px 1px rgba(174, 174, 174, 0.205);
@@ -627,7 +627,7 @@
 
 .profile-body {
     font-family: "Geist";
-    font-size: 14px;
+    font-size: 16px;
     margin-top: 11.5px;
     color: #818181;
 }
@@ -790,4 +790,79 @@
     background-color: #e7e5e5;
   }
 
+
+  .edit-icon {
+    position: absolute;
+    top: 17px;
+    right: 16px;
+    font-size: 18px;
+    color: #888;
+    cursor: pointer;
+    transition: color 0.2s ease-in-out;
+  }
+  
+  .edit-icon:hover {
+    color: #2196F3;
+  }
+  
+  
+  .editButtons {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    padding-right: 40px;
+    margin-top: -20px;
+    margin-bottom: 20px;
+  }
+  
+  .lead-profile-edit-actions {
+    display: flex;
+    gap: 12px; 
+  }
+  
+
+ 
+  .lead-profile-save-btn,
+  .lead-profile-cancel-btn {
+    padding: 10px 22px; /* ⬅️ more padding = larger buttons */
+    font-size: 15px;
+    font-weight: 500;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+  }
+  
+  
+.lead-profile-save-btn {
+  background-color: #2196F3;
+  color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.lead-profile-save-btn:hover {
+  background-color: #1976d2;
+}
+  .lead-profile-cancel-btn {
+    background-color: #eeeeee;
+    color: #444;
+  }
+  
+  .lead-profile-cancel-btn:hover {
+    background-color: #dddddd;
+  }
+  
+
+.profile-body input {
+  width: 100%;
+  max-width: 150px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: "Open Sans", sans-serif;
+  color: #333;
+  background-color: #fff;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
 
