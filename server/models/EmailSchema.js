@@ -38,6 +38,8 @@ const replyEmailSchema = new mongoose.Schema({
 
 const sentEmailSchema = new mongoose.Schema({
     to: { type: String, required: true },
+    cc: { type: String },  // Optional field for CC recipients
+    bcc: { type: String }, // Optional field for BCC recipients
     subject: { type: String, required: true },
     content: { type: String, required: true },
     sentAt: { type: Date, default: Date.now },

@@ -151,7 +151,7 @@ const BackgroundColor = Extension.create({
   },
 });
 
-const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange }) => {
+const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange, editorId }) => {
   const [fileInputKey, setFileInputKey] = useState(Date.now());
   const [fontColor, setFontColor] = useState('#000000');
   const [bgColor, setBgColor] = useState('#ffffff');
@@ -397,10 +397,14 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange }) => {
     );
     
     if (textBefore === '`') {
-      const { top, left } = editor.view.coordsAtPos(from);
+      // Get the editor's DOM element
+      const editorElement = editor.view.dom;
+      const editorRect = editorElement.getBoundingClientRect();
+      const coords = editor.view.coordsAtPos(from);
+      
       setSuggestionPosition({ 
-        top: top + window.scrollY, 
-        left: left + window.scrollX 
+        top: coords.top - editorRect.top + editorElement.scrollTop,
+        left: coords.left - editorRect.left
       });
       setShowSuggestions(true);
       setSuggestions(cannedMessages);
@@ -762,7 +766,7 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange }) => {
               style={{
                 position: 'absolute',
                 fontSize: '14px',
-                top: `${suggestionPosition.top + 20}px`,
+                top: `${suggestionPosition.top + 60}px`,
                 left: `${suggestionPosition.left}px`,
                 background: 'white',
                 border: '1px solid #ddd',
@@ -773,6 +777,7 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange }) => {
                 overflowY: 'scroll',
                 width: '250px',
               }}
+              className={`canned-message-dropdown ${editorId ? `editor-${editorId}` : ''}`}
             >
               <ul {...getMenuProps()} style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                 {isOpen &&
@@ -815,6 +820,7 @@ TipTap.propTypes = {
   onUpdate: PropTypes.func.isRequired,
   resetTrigger: PropTypes.string,
   handleFileChange: PropTypes.func.isRequired,
+  editorId: PropTypes.string,
 };
 
 export default TipTap;

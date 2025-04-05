@@ -70,37 +70,80 @@ export async function handleOAuthRedirect(req, res) {
 
 // Route to send an email using Microsoft Graph API
 export async function sendEmail(req, res) {
+    const formatRecipients = (emails) => {
+        if (!emails) return [];
+        
+        return emails.split(',')
+            .map(email => email.trim())
+            .filter(email => {
+                if (email.length === 0) return false;
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    throw new Error(`Invalid email address: ${email}`);
+                }
+                return true;
+            })
+            .map(email => ({ 
+                emailAddress: { 
+                    address: email 
+                } 
+            }));
+    };
+
     try {
-        const { to, subject, content, token, attachments } = req.body;
+        const { to, cc, bcc, subject, content, token, attachments } = req.body;
         if (!to || !subject || !content || !token) {
-            return res.status(400).json({ error: "Missing fields or authentication token" });
+            return res.status(400).json({ error: "Missing required fields or authentication token" });
         }
 
-        // Format attachments for Microsoft Graph API
+        // Format attachments
         const formattedAttachments = attachments?.map((file) => ({
             "@odata.type": "#microsoft.graph.fileAttachment",
             name: file.fileName,
             contentType: file.mimeType,
-            contentBytes: file.contentBytes, // Base64 encoded content
+            contentBytes: file.contentBytes,
         })) || [];
 
         const emailData = {
             message: {
                 subject,
-                body: { contentType: "HTML", content },
-                toRecipients: [{ emailAddress: { address: to } }],
-                attachments: formattedAttachments // Attachments included here
+                body: { 
+                    contentType: "HTML",
+                    content 
+                },
+                toRecipients: formatRecipients(to),
+                ccRecipients: cc ? formatRecipients(cc) : [],
+                bccRecipients: bcc ? formatRecipients(bcc) : [],
+                attachments: formattedAttachments
             },
+            saveToSentItems: true
         };
 
-        // Send email via Microsoft Graph API
-        await axios.post("https://graph.microsoft.com/v1.0/me/sendMail", emailData, {
-            headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        // Debug log
+        console.log("Sending email with recipients:", {
+            to: emailData.message.toRecipients,
+            cc: emailData.message.ccRecipients,
+            bcc: emailData.message.bccRecipients
         });
+
+        // Send email via Microsoft Graph API
+        const response = await axios.post(
+            "https://graph.microsoft.com/v1.0/me/sendMail", 
+            emailData, 
+            {
+                headers: { 
+                    Authorization: `Bearer ${token}`, 
+                    "Content-Type": "application/json" 
+                },
+            }
+        );
+
+        console.log("Email sent successfully:", response.data);
 
         // Save email to database
         const sentEmail = new SentEmail({
             to,
+            cc: cc || undefined,
+            bcc: bcc || undefined,
             subject,
             content,
             sentAt: new Date(),
@@ -112,12 +155,19 @@ export async function sendEmail(req, res) {
         res.status(200).json({ success: true, message: "Email sent successfully!" });
     } catch (error) {
         console.error("Error sending email:", error.response?.data || error.message);
+        let errorMessage = "Failed to send email";
+        
+        if (error.message.includes("Invalid email address")) {
+            errorMessage = error.message;
+        } else if (error.response?.data?.error?.message) {
+            errorMessage = error.response.data.error.message;
+        }
+
         res.status(500).json({ 
-            error: "Failed to send email",
+            error: errorMessage,
             details: error.response?.data || error.message 
         });
     }
-    
 }
 
 export async function replyEmail(req, res) {
@@ -208,16 +258,25 @@ export async function getSentEmail(req, res) {
         const limitNumber = Math.max(parseInt(limit, 10) || 10, 1);
         const skip = (pageNumber - 1) * limitNumber;
 
+        // Create a query that checks to, cc, and bcc fields
+        const query = {
+            $or: [
+                { to: { $regex: to, $options: 'i' } },
+                { cc: { $regex: to, $options: 'i' } },
+                { bcc: { $regex: to, $options: 'i' } }
+            ]
+        };
+
         // Fetch emails WITHOUT attachments for speed
         const [sentEmails, totalEmails] = await Promise.all([
-            SentEmail.find({ to })
+            SentEmail.find(query)
                 .sort({ _id: -1 })
-                .select("subject sender sentAt content") // Exclude attachments for speed
+                .select("to cc bcc subject sender sentAt content") // Include cc/bcc in response
                 .skip(skip)
                 .limit(limitNumber)
                 .lean(), 
 
-            SentEmail.countDocuments({ to }) 
+            SentEmail.countDocuments(query) 
         ]);
 
         res.status(200).json({

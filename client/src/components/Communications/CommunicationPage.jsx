@@ -38,9 +38,14 @@ export default function CommunicationPageNEW () {
   const [resetEditor, setResetEditor] = useState(false);
 
   // Email Form states
-  const [formData, setFormData] = useState({ to: "", subject: "", text: "" });
+  const [formData, setFormData] = useState({ to: "",   cc: "", bcc: "", subject: "", text: "" });
   const [formDataReply, setFormDataReply] = useState({ text: "", messageId: "", threadId: "" });
   const [selectedAttachment, setSelectedAttachment] = useState(null);
+  const [activeRecipientField, setActiveRecipientField] = useState('to');
+  const [ccSuggestions, setCcSuggestions] = useState([]);
+  const [bccSuggestions, setBccSuggestions] = useState([]);
+  const [showCcSuggestions, setShowCcSuggestions] = useState(false);
+  const [showBccSuggestions, setShowBccSuggestions] = useState(false);
 
    // Modal
   const [modalOpen, setModalOpen] = useState(false); 
@@ -56,7 +61,6 @@ export default function CommunicationPageNEW () {
   const [attachments, setAttachments] = useState({}); 
   const [replies, setReplies] = useState({});
   const temperatureUpdates = useRef(new Set());
-  const [starredLeads, setStarredLeads] = useState({});
 
   const allEmails = [ // Merge Received and Sent Emails
     ...filteredEmails.map(email => ({ ...email, type: "received" })), 
@@ -174,7 +178,16 @@ export default function CommunicationPageNEW () {
             const data = await response.json();
   
             if (response.ok && data.emails.length > 0) {
-                allSentEmails = [...allSentEmails, ...data.emails];
+                // Filter emails where the lead is in to, cc, or bcc
+                const relevantEmails = data.emails.filter(email => {
+                    return (
+                        email.to.includes(activeLead.bestEmail) ||
+                        (email.cc && email.cc.includes(activeLead.bestEmail)) ||
+                        (email.bcc && email.bcc.includes(activeLead.bestEmail))
+                    );
+                });
+  
+                allSentEmails = [...allSentEmails, ...relevantEmails];
                 totalEmailsFetched += data.emails.length;
                 totalEmailsToFetch = data.totalEmails;
                 page++;
@@ -183,14 +196,12 @@ export default function CommunicationPageNEW () {
             }
         }
   
-        // ✅ Update UI with latest sent emails
         setSentEmails(allSentEmails);
-  
     } catch (error) {
         console.error("Error fetching sent emails:", error);
         setSentEmails([]);
     }
-  }, [activeLead]); // ✅ Only re-run when `activeLead` changes
+  }, [activeLead]);
 
   useEffect(() => {
     fetchSentEmails();
@@ -493,39 +504,40 @@ export default function CommunicationPageNEW () {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => { // WILL BE ADDED IN THE FUTURE FOR CREATE EMAILS 
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const microsoftAccessToken = localStorage.getItem("microsoftAccessToken");
-    console.log("Send Email Token", microsoftAccessToken);
-
+    
     if (!microsoftAccessToken) {
       alert("Please log in via Microsoft first.");
       return;
     }
-
+  
     setLoading(true);
-
+  
     try {
       const res = await fetch("http://localhost:4000/api/emails/send-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           to: formData.to,
+          cc: formData.cc,  // Add this line
+          bcc: formData.bcc,  // Add this line
           subject: formData.subject,
           content: formData.text,
           token: microsoftAccessToken,
-          attachments: attachment ? [attachment] : [], // Include attachment if available
+          attachments: attachment ? [attachment] : [],
         }),
       });
-
+  
       const data = await res.json();
-
+  
       if (res.ok) {
         alert("Email sent successfully!");
-        setFormData({ to: "", subject: "", text: "" });
-        setAttachment(null); // Clear attachment after sending
-
-        closeModal(); // Close modal after sending
+        setFormData({ to: "", cc: "", bcc: "", subject: "", text: "" });
+        setAttachment(null);
+        setResetEditor(prev => !prev);
+        closeModal();
         fetchSentEmails();
       } else {
         alert(data.error || "Failed to send email");
@@ -533,7 +545,7 @@ export default function CommunicationPageNEW () {
     } catch (error) {
       console.error("Error sending email:", error);
     }
-
+  
     setLoading(false);
   };
   
@@ -595,33 +607,33 @@ export default function CommunicationPageNEW () {
 
   // Helper function to format timestamp
   const formatRelativeTime = (timestamp, leadId, leadCreatedAt, currentTemperature) => {
-  const now = new Date();
-  const createdDate = new Date(leadCreatedAt);
-  const diffTime = now - createdDate;
-  const daysSinceCreation = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-  // Case 1: No messages exist
-  if (!timestamp) {
-    if (daysSinceCreation >= 7) {
+    // Handle null/undefined timestamp
+    if (!timestamp) {
+      const now = new Date();
+      const createdDate = new Date(leadCreatedAt);
+      const diffTime = now - createdDate;
+      const daysSinceCreation = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+      if (daysSinceCreation >= 7) {
+        if (currentTemperature !== 'cold') {
+          updateLeadTemperature(leadId, "cold");
+        }
+        return `No response - ${daysSinceCreation} days`;
+      }
+      return `No response - ${daysSinceCreation} day${daysSinceCreation !== 1 ? 's' : ''}`;
+    }
+  
+    const now = new Date();
+    const messageDate = new Date(timestamp);
+    const daysSinceLastMessage = Math.floor((now - messageDate) / (1000 * 60 * 60 * 24));
+  
+    if (daysSinceLastMessage >= 7) {
       if (currentTemperature !== 'cold') {
         updateLeadTemperature(leadId, "cold");
       }
-      return `No response - ${daysSinceCreation} days`;
+      return `Needs follow-up`;
     }
-    return `No response - ${daysSinceCreation} day${daysSinceCreation !== 1 ? 's' : ''}`;
-  }
-
-  // Case 2: Messages exist
-  const messageDate = new Date(timestamp);
-  const daysSinceLastMessage = Math.floor((now - new Date(timestamp)) / (1000 * 60 * 60 * 24));
-
-  if (daysSinceLastMessage >= 7) {
-    if (currentTemperature !== 'cold') {  // Only update if not already cold
-      updateLeadTemperature(leadId, "cold");
-    }
-    return `Needs follow-up`;
-  }
-  
+    
     // Format relative time for recent messages
     const minutes = Math.floor((now - messageDate) / (1000 * 60));
     const hours = Math.floor((now - messageDate) / (1000 * 60 * 60));
@@ -632,21 +644,25 @@ export default function CommunicationPageNEW () {
     return `${daysSinceLastMessage} day${daysSinceLastMessage > 1 ? "s" : ""} ago`;
   };
 
+  
   // Helper function to get last interaction timestamp
   const getLastInteractionTimestamp = (lead, emails, sentEmails) => {
+    // Safeguard against undefined lead or missing bestEmail
+    if (!lead || !lead.bestEmail) return null;
+
     // Get all received emails from this lead
     const receivedFromLead = emails.filter(
-      email => email.sender.toLowerCase() === lead.bestEmail.toLowerCase()
+      email => email?.sender?.toLowerCase() === lead.bestEmail.toLowerCase()
     );
 
     // Get all sent emails to this lead
     const sentToLead = sentEmails.filter(
-      email => email.to.toLowerCase() === lead.bestEmail.toLowerCase()
+      email => email?.to?.toLowerCase() === lead.bestEmail.toLowerCase()
     );
 
     // Combine and sort all interactions
     const allInteractions = [...receivedFromLead, ...sentToLead].sort((a, b) => 
-      new Date(b.timestamp || b.sentAt) - new Date(a.timestamp || a.sentAt)
+      new Date(b?.timestamp || b?.sentAt || 0) - new Date(a?.timestamp || a?.sentAt || 0)
     );
 
     return allInteractions[0]?.timestamp || allInteractions[0]?.sentAt || null;
@@ -846,24 +862,68 @@ export default function CommunicationPageNEW () {
 };
 
 const handleRecipientChange = (e) => {
-  const input = e.target.value;
-  setFormData({ ...formData, to: input });
-
-  if (!input) {
-    setFilteredEmails(bestEmails); // Show all emails when input is empty
-  } else {
+  const { name, value } = e.target;
+  setFormData(prev => ({ ...prev, [name]: value }));
+  
+  // Get the last email part being typed (after last comma)
+  const lastEmailPart = value.split(',').pop().trim();
+  
+  if (lastEmailPart.length > 0) {
     const matches = bestEmails.filter(email =>
-      email.toLowerCase().includes(input.toLowerCase())
+      email.toLowerCase().includes(lastEmailPart.toLowerCase()) &&
+      !value.toLowerCase().includes(email.toLowerCase()) // Don't show already added emails
     );
-    setFilteredEmails(matches);
+    
+    if (name === 'to') {
+      setFilteredEmails(matches);
+      setShowSuggestions(matches.length > 0);
+    } else if (name === 'cc') {
+      setCcSuggestions(matches);
+      setShowCcSuggestions(matches.length > 0);
+    } else if (name === 'bcc') {
+      setBccSuggestions(matches);
+      setShowBccSuggestions(matches.length > 0);
+    }
+  } else {
+    // Hide suggestions if no text is being typed
+    if (name === 'to') {
+      setShowSuggestions(false);
+    } else if (name === 'cc') {
+      setShowCcSuggestions(false);
+    } else if (name === 'bcc') {
+      setShowBccSuggestions(false);
+    }
   }
-
-  setShowSuggestions(true);
 };
 
-const handleSelectEmail = (email) => {
-  setFormData({ ...formData, to: email });
-  setShowSuggestions(false);
+const handleSelectEmail = (email, fieldName) => {
+  setFormData(prev => {
+    const currentValue = prev[fieldName];
+    
+    // If the field is empty or we're just starting to type
+    if (!currentValue || currentValue.endsWith(',')) {
+      return { ...prev, [fieldName]: email };
+    }
+    
+    // If we have existing emails, replace the last partial email
+    const emails = currentValue.split(/[,;]\s*/).filter(e => e.trim());
+    if (emails.length > 0) {
+      // Replace the last (partial) email with the selected one
+      emails[emails.length - 1] = email;
+      return { 
+        ...prev, 
+        [fieldName]: emails.join(', ') 
+      };
+    }
+    
+    // Default case (shouldn't normally reach here)
+    return { ...prev, [fieldName]: email };
+  });
+
+  // Hide suggestions
+  if (fieldName === 'to') setShowSuggestions(false);
+  if (fieldName === 'cc') setShowCcSuggestions(false);
+  if (fieldName === 'bcc') setShowBccSuggestions(false);
 };
 
   return (
@@ -887,88 +947,145 @@ const handleSelectEmail = (email) => {
 
          {/* Floating Modal for Creating Email */}
           {modalOpen && (
-            <div className="modal-overlay">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h2>Create New Email</h2>
-                  <MdClose className="modal-close-icon" onClick={closeModal} />
-                </div>
+              <div className="modal-overlay">
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h2>Create New Email</h2>
+                    <MdClose className="modal-close-icon" onClick={closeModal} />
+                  </div>
 
-                <form className="email-form" onSubmit={handleSubmit}>
-                  
-                  {/* ✅ Updated Recipient Input with Suggestions */}
-                    <input
-                      type="email"
-                      name="to"
-                      className="email-input"
-                      placeholder="Recipient"
-                      value={formData.to}
-                      onChange={handleRecipientChange}
-                      required
-                      autoComplete="off"
-                      onFocus={() => {
-                        setFilteredEmails(bestEmails); // Show all emails on focus
-                        setShowSuggestions(true);
-                      }}
-                      onBlur={() => setTimeout(() => setShowSuggestions(false), 200)} // Delay hiding for click selection
-                    />
-
-
-                  {showSuggestions && filteredEmails.length > 0 && (
-                    <ul className="suggestions-dropdown">
-                      {filteredEmails.map((email, index) => (
-                        <li key={index} onClick={() => handleSelectEmail(email)}>
-                          {email}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-
-                  {/* Subject */}
-                  <input
-                    type="text"
-                    name="subject"
-                    className="email-input"
-                    placeholder="Subject"
-                    value={formData.subject}
-                    onChange={handleChange}
-                    required
-                  />
-
-                  {/* Message Body */}
-                  <textarea
-                    name="text"
-                    className="email-textarea"
-                    placeholder="Write your message..."
-                    value={formData.text}
-                    onChange={handleChange}
-                    required
-                  />
-
-                  {/* Attachments & Send */}
-                  <div className="email-actions-send">
-                    <div className="email-attachment-container">
-                      <label className="email-attach-label">
-                        <MdAttachFile className="email-attach-icon-send" />
-                        <input type="file" className="email-attach-input" onChange={handleFileChange} />
-                      </label>
-
-                      {attachment && (
-                        <div className="email-attachment-preview">
-                          {getFileIcon(attachment.mimeType)}
-                          <span className="attachment-name-send">{attachment.fileName}</span>
-                          <MdClose className="email-attach-remove-icon-send" onClick={() => setAttachment(null)} />
-                        </div>
+                  <form className="email-form" onSubmit={handleSubmit}>
+                  <div className="recipient-field-container">
+                      <input
+                        type="email"
+                        name="to"
+                        className="email-input"
+                        placeholder="To"
+                        value={formData.to}
+                        onChange={handleRecipientChange}
+                        onFocus={() => {
+                          setActiveRecipientField('to');
+                          setFilteredEmails(bestEmails);
+                          setShowSuggestions(true);
+                        }}
+                        onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                        required
+                        autoComplete="off"
+                        multiple
+                      />
+                      {showSuggestions && filteredEmails.length > 0 && (
+                        <ul className="suggestions-dropdown">
+                          {filteredEmails.map((email, index) => (
+                            <li key={index} onClick={() => handleSelectEmail(email, 'to')}>
+                              {email}
+                            </li>
+                          ))}
+                        </ul>
                       )}
                     </div>
 
-                    {/* Send Button */}
-                    <button className="send-button-send" type="submit">Send</button>
-                  </div>
-                </form>
+                    {/* CC Field */}
+                    <div className="recipient-field-container">
+                      <input
+                        type="email"
+                        name="cc"
+                        className="email-input"
+                        placeholder="CC"
+                        value={formData.cc}
+                        onChange={handleRecipientChange}
+                        onFocus={() => {
+                          setActiveRecipientField('cc');
+                          setCcSuggestions(bestEmails);
+                          setShowCcSuggestions(true);
+                        }}
+                        onBlur={() => setTimeout(() => setShowCcSuggestions(false), 200)}
+                        autoComplete="off"
+                        multiple
+                      />
+                      {showCcSuggestions && ccSuggestions.length > 0 && (
+                        <ul className="suggestions-dropdown">
+                          {ccSuggestions.map((email, index) => (
+                            <li key={index} onClick={() => handleSelectEmail(email, 'cc')}>
+                              {email}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+
+                    {/* BCC Field */}
+                    <div className="recipient-field-container">
+                      <input
+                        type="email"
+                        name="bcc"
+                        className="email-input"
+                        placeholder="BCC"
+                        value={formData.bcc}
+                        onChange={handleRecipientChange}
+                        onFocus={() => {
+                          setActiveRecipientField('bcc');
+                          setBccSuggestions(bestEmails);
+                          setShowBccSuggestions(true);
+                        }}
+                        onBlur={() => setTimeout(() => setShowBccSuggestions(false), 200)}
+                        autoComplete="off"
+                        multiple
+                      />
+                      {showBccSuggestions && bccSuggestions.length > 0 && (
+                        <ul className="suggestions-dropdown">
+                          {bccSuggestions.map((email, index) => (
+                            <li key={index} onClick={() => handleSelectEmail(email, 'bcc')}>
+                              {email}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+
+                    {/* Subject */}
+                    <input
+                      type="text"
+                      name="subject"
+                      className="email-input"
+                      placeholder="Subject"
+                      value={formData.subject}
+                      onChange={handleChange}
+                      required
+                    />
+
+                    {/* Replace textarea with TipTap editor */}
+                    <TipTap 
+                      content={formData.text || ""}
+                      onUpdate={(html) => setFormData(prev => ({ ...prev, text: html }))}
+                      resetTrigger={resetEditor}
+                      handleFileChange={handleFileChange}
+                      editorId="create-email"
+                    />
+
+                    {/* Attachments & Send */}
+                    <div className="email-actions-send">
+                      <div className="email-attachment-container">
+                        <label className="email-attach-label">
+                          <MdAttachFile className="email-attach-icon-send" />
+                          <input type="file" className="email-attach-input" onChange={handleFileChange} />
+                        </label>
+
+                        {attachment && (
+                          <div className="email-attachment-preview">
+                            <p className="email-attach-preview-icon"> {getFileIcon(attachment.mimeType)} </p>
+                            <span className="attachment-name-send">{attachment.fileName}</span>
+                            <MdClose className="email-attach-remove-icon-send" onClick={() => setAttachment(null)} />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Send Button */}
+                      <button className="send-button-send" type="submit">Send</button>
+                    </div>
+                  </form>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
         {/* Leads List */}
         <div className="inbox-body-list-grid">
@@ -1066,9 +1183,13 @@ const handleSelectEmail = (email) => {
                               {email.type === "received" ? email.senderName || "Unknown Sender" : companyDisplayName}
                           </p>
                           <p className="email-sender-email">
-                              {email.type === "received" ? email.sender : email.recipient}
+                              {email.type === "received" ? email.sender : companyEmail}
                           </p>
+
+                            {email.cc && (<p className="email-cc-bcc-display">CC: {typeof email.cc === 'string' ? email.cc : JSON.stringify(email.cc)}</p>)}
+                            {email.bcc && (<p className="email-cc-bcc-display">BCC: {typeof email.bcc === 'string' ? email.bcc : JSON.stringify(email.bcc)}</p>)}
                       </div>
+                      
       
                       {/* Timestamp */}
                       <p className="email-timestamp">
@@ -1093,7 +1214,9 @@ const handleSelectEmail = (email) => {
       
                   {/* Email Body */}
                   <div className="email-body-container">
-                      <p className="email-body-display">{email.message || email.content || "No Content"}</p>
+                    <p className="email-body-display" dangerouslySetInnerHTML=
+                        {{__html: DOMPurify.sanitize(email.message || email.content || "No Content") }}>
+                    </p>
                   </div>
       
                   {/* Attachments Section */}
@@ -1267,6 +1390,7 @@ const handleSelectEmail = (email) => {
             onUpdate={(html) => setFormDataReply(prev => ({ ...prev, text: html }))}
             resetTrigger={resetEditor}
             handleFileChange={handleFileChange}
+            editorId="reply-email"
           />
 
           {/* Send Button & Attachments */}
@@ -1281,7 +1405,8 @@ const handleSelectEmail = (email) => {
             
             {attachment && (
               <div className="email-attach-preview">
-                <p>{attachment.fileName}</p>
+              <p className="email-attach-preview-icon"> {getFileIcon(attachment.mimeType)} </p>
+              <span className="attachment-name-send">{attachment.fileName} </span>
                 <MdClose 
                   className="email-attach-remove-icon" 
                   onClick={() => setAttachment(null)} 
@@ -1295,5 +1420,3 @@ const handleSelectEmail = (email) => {
     </div>
   );
 }
-
-

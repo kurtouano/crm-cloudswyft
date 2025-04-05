@@ -301,3 +301,11 @@
 [style*="text-align: justify"] {
   text-align: justify;
 }
+
+.email-editor {
+  position: relative;
+}
+
+.canned-message-dropdown {
+  position: absolute !important;
+}

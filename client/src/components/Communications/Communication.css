@@ -219,7 +219,6 @@
 .modal-content {
     background: #fff;
     width: 700px; /* Adjusted width */
-    height: 500px;
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     position: relative; /* No need for fixed position */
@@ -277,8 +276,9 @@
 
 /* Input Fields */
 .email-input {
+    width: 100%;
     font-family: "Open Sans";
-    padding: 12px;
+    padding: 8px 0px;
     font-size: 15px;
     border: none;
     border-bottom: 1px solid #ddd;
@@ -289,16 +289,6 @@
 
 .email-input:focus {
     border-bottom: 1px solid #007bff;
-}
-
-.email-textarea {
-    font-family: "Open Sans";
-    height: 290px;
-    padding: 12px;
-    font-size: 15px;
-    border: none;
-    outline: none;
-    resize: none;
 }
 
 /* Email Actions (Attachments & Send Button) */
@@ -538,11 +528,10 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 10px;
     position: absolute;
     right: 0;
     font-size: 12px;
-    top: 5px;
+    top: 10px;
     color: rgb(123, 123, 123);
 }
 
@@ -551,6 +540,7 @@
     width: 16px;
     color: rgba(191, 52, 52, 0.674);
     cursor: pointer;
+    margin-left: 10px;
 }
 
 .email-attachment-modal {
@@ -655,6 +645,13 @@
     color: #777;
 }
 
+.email-cc-bcc-display {
+    font-size: 12px;
+    font-family: "Geist";
+    margin-top: 5px;
+    color: rgba(118, 118, 118, 0.858);
+}
+
 /* Timestamp */
 .email-timestamp {
     font-size: 14px;
@@ -741,25 +738,6 @@ padding-inline-start: 40px;
     flex-grow: 1; /* ✅ Ensures it takes up space properly */
 }
 
-/* File Icon */
-
-
-.email-attachment-preview .attachment-icon {
-    font-size: 18px;
-    margin-right: 8px;
-}
-
-.email-attachment-preview .attachment-name-send {
-    font-size: 14px;
-    font-weight: 500;
-    color: #333;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 250px; /* ✅ Prevents text from overflowing */
-}
-
-
 /* Close button */
 .email-attach-remove-icon-send {
     font-size: 16px;
@@ -768,9 +746,8 @@ padding-inline-start: 40px;
     margin-left: 8px;
 }
 
-
 .attachment-name-send {
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
     color: #333;
     white-space: nowrap;
@@ -800,31 +777,34 @@ padding-inline-start: 40px;
     width: 100%;
 }
 
-.suggestions-dropdown {
+.recipient-field-container {
+    position: relative;
+    margin-bottom: 10px;
+  }
+
+  .suggestions-dropdown {
     position: absolute;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
     background: white;
     border: 1px solid #ddd;
-    max-height: 170px;
-    padding-right: 50px;
-    overflow-y: auto;
-    z-index: 1000;
-    list-style: none;
-    padding: 0;
-    margin-top: 50px;
-    border-radius: 5px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-}
+    border-radius: 4px;
+    z-index: 100;
+    margin-top: 2px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
 
-.suggestions-dropdown li {
-    padding: 10px 12px;
+  .suggestions-dropdown li {
+    padding: 8px 10px;
     cursor: pointer;
-    transition: background 0.2s;
-    text-align: left;
-}
+    font-size: 14px;
+  }
 
-.suggestions-dropdown li:hover {
-    background: #f0f0f0;
-}
+  .suggestions-dropdown li:hover {
+    background-color: #f5f5f5;
+  }
+  
 
 .email-attachments-container {
     padding: 15px;
@@ -849,7 +829,19 @@ padding-inline-start: 40px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     width: 260px;
   }
+
   
+  .email-attach-preview-icon {
+    width: 20px;
+    height: 17px; 
+    margin-right: 10px;  
+  }
+
+  .email-attach-preview-icon svg {
+    width: 20px;
+    height: 17px;   
+  }
+
   /* Attachment Icons */
   .attachment-icon {
     font-size: 30px;
