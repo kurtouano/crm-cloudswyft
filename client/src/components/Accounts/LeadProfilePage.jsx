@@ -344,7 +344,7 @@ export default function LeadProfilePage() {
                   <p className="interaction-history-title">Base</p>
                   <p className="interaction-history-type">Promotions</p>
                   <p className="interaction-history-subject">{interaction.subject}</p>
-                  <p className="interaction-history-description">- {interaction.message || interaction.content}</p>
+                  <p className="interaction-history-description" dangerouslySetInnerHTML={{ __html: interaction.message || interaction.content }}></p>
                   <p className="interaction-history-date">
                     {[interaction.timestamp, interaction.sentAt]
                       .filter(Boolean)

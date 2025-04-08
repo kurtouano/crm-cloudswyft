@@ -13,6 +13,7 @@ const LeadSchema = new mongoose.Schema(
     status: { type: String, required: true, default: "active" },
     temperature: { type: String, required: true, default: "warm" },
     starred: {type: Boolean, default: false},
+    starredForSupport: {type: Boolean, default: false},
     stage: {
       type: String,
       enum: [

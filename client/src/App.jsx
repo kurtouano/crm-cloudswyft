@@ -8,6 +8,7 @@ import Salesflow from "./pages/Salesflow";
 import SalesTeam from "./pages/SalesTeam";
 import Accounts from "./pages/Accounts";
 import Communications from "./pages/Communications";
+import CommsAfterSales from "./pages/CommsAfterSales.jsx";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import LeadProfile from "./pages/LeadProfile"
 
@@ -49,6 +50,7 @@ function MainLayout() {
           <Route path="/accounts" element={<ProtectedRoute><Accounts /></ProtectedRoute>} />
 
           <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
+          <Route path="/customer-support" element={<ProtectedRoute><CommsAfterSales /></ProtectedRoute>} />
           <Route path="/lead-profile" element={<ProtectedRoute><LeadProfile /></ProtectedRoute>} />
 
           {/* Redirect unknown routes to login */}

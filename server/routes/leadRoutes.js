@@ -1,5 +1,5 @@
 import express from "express";
-import { getLeads, addLead, updateLeadStage, importLead, updateLeadDetails, deleteLead, updateLeadStatus, updateLeadTemperature, updateLeadStar} from "../controllers/leadController.js";
+import { getLeads, addLead, updateLeadStage, importLead, updateLeadDetails, deleteLead, updateLeadStatus, updateLeadTemperature, updateLeadStar, updateLeadStarCustomerSupport} from "../controllers/leadController.js";
 
 const router = express.Router();
 
@@ -12,5 +12,6 @@ router.delete("/leadID/:id", deleteLead);  // ✅ Change route to `/leadID/:id`
 router.patch("/status/:leadID", updateLeadStatus) // Update status
 router.patch("/updateLeadTemp/:leadId", updateLeadTemperature); // Update Lead Temperature
 router.patch("/toggleStar/:leadID", updateLeadStar);
+router.patch("/support/toggleStar/:leadID", updateLeadStarCustomerSupport);
 
 export default router;

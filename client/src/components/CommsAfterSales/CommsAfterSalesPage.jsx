@@ -1,4 +1,4 @@
-import useMicrosoftAuthentication from "../../utils/AuthMicrosoft.js";
+import useMicrosoftAuthentication from "../../utils/AuthMicrosoftAfterSales.js";
 import { useEffect, useState, useMemo, useCallback, useRef} from "react";
 import { useLocation } from "react-router-dom";
 import Fuse from "fuse.js"; // 🔍 Import Fuse.js
@@ -9,15 +9,15 @@ import { IoArrowBack, IoArrowForward, IoEllipsisVerticalOutline } from "react-ic
 import { MdAttachFile, MdClose} from "react-icons/md";
 import TipTap from "../../utils/TextEditor.jsx";
 import DOMPurify from 'dompurify';
-import "./Communication.css";
+import "../Communications/Communication.css";
 
-export default function CommunicationPageNEW () {
+export default function CommsAfterSalesPage() {
   useMicrosoftAuthentication();
-  localStorage.setItem("currentPage", "communications");
+  localStorage.setItem("currentPage", "customer-support");
   // Basic states
   const location = useLocation();
-  const companyDisplayName = "Cloudswyft";
-  const companyEmail = "cloudswyft-test@outlook.com";
+  const companyDisplayName = "Cloudswyft Customer Support";
+  const companyEmail = "cloudswyft.support@outlook.com";
   const [leads, setLeads] = useState([]);
   const [filteredLeads, setFilteredLeads] = useState([]);
   const [activeLead, setActiveLead] = useState(null);
@@ -25,8 +25,6 @@ export default function CommunicationPageNEW () {
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [unreadCounts, setUnreadCounts] = useState({});
-
-  // Auth & token
 
   // Emails & attachments
   const [emails, setEmails] = useState([]);
@@ -38,7 +36,7 @@ export default function CommunicationPageNEW () {
   const [resetEditor, setResetEditor] = useState(false);
 
   // Email Form states
-  const [formData, setFormData] = useState({ to: "",   cc: "", bcc: "", subject: "", text: "" });
+  const [formData, setFormData] = useState({ to: "",   cc: "", bcc: "", subject: "", text: "", emailType: "" });
   const [formDataReply, setFormDataReply] = useState({ text: "", messageId: "", threadId: "" });
   const [selectedAttachment, setSelectedAttachment] = useState(null);
   const [activeRecipientField, setActiveRecipientField] = useState('to');
@@ -173,7 +171,7 @@ export default function CommunicationPageNEW () {
     try {
         while (totalEmailsFetched < totalEmailsToFetch) {
             const response = await fetch(
-                `http://localhost:4000/api/emails/sent?to=${activeLead.bestEmail}&page=${page}&limit=${sentEmailsPerPage}&emailType=revenue`
+                `http://localhost:4000/api/emails/support/sent?to=${activeLead.bestEmail}&page=${page}&limit=${sentEmailsPerPage}&emailType=after-sales`
             );
             const data = await response.json();
   
@@ -228,7 +226,7 @@ export default function CommunicationPageNEW () {
                       } else {
                           try {
                               const response = await fetch(
-                                  `http://localhost:4000/api/emails/attachments/${email._id}`
+                                  `http://localhost:4000/api/emails/support/attachments/${email._id}`
                               );
                               const data = await response.json();
 
@@ -265,7 +263,7 @@ export default function CommunicationPageNEW () {
 
   const fetchReplyEmails = async (threadId) => {
     try {
-      const response = await fetch(`http://localhost:4000/api/emails/fetch-reply-emails?threadId=${threadId}`);
+      const response = await fetch(`http://localhost:4000/api/emails/support/fetch-reply-emails?threadId=${threadId}`);
       const data = await response.json();
   
       if (response.ok) {
@@ -283,7 +281,7 @@ export default function CommunicationPageNEW () {
   
             // Fetch from backend if not cached
             const attachmentsResponse = await fetch(
-              `http://localhost:4000/api/emails/attachments/reply/${reply._id}`
+              `http://localhost:4000/api/emails/support/attachments/reply/${reply._id}`
             );
   
             if (!attachmentsResponse.ok) {
@@ -326,10 +324,10 @@ export default function CommunicationPageNEW () {
   useEffect(() => {
     const fetchEmails = async () => {
       try {
-        const token = localStorage.getItem("microsoftAccessToken");
+        const token = localStorage.getItem("microsoftAccessTokenAfterSales");
         if (!token) throw new Error("Access token is missing from localStorage.");
 
-        const response = await fetch("http://localhost:4000/api/emails/received", {
+        const response = await fetch("http://localhost:4000/api/emails/support/received", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -385,8 +383,8 @@ export default function CommunicationPageNEW () {
     const sortLeads = (leadsToSort) => {
       return [...leadsToSort].sort((a, b) => {
         // Starred leads always come first
-        if (a.starred && !b.starred) return -1;
-        if (!a.starred && b.starred) return 1;
+        if (a.starredForSupport && !b.starredForSupport) return -1;
+        if (!a.starredForSupport && b.starredForSupport) return 1;
         
         // For leads with same star status, sort by last interaction
         const aLastEmail = emails.find(email => email.sender.toLowerCase() === a.bestEmail.toLowerCase());
@@ -506,7 +504,7 @@ export default function CommunicationPageNEW () {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const microsoftAccessToken = localStorage.getItem("microsoftAccessToken");
+    const microsoftAccessToken = localStorage.getItem("microsoftAccessTokenAfterSales");
     
     if (!microsoftAccessToken) {
       alert("Please log in via Microsoft first.");
@@ -516,7 +514,7 @@ export default function CommunicationPageNEW () {
     setLoading(true);
   
     try {
-      const res = await fetch("http://localhost:4000/api/emails/send-email", {
+      const res = await fetch("http://localhost:4000/api/emails/support/send-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -551,7 +549,7 @@ export default function CommunicationPageNEW () {
   
   const handleReplySubmit = async (e) => {
     e.preventDefault();
-    const microsoftAccessToken = localStorage.getItem("microsoftAccessToken");
+    const microsoftAccessToken = localStorage.getItem("microsoftAccessTokenAfterSales");
   
     if (!microsoftAccessToken) {
       alert("Please log in via Microsoft first.");
@@ -564,7 +562,7 @@ export default function CommunicationPageNEW () {
       // Ensure attachments is always an array
       const attachments = attachment ? [attachment] : [];
       
-      const res = await fetch("http://localhost:4000/api/emails/reply-email", {
+      const res = await fetch("http://localhost:4000/api/emails/support/reply-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -606,51 +604,22 @@ export default function CommunicationPageNEW () {
   };
 
   // Helper function to format timestamp
-  const formatRelativeTime = (timestamp, leadId, leadCreatedAt, currentTemperature, isLoading) => {
-    // Don't make any temperature changes while still loading
-    if (isLoading) {
-      return currentTemperature === 'cold' ? "Needs follow-up" : "Loading...";
-    }
-  
+  const formatRelativeTime = (timestamp) => {
     // Handle null/undefined timestamp
-    if (!timestamp) {
-      const now = new Date();
-      const createdDate = new Date(leadCreatedAt);
-      const diffTime = now - createdDate;
-      const daysSinceCreation = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  
-      if (daysSinceCreation >= 7) {
-        if (currentTemperature !== 'cold') {
-          updateLeadTemperature(leadId, "cold");
-        }
-        return `No response - ${daysSinceCreation} days`;
-      }
-      return `No response - ${daysSinceCreation} day${daysSinceCreation !== 1 ? 's' : ''}`;
-    }
+    if (!timestamp) return "No response";
   
     const now = new Date();
     const messageDate = new Date(timestamp);
-    const daysSinceLastMessage = Math.floor((now - messageDate) / (1000 * 60 * 60 * 24));
-  
-    if (daysSinceLastMessage < 7 && currentTemperature === 'cold') {
-      updateLeadTemperature(leadId, "warm");
-    }
-    // Set to cold if no message in 7 days
-    else if (daysSinceLastMessage >= 7) {
-      if (currentTemperature !== 'cold') {
-        updateLeadTemperature(leadId, "cold");
-      }
-      return `Needs follow-up`;
-    }
     
     // Format relative time for recent messages
     const minutes = Math.floor((now - messageDate) / (1000 * 60));
     const hours = Math.floor((now - messageDate) / (1000 * 60 * 60));
+    const days = Math.floor((now - messageDate) / (1000 * 60 * 60 * 24));
   
     if (minutes < 1) return "Just now";
     if (minutes < 60) return `${minutes} min${minutes > 1 ? "s" : ""} ago`;
     if (hours < 24) return `${hours} hr${hours > 1 ? "s" : ""} ago`;
-    return `${daysSinceLastMessage} day${daysSinceLastMessage > 1 ? "s" : ""} ago`;
+    return `${days} day${days > 1 ? "s" : ""} ago`;
   };
 
   
@@ -672,39 +641,6 @@ export default function CommunicationPageNEW () {
     // Return timestamp from most recent email from lead
     return sortedReceived[0]?.timestamp || null;
   };
-
-  // Update the lead temperature in database
-  const updateLeadTemperature = useCallback(async (leadId, temperature) => {
-    // Skip if already updated or updating
-    if (temperatureUpdates.current.has(leadId)) return;
-  
-    try {
-      temperatureUpdates.current.add(leadId); // Mark as in-progress
-      
-      // Double check we have all data before updating
-      if (!leads.length || !emails.length) {
-        console.log('Waiting for data to load before updating temperature');
-        return;
-      }
-  
-      const response = await fetch(`http://localhost:4000/api/leads/updateLeadTemp/${leadId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ temperature })
-      });
-  
-      if (!response.ok) {
-        temperatureUpdates.current.delete(leadId); // Allow retry on failure
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Update failed');
-      }
-  
-      return await response.json();
-    } catch (error) {
-      console.error('Update error:', error.message);
-      throw error;
-    }
-  }, [leads, emails]); // Add dependencies
 
   const getLastMessagePreview = (lead, emails) => {
     // Filter emails for this lead
@@ -741,18 +677,18 @@ export default function CommunicationPageNEW () {
     
     // Get current starred status before toggling
     const currentLead = leads.find(lead => lead._id === leadId);
-    const newStarredStatus = !currentLead?.starred;
+    const newStarredStatus = !currentLead?.starredForSupport;
   
     // Optimistically update all lead states
     const updateLeadStates = (newStatus) => {
       setLeads(prev => prev.map(lead => 
-        lead._id === leadId ? { ...lead, starred: newStatus } : lead
+        lead._id === leadId ? { ...lead, starredForSupport: newStatus } : lead
       ));
       setFilteredLeads(prev => prev.map(lead =>
-        lead._id === leadId ? { ...lead, starred: newStatus } : lead
+        lead._id === leadId ? { ...lead, starredForSupport: newStatus } : lead
       ));
       setSortedLeads(prev => prev.map(lead =>
-        lead._id === leadId ? { ...lead, starred: newStatus } : lead
+        lead._id === leadId ? { ...lead, starredForSupport: newStatus } : lead
       ));
     };
   
@@ -760,7 +696,7 @@ export default function CommunicationPageNEW () {
     updateLeadStates(newStarredStatus);
   
     try {
-      const response = await fetch(`http://localhost:4000/api/leads/toggleStar/${leadId}`, {
+      const response = await fetch(`http://localhost:4000/api/leads/support/toggleStar/${leadId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -1118,13 +1054,7 @@ const handleSelectEmail = (email, fieldName) => {
                     <CgProfile className="inbox-body-header-icon" />
                     <p className="inbox-body-lead-type"> {lead.leadName || "Unknown Lead"}</p>
                     <p className="inbox-body-last-message-time">
-                        {formatRelativeTime(
-                          lastInteraction, 
-                          lead._id, 
-                          lead.createdAt, 
-                          lead.temperature,
-                          loading // Pass the loading state
-                        )}
+                      {formatRelativeTime(lastInteraction)}
                     </p>
                   </div>
                   <p className="inbox-body-company-name">{lead.company}</p>
@@ -1133,7 +1063,7 @@ const handleSelectEmail = (email, fieldName) => {
                       {getLastMessagePreview(lead, emails) || "No recent message"}
                     </p>
                     <FaStar 
-                      className={`inbox-body-reply-type-star ${lead.starred ? "starred-active" : ""}`}
+                      className={`inbox-body-reply-type-star ${lead.starredForSupport ? "starred-active" : ""}`}
                       onClick={(e) => toggleStarLead(lead._id, e)}
                     />
                   </div>

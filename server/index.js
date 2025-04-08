@@ -7,6 +7,7 @@ import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
 import leadRoutes from "./routes/leadRoutes.js";
 import emailRoutes from "./routes/emailRoutes.js";
+import customerSupport from "./routes/emailAfterSalesRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
 
 dotenv.config();
@@ -31,6 +32,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/leads", leadRoutes);
 app.use("/api/emails", emailRoutes);
+app.use("/api/emails/support", customerSupport);
 
 app.get("/", (req, res) => {
   res.send("Welcome to the CRM CloudSwyft API!");

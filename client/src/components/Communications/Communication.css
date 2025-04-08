@@ -49,6 +49,7 @@
 }
 
 .inbox-header-create-email-btn {
+    cursor: pointer;
     margin-left: 15px;
     width: 50px;
     height: 40px;

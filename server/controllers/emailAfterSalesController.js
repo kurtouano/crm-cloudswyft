@@ -11,8 +11,8 @@ dotenv.config();
 
 const msalConfig = {
     auth: {
-        clientId: process.env.REVENUE_CLIENT_ID,               // Your client ID
-        clientSecret: process.env.REVENUE_CLIENT_SECRET,       // Your client secret
+        clientId: process.env.AFTER_SALES_CLIENT_ID,               // Your client ID
+        clientSecret: process.env.AFTER_SALES_CLIENT_SECRET,       // Your client secret
         authority: "https://login.microsoftonline.com/common",  // Use common for personal accounts
         redirectUri: process.env.REDIRECT_URI,         // Your redirect URI
     },
@@ -148,7 +148,7 @@ export async function sendEmail(req, res) {
             content,
             sentAt: new Date(),
             attachments,
-            emailType: 'revenue'
+            emailType: 'after-sales'
         });
 
         await sentEmail.save();
@@ -231,7 +231,7 @@ export async function replyEmail(req, res) {
             replyContentText: content.replace(/<[^>]*>?/gm, ''),
             repliedAt: new Date(),
             attachments: attachments, // Include all attachments
-            emailType: 'revenue'
+            emailType: 'after-sales'
         });
 
         await repliedEmail.save();
@@ -253,7 +253,7 @@ export async function replyEmail(req, res) {
 
 export async function getSentEmail(req, res) {
     try {
-        const { to, page = 1, limit = 10, emailType = 'revenue'} = req.query;
+        const { to, page = 1, limit = 10, emailType = 'after-sales'} = req.query;
         if (!to) return res.status(400).json({ error: "Recipient email is required" });
 
         const pageNumber = Math.max(parseInt(page, 10) || 1, 1);
@@ -315,7 +315,7 @@ export async function fetchSentReplyEmails(req, res) {
         // Fetch reply emails from the database based on threadId
         const replyEmails = await ReplyEmail.find({ 
             threadId,
-            emailType: 'revenue'
+            emailType: 'after-sales'
         }).sort({ repliedAt: -1 }).lean();
 
         if (!replyEmails || replyEmails.length === 0) {
@@ -457,7 +457,8 @@ export async function fetchReceivedEmails(req, res) {
                         message: plainTextMessage,
                         html: htmlContent,
                         timestamp: new Date(email.receivedDateTime),
-                        attachments
+                        attachments,
+                        emailType: 'after-sales'
                     },
                     { upsert: true, new: true }
                 );

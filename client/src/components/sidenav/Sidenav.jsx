@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import io from "socket.io-client";
 import "./styles.css";
-import { FiGrid, FiCheckSquare, FiUsers, FiBookOpen, FiMail, FiLogOut } from "react-icons/fi";  // Sidenav Icons
+import { FiGrid, FiCheckSquare, FiUsers, FiBookOpen, FiLogOut } from "react-icons/fi";  // Sidenav Icons
+import { LuMailQuestion, LuMailSearch } from "react-icons/lu";
 
 const socket = io("http://localhost:4000"); // ✅ Connect to backend WebSocket server
 
@@ -12,7 +13,8 @@ const navItems = [
     { path: "/sales-flow", name: "Sales Flow", icon: <FiCheckSquare className="nav-react-icons"/> },
     { path: "/sales-team", name: "Sales Team", icon: <FiUsers className="nav-react-icons"/> },
     { path: "/accounts", name: "Accounts", icon: <FiBookOpen className="nav-react-icons"/> },
-    { path: "/communications", name: "Communications", icon: <FiMail className="nav-react-icons"/> },
+    { path: "/communications", name: "Revenue Comms", icon: <LuMailSearch className="nav-react-icons"/> },
+    { path: "/customer-support", name: "Customer Support", icon: <LuMailQuestion className="nav-react-icons"/> },
 ];
 
 const Sidenav = () => {
@@ -134,8 +136,10 @@ const Sidenav = () => {
     const handleLogout = () => {
         localStorage.removeItem("token"); // Remove CRM JWT Token
         localStorage.removeItem("role");  // Remove User Role
-        //localStorage.removeItem("microsoftAccessToken"); // Remove Microsoft Token
-        //localStorage.removeItem("tokenExpiry"); // Remove Token Expiry Time
+        localStorage.removeItem("microsoftAccessToken"); // Remove Microsoft Token
+        localStorage.removeItem("tokenExpiry"); // Remove Token Expiry Time
+        localStorage.removeItem("microsoftAccessTokenAfterSales"); // Remove Microsoft Token
+        localStorage.removeItem("tokenExpiryAfterSales"); // Remove Token Expiry Time
     
         window.location.href = "/"; // ✅ Force page reload to remove sidebar
     };

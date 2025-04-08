@@ -291,4 +291,43 @@ export const updateLeadStar = async (req, res) => {
   }
 };
 
+export const updateLeadStarCustomerSupport = async (req, res) => {
+  try {
+    const { leadID } = req.params;
+
+    // Find the lead and toggle its starred status
+    const lead = await Lead.findById(leadID);
+    
+    if (!lead) {
+      return res.status(404).json({
+        success: false,
+        error: 'Lead not found'
+      });
+    }
+
+    // Toggle the starred value
+    lead.starredForSupport = !lead.starredForSupport;
+    
+    // Save the updated lead
+    const updatedLead = await lead.save();
+
+    res.status(200).json({
+      success: true,
+      data: {
+        _id: updatedLead._id,
+        starredForSupport: updatedLead.starredForSupport,
+        leadName: updatedLead.leadName,
+        bestEmail: updatedLead.bestEmail
+      }
+    });
+
+  } catch (error) {
+    console.error('Error toggling lead star for lead in customer support:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Server Error'
+    });
+  }
+};
+
 
