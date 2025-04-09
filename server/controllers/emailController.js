@@ -27,7 +27,8 @@ export async function handleMicrosoftLogin(req, res) {
         const authUrl = await cca.getAuthCodeUrl({
             scopes: ["Mail.ReadWrite", "Mail.Send", "Mail.Read", "openid", "email", "profile"], // Scopes for personal account login
             redirectUri: process.env.REDIRECT_URI,
-            state: currentPage
+            state: currentPage,
+            loginHint: process.env.REVENUE_SENDER_EMAIL, // Pre-fill the email for personal accounts
         });
 
         // Redirect the user to the Microsoft login page
@@ -49,6 +50,13 @@ export async function handleOAuthRedirect(req, res) {
             scopes: ["Mail.ReadWrite", "Mail.Send", "Mail.Read", "openid", "email", "profile"],
             redirectUri: process.env.REDIRECT_URI,
         });
+
+        const userEmail = tokenResponse.account.username;
+
+        const authorizedEmail = process.env.REVENUE_SENDER_EMAIL;
+        if (userEmail !== authorizedEmail) {
+            return res.status(403).json({ error: "Unauthorized account. Please use the correct Microsoft account." });
+        }
 
         if (tokenResponse?.accessToken) {
             global.MICROSOFT_ACCESS_TOKEN = tokenResponse.accessToken; // Save globally!
