@@ -72,32 +72,33 @@ export default function Kanban() {
 
   const handleDragDrop = async (results) => {
     const { source, destination, draggableId } = results;
+    
+    // Early return for invalid drops
     if (!destination) return;
-    if (source.droppableId === destination.droppableId && source.index === destination.index) return;
-
-    const newData = { ...data };
-    const sourceCol = newData[source.droppableId];
-    const destCol = newData[destination.droppableId];
-
-    const sourceItems = [...sourceCol.itemsOrder];
-    const destItems = [...destCol.itemsOrder];
-
-    const [movedItem] = sourceItems.splice(source.index, 1);
-    destItems.splice(destination.index, 0, movedItem);
-
-    newData[source.droppableId] = { ...sourceCol, itemsOrder: sourceItems };
-    newData[destination.droppableId] = { ...destCol, itemsOrder: destItems };
-
+    if (source.droppableId === destination.droppableId && 
+        source.index === destination.index) return;
+  
+    // Create a deep copy of the current data
+    const newData = JSON.parse(JSON.stringify(data));
+  
+    // Remove from source
+    const [removedItem] = newData[source.droppableId].itemsOrder.splice(source.index, 1);
+    
+    // Insert into destination
+    newData[destination.droppableId].itemsOrder.splice(destination.index, 0, removedItem);
+  
+    // Optimistic UI update
     setData(newData);
-
-    // ✅ Send API request to update the lead's stage in the database
+  
     try {
+      // Update backend
       await axios.put(`http://localhost:4000/api/leads/${draggableId}`, {
         stage: destination.droppableId,
       });
-      console.log(`✅ Lead ${draggableId} moved to ${destination.droppableId}`);
     } catch (error) {
-      console.error("❌ Error updating lead stage:", error);
+      console.error("Error updating lead stage:", error);
+      // Revert on error
+      setData(prevData => ({ ...prevData }));
     }
   };
 

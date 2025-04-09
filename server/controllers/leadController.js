@@ -18,6 +18,43 @@ export const getLeads = async (req, res) => {
   }
 };
 
+export const getRevenueLeads = async (req, res) => {
+  try {
+    const leads = await Lead.find({ 
+      status: { $ne: "successful" }, 
+    });
+
+    const formattedLeads = leads.map((lead) => ({
+      ...lead._doc,
+      leadID: `LID-${String(lead.leadID).padStart(3, "0")}`,
+      importDate: lead.importDate ? lead.importDate.toISOString().split("T")[0] : null,
+    }));
+
+    res.status(200).json(formattedLeads);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching leads", error });
+  }
+};
+
+export const getAfterSalesLeads = async (req, res) => {
+  try {
+    const leads = await Lead.find({ 
+      status: "successful", 
+      stage: "On-boarding" 
+    });
+
+    const formattedLeads = leads.map((lead) => ({
+      ...lead._doc,
+      leadID: `LID-${String(lead.leadID).padStart(3, "0")}`,
+      importDate: lead.importDate ? lead.importDate.toISOString().split("T")[0] : null,
+    }));
+
+    res.status(200).json(formattedLeads);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching leads", error });
+  }
+};
+
 // 🔵 Add a new lead
 export const addLead = async (req, res) => {
   try {

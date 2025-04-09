@@ -130,7 +130,7 @@ export default function CommunicationPageNEW () {
   useEffect(() => {
     const fetchLeads = async () => {
       try {
-        const response = await fetch("http://localhost:4000/api/leads");
+        const response = await fetch("http://localhost:4000/api/leads/revenue-leads");
         if (!response.ok) throw new Error("Failed to fetch leads");
   
         const data = await response.json();
@@ -1065,13 +1065,14 @@ const handleSelectEmail = (email, fieldName) => {
                     />
 
                     {/* Replace textarea with TipTap editor */}
-                    <TipTap 
-                      content={formData.text || ""}
-                      onUpdate={(html) => setFormData(prev => ({ ...prev, text: html }))}
-                      resetTrigger={resetEditor}
-                      handleFileChange={handleFileChange}
-                      editorId="create-email"
-                    />
+                      <TipTap 
+                        content={formData.text || ""}
+                        onUpdate={(html) => setFormData(prev => ({ ...prev, text: html }))}
+                        resetTrigger={resetEditor}
+                        handleFileChange={handleFileChange}
+                        editorId="create-email"
+                        commsType="createEmail"
+                      />
 
                     {/* Attachments & Send */}
                     <div className="email-actions-send">
@@ -1408,6 +1409,7 @@ const handleSelectEmail = (email, fieldName) => {
             resetTrigger={resetEditor}
             handleFileChange={handleFileChange}
             editorId="reply-email"
+            commsType="revenue"
           />
 
           {/* Send Button & Attachments */}

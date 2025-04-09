@@ -1,6 +1,7 @@
 import { Droppable, Draggable } from "@hello-pangea/dnd";
 import CalendarIcon from "../../assets/kanban-item-calendar-icon.svg";
 import "./SalesFlow.css";
+import { useMemo } from "react";
 import PropTypes from 'prop-types';
 
 // Import employee images
@@ -17,11 +18,23 @@ const employeeImages = {
 };
 
 const Column = ({ itemsOrder, id, title, ITEMS }) => {
+  // Use useMemo to prevent unnecessary re-renders
+  const memoizedItems = useMemo(() => {
+    return itemsOrder.map(item_id => {
+      const item = ITEMS[item_id];
+      if (!item) {
+        console.warn(`Item not found: ${item_id}`);
+        return null;
+      }
+      return item;
+    }).filter(Boolean);
+  }, [itemsOrder, ITEMS]);
+
   return (
     <div className="kanban-column-container">
       <div className="kanban-column-title-container">
         <p className="kanban-column-title">{title}</p>
-        <p className="kanban-column-item-counter">{itemsOrder.length}</p>
+        <p className="kanban-column-item-counter">{memoizedItems.length}</p>
       </div>
 
       <Droppable droppableId={id}>
@@ -31,39 +44,33 @@ const Column = ({ itemsOrder, id, title, ITEMS }) => {
             {...provided.droppableProps}
             className="kanban-column-body-container"
           >
-            {itemsOrder.length === 0 && (
+            {memoizedItems.length === 0 && (
               <div className="kanban-column-body-no-item">No items</div>
             )}
 
-            {itemsOrder.map((item_id, index) => {
-              const item = ITEMS[item_id];
-
-              // ✅ Ensure item exists before rendering
-              if (!item) {
-                console.warn(`Item not found: ${item_id}`);
-                return null;
-              }
-
+            {memoizedItems.map((item, index) => {
               const employeeName = item.employee || "Unknown";
               const employeeImg = employeeImages[employeeName] || DefaultAvatar;
 
               return (
-                <Draggable draggableId={item.id} index={index} key={item.id}>
+                <Draggable 
+                  key={item.id} 
+                  draggableId={item.id} 
+                  index={index}
+                >
                   {(provided) => (
                     <div
                       className="kanban-draggable-items"
-                      {...provided.dragHandleProps}
-                      {...provided.draggableProps}
                       ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
                     >
                       <p className="kanban-item-title">{item.title}</p>
                       <p className="kanban-item-description">{item.description}</p>
-
                       <div className="kanban-item-employee-container">
                         <span className="kanban-item-employee-name">{employeeName}</span>
                         <img className="kanban-item-employee-avatar" src={employeeImg} alt={employeeName} />
                       </div>
-
                       <div className="kanban-item-divider">
                         <img src={CalendarIcon} alt="Calendar Icon" />
                         <p className="kanban-item-start-time">{item.timeStarted}</p>
@@ -80,6 +87,7 @@ const Column = ({ itemsOrder, id, title, ITEMS }) => {
     </div>
   );
 };
+
 Column.propTypes = {
   itemsOrder: PropTypes.arrayOf(PropTypes.string).isRequired,
   id: PropTypes.string.isRequired,

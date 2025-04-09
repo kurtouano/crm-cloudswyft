@@ -14,7 +14,7 @@ import { Extension } from '@tiptap/core';
 import Paragraph from '@tiptap/extension-paragraph'
 import { FaBold, FaItalic, FaUnderline, FaLink, FaPaperclip, FaFilePdf, FaFileWord, FaFileExcel, FaFileAlt, FaListOl, FaListUl, FaHeading, FaFont, FaImage, FaPalette, FaFillDrip, FaTable } from 'react-icons/fa';
 import PropTypes from 'prop-types';
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import Downshift from 'downshift';
 import "./TextEditor.css";
 
@@ -151,150 +151,124 @@ const BackgroundColor = Extension.create({
   },
 });
 
-const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange, editorId }) => {
+
+const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange, editorId, commsType }) => {
   const [fileInputKey, setFileInputKey] = useState(Date.now());
   const [fontColor, setFontColor] = useState('#000000');
   const [bgColor, setBgColor] = useState('#ffffff');
   const [showColorPicker, setShowColorPicker] = useState(null);
   const [showTableDropdown, setShowTableDropdown] = useState(false);
-  
-  // Canned messages data
-  const [cannedMessages] = useState([
-    {
-      id: 'test-div',
-      name: 'test-div',
-      content: `
-<div style=" 
-  font-family: Arial, sans-serif;
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 20px;
-  text-align: center;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-">
-  <h1><span style="
-    color: #1155cc;
-    font-weight: bold;
-    display: block;
-  ">LIMITED TIME OFFER!</span>
-  </h1>
-  <br><br>
-  
-  <span style="
-    color: #1155cc;
-    font-size: 20px;
-    font-weight: bold;
-    display: block;
-  ">GET 50% OFF ALL COURSES</span>
-  <br><br>
-  
-  <span style="
-    color: #333333;
-    font-size: 16px;
-    display: block;
-  ">Upgrade your skills with our premium courses at half the price.</span>
-  <br><br>
-  
-  <span style="
-    color: #d32f2f;
-    font-weight: bold;
-    display: block;
-  ">This exclusive offer expires in 48 hours!</span>
-  <br><br>
-  
-  <span style="
-    background-color: #1155cc;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 4px;
-    display: inline-block;
-    font-weight: bold;
-  ">CLAIM YOUR DISCOUNT NOW</span>
-  <br><br><br>
-  
-  <span style="
-    color: #666666;
-    font-size: 14px;
-    display: block;
-  ">Don't miss this opportunity to boost your career with Cloudswyft!</span>
-</div>
-  `
-    },
-    {
-      id: 'interested-lead-followup',
-      name: 'Interested Lead Follow-Up',
-      content: `
-          <p>Dear <span style="color:#1155cc">[First Name]</span>,</p><br><br>
-          <p>Thank you for your interest in [Product/Service].</p>
-          <p>Next steps:</p>
-          <p>• [Next Step 1]<br>• [Next Step 2]</p>
-          <p>Please let me know if you have any questions.</p><br>
-          <p>Best regards,<br>Cloudswyft</p>
-      `
-    },
-    {
-      id: 'standard-followup',
-      name: 'Standard Follow-Up',
-      content: `
-        <p>Dear <span style="color:#1155cc;">[First Name]</span>,</p><br>
-        <p>I wanted to follow up regarding our recent conversation about [Topic].</p>
-        <p>Please let me know if you have any questions.</p><br>
-        <p>Best regards,<br>Cloudswyft</p>
-      `
-    },
-    {
-      id: 'thank-you',
-      name: 'Thank You Note',
-      content: `
-        <p>Dear <span style="color:#1155cc;">[First Name]</span>,</p><br>
-        <p>Thank you for [specific reason].</p>
-        <p>We appreciate your [business/partnership/support].</p><br>
-        <p>Best regards,<br>Cloudswyft</p>
-      `
-    },
-    {
-      id: 'follow-up-newsletter',
-      name: 'Follow Up Newsletter',
-      content: `
-          <h1>
-            <span style="color:#ffffff;background-color:#4a6bdf;border-radius:4px;display:inline-block;font-size:20px;font-weight:bold;">Quick Follow-Up</span>
-          </h1> <br>
-          <p>
-            Hi <span style="color:#4a6bdf;">[First Name]</span>,
-          </p>
-          <p style="color: black">
-            I noticed we haven't connected since my last email about <span style="background-color:#f3f6ff;padding:2px 6px;">[Your Product/Service]</span>. Here's a quick reminder of how we can help:
-          </p>
-          <p>
-            <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" alt="Business solution" style="max-width:100%;height:auto;">
-          </p>
-          <p>
-            <span style="background-color:#f3f6ff;padding:8px 12px;display:inline-block;">
-              • Solve <span style="color:#4a6bdf;font-weight:bold;">[Specific Pain Point]</span><br>
-              • Save <span style="color:#4a6bdf;font-weight:bold;">X hours/week</span><br>
-              • Boost <span style="color:#4a6bdf;font-weight:bold;">[Relevant Metric] by Y%</span>
-            </span>
-          </p><br>
 
-          <p style="color: black">
-            Would <span style="background-color:#fff8e6;padding:2px 4px;">15 minutes next week</span> work to explore this further?
-          </p>
-          <p>
-            <a href="[Calendly Link]" style="color:white;background-color:#4a6bdf;padding:6px 15px; display: inline-block; text-decoration: none;font-weight:bold;">
-            <span style="color: white; display: inline-block;">Schedule a Call</span></a>
-          </p>
-          <p>
-            If now's not the right time, just reply "not now" - no hard feelings!
-          </p><br>
-          
-          <p style="color: black">
-            Best,<br>
-            <span>Cloudswyft Global Systems, Inc.</span>
-          </p>
-      `
-    }
-  ]);
+    // Define all canned messages by type
+    const allCannedMessages = useMemo(() => ({
+      revenue: [
+        {
+          id: 'revenue-offer',
+          name: 'Revenue Growth Offer',
+          content: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; text-align: center; background-color: #f8f9fa; border-radius: 8px;">
+              <h1><span style="color: #1155cc; font-weight: bold; display: block;">LIMITED TIME OFFER!</span></h1>
+              <br><br>
+              <span style="color: #1155cc; font-size: 20px; font-weight: bold; display: block;">GET 50% OFF ALL COURSES</span>
+              <br><br>
+              <span style="color: #333333; font-size: 16px; display: block;">Upgrade your skills with our premium courses at half the price.</span>
+              <br><br>
+              <span style="color: #d32f2f; font-weight: bold; display: block;">This exclusive offer expires in 48 hours!</span>
+              <br><br>
+              <span style="background-color: #1155cc; color: white; padding: 10px 20px; border-radius: 4px; display: inline-block; font-weight: bold;">CLAIM YOUR DISCOUNT NOW</span>
+              <br><br><br>
+              <span style="color: #666666; font-size: 14px; display: block;">Don't miss this opportunity to boost your career!</span>
+            </div>
+          `
+        },
+        {
+          id: 'revenue-followup',
+          name: 'Revenue Follow-Up',
+          content: `
+            <p>Dear <span style="color:#1155cc">[First Name]</span>,</p><br>
+            <p>I wanted to follow up about our conversation regarding [Product/Service].</p>
+            <p>Here are the key benefits:</p>
+            <p>• [Benefit 1]<br>• [Benefit 2]<br>• [Benefit 3]</p><br>
+            <p>Would you be available for a quick call to discuss further?</p><br>
+            <p>Best regards,<br>Sales Team</p>
+          `
+        }
+      ],
+
+
+      afterSales: [
+        {
+          id: 'thank-you',
+          name: 'Thank You Note',
+          content: `
+            <p>Dear <span style="color:#1155cc;">[First Name]</span>,</p><br>
+            <p>Thank you for your purchase! We truly appreciate your business.</p>
+            <p>Your order details:</p>
+            <p>• Order #: [Number]<br>• Items: [Description]</p><br>
+            <p>If you have any questions, please don't hesitate to contact us.</p><br>
+            <p>Best regards,<br>Customer Support</p>
+          `
+        },
+        {
+          id: 'issue-resolved',
+          name: 'Issue Resolved',
+          content: `
+            <p>Hi <span style="color:#1155cc;">[First Name]</span>,</p><br>
+            <p>We're pleased to inform you that your issue with [Product/Service] has been resolved.</p>
+            <p>Resolution details: [Description]</p><br>
+            <p>Please let us know if you need anything else!</p><br>
+            <p>Cheers,<br>Support Team</p>
+          `
+        },
+        {
+          id: 'follow-up-check',
+          name: 'Follow-Up Check',
+          content: `
+            <p>Hello <span style="color:#1155cc;">[First Name]</span>,</p><br>
+            <p>We hope you're enjoying your purchase!</p>
+            <p>Just checking in to see if everything is working as expected.</p><br>
+            <p>Feel free to reply with any feedback or questions.</p><br>
+            <p>Best,<br>Customer Care</p>
+          `
+        }
+      ],
+
+
+      createEmail: [
+        {
+          id: 'standard-followup',
+          name: 'Standard Follow-Up',
+          content: `
+            <p>Dear <span style="color:#1155cc;">[First Name]</span>,</p><br>
+            <p>I wanted to follow up regarding our recent conversation about [Topic].</p>
+            <p>Please let me know if you have any questions.</p><br>
+            <p>Best regards,<br>[Your Name]</p>
+          `
+        },
+        {
+          id: 'newsletter-template',
+          name: 'Newsletter Template',
+          content: `
+            <h1><span style="color:#4a6bdf;">Monthly Update</span></h1><br>
+            <p>Hi <span style="color:#4a6bdf;">[First Name]</span>,</p>
+            <p>Here's what's new this month:</p>
+            <p>• [Update 1]<br>• [Update 2]<br>• [Update 3]</p><br>
+            <p>Let us know what you think!</p><br>
+            <p>Best,<br>Marketing Team</p>
+          `
+        }
+      ]
+    }), []);
+  
+    // Initialize with the correct canned messages based on commsType
+    const [cannedMessages, setCannedMessages] = useState(
+      allCannedMessages[commsType] || allCannedMessages.createEmail
+    );
+  
+    // Update messages when commsType changes
+    useEffect(() => {
+      setCannedMessages(allCannedMessages[commsType] || allCannedMessages.createEmail);
+    }, [commsType, allCannedMessages]);
 
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
@@ -541,15 +515,6 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange, editorId })
     if (!file) return;
   
     handleFileChange(e);
-    
-    editor?.chain().focus()
-      .insertContent(`
-        <div class="file-attachment" data-filename="${file.name}">
-          <span class="file-name">${file.name}</span>
-        </div>
-      `)
-      .run();
-
     setFileInputKey(Date.now());
   };
 
@@ -821,6 +786,7 @@ TipTap.propTypes = {
   resetTrigger: PropTypes.string,
   handleFileChange: PropTypes.func.isRequired,
   editorId: PropTypes.string,
+  commsType: PropTypes.oneOf(['revenue', 'afterSales', 'createEmail']),
 };
 
 export default TipTap;

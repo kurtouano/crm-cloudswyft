@@ -128,7 +128,7 @@ export default function CommsAfterSalesPage() {
   useEffect(() => {
     const fetchLeads = async () => {
       try {
-        const response = await fetch("http://localhost:4000/api/leads");
+        const response = await fetch("http://localhost:4000/api/leads/onboarding-leads");
         if (!response.ok) throw new Error("Failed to fetch leads");
   
         const data = await response.json();
@@ -1007,6 +1007,7 @@ const handleSelectEmail = (email, fieldName) => {
                       resetTrigger={resetEditor}
                       handleFileChange={handleFileChange}
                       editorId="create-email"
+                      commsType="createEmail"
                     />
 
                     {/* Attachments & Send */}
@@ -1338,6 +1339,7 @@ const handleSelectEmail = (email, fieldName) => {
             resetTrigger={resetEditor}
             handleFileChange={handleFileChange}
             editorId="reply-email"
+            commsType="afterSales"
           />
 
           {/* Send Button & Attachments */}
