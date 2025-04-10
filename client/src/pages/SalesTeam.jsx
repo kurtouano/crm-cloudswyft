@@ -1,8 +1,6 @@
 import '../components/SalesTeam/SalesTeam.css';
 import TeamsTable from '../components/SalesTeam/TeamsTable';
 import RegisterEmployee from '../components/SalesTeam/RegisterEmployee';
-import ProductivityChart from '../components/SalesTeam/ProductivityChart';
-import SalesTeamCards from '../components/SalesTeam/SalesTeamCards';
 import ProductivitySpecialist from '../components/SalesTeam/ProductivitySpecialist';
 import SpecialistStatsCards from '../components/SalesTeam/SpecialistStatsCards';
 
@@ -15,14 +13,6 @@ export default function SalesTeam() {
         <div className="salesteam-horizontal-alignment">
           <TeamsTable />
           <RegisterEmployee />
-        </div>
-
-        {/* Productivity Chart + SalesTeamCards */}
-        <div className="onboarded-salesteam-grid-container">
-          <div className="salesteam-chart-card-wrapper">
-            <ProductivityChart />
-            <SalesTeamCards />
-          </div>
         </div>
 
         {/* ProductivitySpecialist + SpecialistStatsCards */}

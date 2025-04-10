@@ -8,43 +8,131 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import "./SalesTeam.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-const data = [
-  { name: "1", deals: 10 },
-  { name: "2", deals: 15 },
-  { name: "3", deals: 8 },
-  { name: "4", deals: 12 },
-  { name: "5", deals: 18 },
-  { name: "6", deals: 6 },
-  { name: "7", deals: 11 },
-  { name: "8", deals: 14 },
-  { name: "9", deals: 9 },
-  { name: "10", deals: 13 },
-];
+const dummyDataByEmployee = {
+  "Nhick Fabian": [
+    { name: "1", deals: 10 },
+    { name: "2", deals: 12 },
+    { name: "3", deals: 8 },
+    { name: "4", deals: 14 },
+    { name: "5", deals: 9 },
+    { name: "6", deals: 11 },
+    { name: "7", deals: 10 },
+    { name: "8", deals: 15 },
+    { name: "9", deals: 13 },
+    { name: "10", deals: 17 },
+  ],
+  "Kurt Ouano": [
+    { name: "1", deals: 6 },
+    { name: "2", deals: 8 },
+    { name: "3", deals: 5 },
+    { name: "4", deals: 9 },
+    { name: "5", deals: 11 },
+    { name: "6", deals: 7 },
+    { name: "7", deals: 6 },
+    { name: "8", deals: 8 },
+    { name: "9", deals: 7 },
+    { name: "10", deals: 9 },
+  ],
+  "Jash Villegas": [
+    { name: "1", deals: 12 },
+    { name: "2", deals: 14 },
+    { name: "3", deals: 13 },
+    { name: "4", deals: 15 },
+    { name: "5", deals: 16 },
+    { name: "6", deals: 17 },
+    { name: "7", deals: 14 },
+    { name: "8", deals: 16 },
+    { name: "9", deals: 15 },
+    { name: "10", deals: 17 },
+  ],
+  "Kyle Castillo": [
+    { name: "1", deals: 10 },
+    { name: "2", deals: 12 },
+    { name: "3", deals: 8 },
+    { name: "4", deals: 14 },
+    { name: "5", deals: 9 },
+    { name: "6", deals: 11 },
+    { name: "7", deals: 10 },
+    { name: "8", deals: 15 },
+    { name: "9", deals: 13 },
+    { name: "10", deals: 17 },
+  ],
+  "Vincent Mendoza": [
+    { name: "1", deals: 6 },
+    { name: "2", deals: 8 },
+    { name: "3", deals: 5 },
+    { name: "4", deals: 9 },
+    { name: "5", deals: 11 },
+    { name: "6", deals: 7 },
+    { name: "7", deals: 6 },
+    { name: "8", deals: 8 },
+    { name: "9", deals: 7 },
+    { name: "10", deals: 9 },
+  ],
+  "Tyron Silva": [
+    { name: "1", deals: 12 },
+    { name: "2", deals: 14 },
+    { name: "3", deals: 13 },
+    { name: "4", deals: 15 },
+    { name: "5", deals: 16 },
+    { name: "6", deals: 17 },
+    { name: "7", deals: 14 },
+    { name: "8", deals: 16 },
+    { name: "9", deals: 15 },
+    { name: "10", deals: 17 },
+  ],
+  "Labanos": [
+    { name: "1", deals: 12 },
+    { name: "2", deals: 14 },
+    { name: "3", deals: 13 },
+    { name: "4", deals: 15 },
+    { name: "5", deals: 16 },
+    { name: "6", deals: 17 },
+    { name: "7", deals: 14 },
+    { name: "8", deals: 16 },
+    { name: "9", deals: 15 },
+    { name: "10", deals: 17 },
+  ],
+};
 
 export default function ProductivitySpecialist() {
-  const [selectedEmployee, setSelectedEmployee] = useState("Specialist 1");
+  const [employees, setEmployees] = useState([]);
+  const [selectedEmployee, setSelectedEmployee] = useState("");
+
+  useEffect(() => {
+    fetch("http://localhost:4000/api/auth/employees")
+      .then((res) => res.json())
+      .then(setEmployees)
+      .catch((err) => console.error("Error loading employees", err));
+  }, []);
+
+  const chartData = dummyDataByEmployee[selectedEmployee] || [];
 
   return (
     <div className="productivity-chart-container">
       <div className="productivity-header-wrapper">
-        {/* Dropdown at the top */}
-        <select
+      <select
           className="employee-dropdown"
           value={selectedEmployee}
-          onChange={(e) => setSelectedEmployee(e.target.value)}
+          onChange={(e) => setSelectedEmployee(e.target.value.trim())}
         >
-          <option value="Specialist 1">Select Employee</option>
-          <option value="Specialist 1">Specialist 1</option>
-          <option value="Specialist 2">Specialist 2</option>
-          <option value="Specialist 3">Specialist 3</option>
+          <option value="">Select Employee</option>
+          {employees.map((emp) => {
+            const cleanName = emp.name.trim();
+            return (
+              <option key={emp.employeeId} value={cleanName}>
+                {cleanName}
+              </option>
+            );
+          })}
         </select>
       </div>
 
       <div className="productivity-header-row">
         <h3 className="productivity-chart-title">
-          Productivity Chart - ({selectedEmployee})
+          Productivity Chart - ({selectedEmployee || "No Selection"})
         </h3>
         <a href="#" className="download-link">
           DOWNLOAD CHART
@@ -53,7 +141,7 @@ export default function ProductivitySpecialist() {
 
       <ResponsiveContainer width="100%" height={400}>
         <LineChart
-          data={data}
+          data={chartData}
           margin={{ top: 10, right: 20, left: 10, bottom: 20 }}
         >
           <CartesianGrid stroke="#ccc" strokeDasharray="3 3" />
