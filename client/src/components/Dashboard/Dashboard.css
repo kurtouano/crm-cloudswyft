@@ -469,4 +469,86 @@
     padding-top: 20px;
   }
   
+/* CTR */
+  .ctr-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  .download-chart-btn {
+    background: none;
+    border: none;
+    color: #A5A5A5;
+    font-weight: 700;
+    font-size: 12px;
+    font-family: "Poppins", sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    cursor: pointer;
+    padding: 2px 0;
+  }
+  
+  .download-chart-btn:hover {
+    color: #777;
+  }
 
+  .handling-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  .handling-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #05004E;
+    margin: 0;
+    font-family: "Poppins", sans-serif;
+  }
+  
+  .download-chart-btn {
+    background: none;
+    border: none;
+    color: #A5A5A5;
+    font-weight: 700;
+    font-size: 12px;
+    font-family: "Poppins", sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    cursor: pointer;
+    padding: 2px 0;
+  }
+  
+  .download-chart-btn:hover {
+    color: #777;
+  }
+  
+
+  .dashboard-header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .dashboard-report-btn {
+    background-color: #1976D2;              /* Blue background */
+    color: white;                           /* White text */
+    font-weight: 600;
+    font-size: 12px;
+    font-family: "Poppins", sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.25s ease;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.08);
+  }
+  
+  .dashboard-report-btn:hover {
+    background-color: #125aa8;             /* Slightly darker on hover */
+  }
