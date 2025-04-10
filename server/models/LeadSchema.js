@@ -36,6 +36,11 @@ const LeadSchema = new mongoose.Schema(
     phone: { type: String, required: true },
     social: { type: String }, 
     website: { type: String }, 
+    afterSalesStatus: { 
+      type: String, 
+      enum: ["none", "open", "in-progress","resolved"],
+      default: "none" 
+    }, // Default value for supportStatus
   },
   { timestamps: true }
 );

@@ -10,6 +10,7 @@ import { MdAttachFile, MdClose} from "react-icons/md";
 import TipTap from "../../utils/TextEditor.jsx";
 import DOMPurify from 'dompurify';
 import "../Communications/Communication.css";
+import { io } from "socket.io-client";
 
 export default function CommsAfterSalesPage() {
   useMicrosoftAuthenticationSupport();
@@ -579,7 +580,8 @@ export default function CommsAfterSalesPage() {
       if (!res.ok) {
         throw new Error(data.error || "Failed to send reply");
       }
-  
+
+      await handleStatusChange("in-progress");
       alert("Reply sent successfully!");
       setFormDataReply({ messageId: "", text: "", threadId: "" });
       setAttachment(null);
@@ -873,6 +875,110 @@ const handleSelectEmail = (email, fieldName) => {
   if (fieldName === 'bcc') setShowBccSuggestions(false);
 };
 
+// Add to your CommsAfterSalesPage component
+useEffect(() => {
+  const socket = io('http://localhost:4000');
+  
+  // Join room for the current lead
+  if (activeLead?._id) {
+      socket.emit('joinLeadRoom', activeLead._id);
+  }
+
+  // Handle status updates
+  socket.on('leadStatusUpdated', (data) => {
+      console.log('Status update received:', data);
+      
+      // Update all lead states
+      const updateState = (prevState) => 
+          prevState.map(lead => 
+              lead._id === data.leadId 
+                  ? { ...lead, afterSalesStatus: data.newStatus } 
+                  : lead
+          );
+
+      setLeads(updateState);
+      setFilteredLeads(updateState);
+      setSortedLeads(updateState);
+      
+      // Update active lead if it's the one being modified
+      if (activeLead?._id === data.leadId) {
+          setActiveLead(prev => ({ 
+              ...prev, 
+              afterSalesStatus: data.newStatus 
+          }));
+      }
+  });
+
+  return () => {
+      socket.disconnect();
+  };
+}, [activeLead?._id]);
+
+const handleStatusChange = async (newStatus) => {
+  if (!activeLead) return;
+
+  // Define allowed status transitions
+  const statusFlow = {
+    'none': ['open'],                  // Only allow → open
+    'open': ['resolved'], // Can progress or resolve
+    'in-progress': ['resolved'],        // Can only move to resolved (no revert to open)
+    'resolved': ['open']                // Allow reopening
+  };
+
+  // Get current status (default to 'none' if undefined)
+  const currentStatus = activeLead.afterSalesStatus || 'none';
+  
+  // Check if transition is valid
+  if (!statusFlow[currentStatus]?.includes(newStatus)) {
+    alert(`Invalid status transition: ${currentStatus} → ${newStatus}`);
+    return;
+  }
+
+  // Optimistic UI update
+  const updateLeadState = (lead) => 
+    lead._id === activeLead._id 
+      ? { ...lead, afterSalesStatus: newStatus } 
+      : lead;
+
+  setLeads(prev => prev.map(updateLeadState));
+  setFilteredLeads(prev => prev.map(updateLeadState));
+  setSortedLeads(prev => prev.map(updateLeadState));
+  setActiveLead(prev => ({ ...prev, afterSalesStatus: newStatus }));
+
+  // API call to persist the change
+  try {
+    const response = await fetch(
+      `http://localhost:4000/api/leads/support/updateSupportStatus/${activeLead._id}`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to update status');
+    }
+
+    // Optional: Fetch fresh data if needed
+    const data = await response.json();
+    console.log('Status updated successfully:', data);
+
+  } catch (error) {
+    console.error("Error updating status:", error);
+    
+    // Revert UI if update fails
+    const revertLeadState = (lead) => 
+      lead._id === activeLead._id 
+        ? { ...lead, afterSalesStatus: currentStatus } 
+        : lead;
+
+    setLeads(prev => prev.map(revertLeadState));
+    setFilteredLeads(prev => prev.map(revertLeadState));
+    setSortedLeads(prev => prev.map(revertLeadState));
+  }
+};
+
   return (
     <div className="communications-container">
       {/* Left Panel (Inbox) */}
@@ -1083,6 +1189,17 @@ const handleSelectEmail = (email, fieldName) => {
         <div className="email-header">
           {/* Left Side Icons */}
           <div className="email-header-left">
+            <div className="support-status-dropdown">
+              <select className="support-status-select"
+                  value={activeLead?.afterSalesStatus || "none"}
+                  onChange={(e) => handleStatusChange(e.target.value)}
+              >
+                  <option value="none">None</option>
+                  <option value="open">Open</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="resolved">Resolved</option>
+              </select>
+            </div>
           </div>
 
           {/* Pagination Controls */}

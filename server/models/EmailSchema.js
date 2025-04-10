@@ -18,6 +18,13 @@ const receivedEmailSchema = new mongoose.Schema({
     timestamp: { type: Date, default: Date.now, index: true },
     viewed: { type: Boolean, default: false },
     notificationDeleted: { type: Boolean, default: false },
+    emailType: {
+        type: String,
+        enum: ['revenue', 'after-sales'],
+        required: true,
+        default: 'revenue',
+        index: true
+    }
 });
 
 const replyEmailSchema = new mongoose.Schema({

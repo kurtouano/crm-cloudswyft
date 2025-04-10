@@ -360,7 +360,7 @@ export default function LeadProfilePage() {
         </div>
 
         {/* Pagination */}
-        <div className="pagination-container">
+        <div className="accounts-pagination-container">
           <ReactPaginate
             breakLabel="..."
             nextLabel=">"
@@ -369,7 +369,7 @@ export default function LeadProfilePage() {
             marginPagesDisplayed={1}
             pageCount={Math.ceil(emailsToShow.length / itemsPerPage) || 1} // Ensure pagination updates dynamically
             previousLabel="<"
-            containerClassName="pagination"
+            containerClassName="accounts-pagination"
             activeClassName="active"
           />
         </div>

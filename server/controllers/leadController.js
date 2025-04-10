@@ -367,4 +367,35 @@ export const updateLeadStarCustomerSupport = async (req, res) => {
   }
 };
 
+ export async function updateLeadSupportStatus(req, res) {
+    try {
+        const { leadId } = req.params;
+        const { status } = req.body;
+
+        if (!leadId || !status) {
+            return res.status(400).json({ error: "Lead ID and status are required" });
+        }
+
+        const validStatuses = ["none", "open", "in-progress", "pending", "resolved"];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ error: "Invalid status value" });
+        }
+
+        const updatedLead = await Lead.findByIdAndUpdate(
+            leadId,
+            { $set: { afterSalesStatus: status } },
+            { new: true }
+        );
+
+        if (!updatedLead) {
+            return res.status(404).json({ error: "Lead not found" });
+        }
+
+        res.status(200).json(updatedLead);
+    } catch (error) {
+        console.error("Error updating lead status:", error);
+        res.status(500).json({ error: "Failed to update lead status" });
+    }
+}
+
 

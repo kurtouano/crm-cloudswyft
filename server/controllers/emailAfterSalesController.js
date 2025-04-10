@@ -365,131 +365,154 @@ export async function fetchAttachmentsForReply(req, res) {
 
 export async function fetchReceivedEmails(req, res) {
     try {
-        const authHeader = req.headers.authorization; // Get Microsoft Access Token from headers
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        console.error("Authorization header is missing or invalid");
-        return res.status(401).json({ error: "Unauthorized - Access token is required" });
-    }
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            console.error("Authorization header is missing or invalid");
+            return res.status(401).json({ error: "Unauthorized - Access token is required" });
+        }
 
-    const accessToken = authHeader.slice(7); // Extract token after "Bearer "
+        const accessToken = authHeader.slice(7);
 
-    // Fetch emails from Microsoft Graph API
-    const graphResponse = await axios.get(
-        "https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?$top=40&$expand=attachments",
-        { headers: { Authorization: `Bearer ${accessToken}` } }
-    );
+        // Fetch emails from Microsoft Graph API
+        const graphResponse = await axios.get(
+            "https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?$top=40&$expand=attachments",
+            { headers: { Authorization: `Bearer ${accessToken}` } }
+        );
 
-    const emails = graphResponse.data.value || [];
-    console.log(`Fetched ${emails.length} emails from Microsoft`);
+        const emails = graphResponse.data.value || [];
+        console.log(`Fetched ${emails.length} emails from Microsoft`);
 
-    if (emails.length === 0) {
-        return res.status(200).json({ success: true, emails: [] });
-    }
+        if (emails.length === 0) {
+            return res.status(200).json({ success: true, emails: [] });
+        }
 
-    // Fetch leads from the database
-    const leads = await Lead.find({}, "bestEmail").lean();
-    const leadEmails = new Set(leads.map(lead => lead.bestEmail.toLowerCase()));
+        // Fetch leads from the database
+        const leads = await Lead.find({}, "bestEmail").lean();
+        const leadEmails = new Set(leads.map(lead => lead.bestEmail.toLowerCase()));
 
-    // Filter emails based on lead emails
-    const filteredEmails = emails.filter(email =>
-        email.from?.emailAddress && leadEmails.has(email.from.emailAddress.address.toLowerCase())
-    );
+        // Filter emails based on lead emails
+        const filteredEmails = emails.filter(email =>
+            email.from?.emailAddress && leadEmails.has(email.from.emailAddress.address.toLowerCase())
+        );
 
-    console.log(`Filtered ${filteredEmails.length} emails matching leads`);
+        console.log(`Filtered ${filteredEmails.length} emails matching leads`);
 
-    function cleanReplyText(html) {
-        const $ = cheerio.load(html);
+        // Email cleaning function (keep all existing functionality)
+        function cleanReplyText(html) {
+            const $ = cheerio.load(html);
 
-        // Remove quoted text, previous replies, and Gmail/Outlook metadata
-        $("blockquote, .gmail_quote, .gmail_attr, #divRplyFwdMsg, #x_divRplyFwdMsg, hr").remove();
-        $("#ms-outlook-mobile-signature, #x_ms-outlook-mobile-signature").remove();
-        $("a[href*='outlook.com'], a[href*='aka.ms']").remove(); // Remove "Get Outlook for iOS" links
+            // Remove quoted text, previous replies, and Gmail/Outlook metadata
+            $("blockquote, .gmail_quote, .gmail_attr, #divRplyFwdMsg, #x_divRplyFwdMsg, hr").remove();
+            $("#ms-outlook-mobile-signature, #x_ms-outlook-mobile-signature").remove();
+            $("a[href*='outlook.com'], a[href*='aka.ms']").remove(); // Remove "Get Outlook for iOS" links
 
-        // Remove unnecessary meta tags
-        $("head, meta").remove();
+            // Remove unnecessary meta tags
+            $("head, meta").remove();
 
-        // Replace <br> with new lines
-        $("br").replaceWith("\n");
+            // Replace <br> with new lines
+            $("br").replaceWith("\n");
 
-        // Convert <div> to new lines (while keeping spacing)
-        $("div").each(function () {
-            $(this).replaceWith($(this).text() + "\n");
-        });
+            // Convert <div> to new lines (while keeping spacing)
+            $("div").each(function () {
+                $(this).replaceWith($(this).text() + "\n");
+            });
 
-        // Extract only the first part of the body (latest reply)
-        let cleanedText = $("body").contents().first().text().trim();
+            // Extract only the first part of the body (latest reply)
+            let cleanedText = $("body").contents().first().text().trim();
 
-        // Preserve multiple new lines (while preventing excessive spaces)
-        cleanedText = cleanedText.replace(/\n{3,}/g, "\n\n");
+            // Preserve multiple new lines (while preventing excessive spaces)
+            cleanedText = cleanedText.replace(/\n{3,}/g, "\n\n");
 
-        return cleanedText;
-    }
+            return cleanedText;
+        }
             
-    let newEmails = []; // ✅ Track new emails for WebSocket notifications
+        let newEmails = []; // Track new emails for WebSocket notifications
 
-    // Save filtered emails to MongoDB
-    const savedEmails = await Promise.all(
-        filteredEmails.map(async (email) => {
-            try {
-                const htmlContent = email.body.content || "";
-                const plainTextMessage = cleanReplyText(htmlContent);
-                const conversationId = email.conversationId || email.id; // Use conversationId as threadId
-                const messageId = email.id; // Unique per email
+        // Save filtered emails to MongoDB
+        const savedEmails = await Promise.all(
+            filteredEmails.map(async (email) => {
+                try {
+                    const htmlContent = email.body.content || "";
+                    const plainTextMessage = cleanReplyText(htmlContent);
+                    const conversationId = email.conversationId || email.id;
+                    const messageId = email.id;
+                    const senderEmail = email.from.emailAddress.address.toLowerCase();
 
-                const attachments = email.attachments?.map(att => ({
-                    fileName: att.name,
-                    mimeType: att.contentType,
-                    contentBytes: att.contentBytes || null, // Only if Base64 is available
-                })) || [];
+                    const attachments = email.attachments?.map(att => ({
+                        fileName: att.name,
+                        mimeType: att.contentType,
+                        contentBytes: att.contentBytes || null,
+                    })) || [];
 
-                const existingEmail = await ReceivedEmail.findOne({ messageId }); // ✅ Check if email exists
+                    const existingEmail = await ReceivedEmail.findOne({ messageId });
 
-                // ✅ If it's a new email, push to `newEmails`
-                if (!existingEmail) {
-                    newEmails.push({
-                        message: `New reply from ${email.from.emailAddress.name} – Click to view the conversation!`,
-                        leadEmail: email.from.emailAddress.address,
-                        threadId: conversationId
-                    });
-                    clearHandlingTimeCache();
+                    // If it's a new email
+                    if (!existingEmail) {
+                        const lead = await Lead.findOne({ bestEmail: senderEmail });
+                        
+                        // Only update to "open" if current status is "none"
+                        if (lead.afterSalesStatus === "none" || lead.afterSalesStatus === "resolved") {
+                            const updatedLead = await Lead.findOneAndUpdate(
+                              { bestEmail: senderEmail },
+                              { $set: { afterSalesStatus: "open" } },
+                              { new: true }
+                            );
+                        
+                            if (updatedLead) {
+                              console.log(`Status updated to "open" for ${updatedLead.leadName}`);
+                              io.to(updatedLead._id.toString()).emit('leadStatusUpdated', {
+                                leadId: updatedLead._id,
+                                newStatus: 'open'
+                              });
+                            }
+                          }
+                        
+                        // For any incoming email (regardless of status)
+                        newEmails.push({
+                          message: `New reply from ${email.from.emailAddress.name}`,
+                          leadEmail: senderEmail,
+                          threadId: conversationId
+                        });
+                        clearHandlingTimeCache();
+                      }
+
+                    return await ReceivedEmail.findOneAndUpdate(
+                        { messageId },
+                        {
+                            messageId,
+                            threadId: conversationId,
+                            subject: email.subject,
+                            sender: senderEmail,
+                            senderName: email.from.emailAddress.name,
+                            message: plainTextMessage,
+                            html: htmlContent,
+                            timestamp: new Date(email.receivedDateTime),
+                            attachments,
+                            emailType: "after-sales",
+                        },
+                        { upsert: true, new: true }
+                    );
+                } catch (dbError) {
+                    console.error("Error saving email to MongoDB:", dbError);
+                    return null;
                 }
+            })
+        );
 
-                return await ReceivedEmail.findOneAndUpdate(
-                    { messageId }, // Ensure uniqueness
-                    {
-                        messageId,
-                        threadId: conversationId, // Grouping based on conversationId
-                        subject: email.subject,
-                        sender: email.from.emailAddress.address,
-                        senderName: email.from.emailAddress.name,
-                        message: plainTextMessage,
-                        html: htmlContent,
-                        timestamp: new Date(email.receivedDateTime),
-                        attachments,
-                    },
-                    { upsert: true, new: true }
-                );
-            } catch (dbError) {
-                console.error("Error saving email to MongoDB:", dbError);
-                return null;
-            }
-        })
-    );
+        const successfullySavedEmails = savedEmails.filter(email => email !== null);
+        console.log(`Saved ${successfullySavedEmails.length} emails to MongoDB`);
 
-    const successfullySavedEmails = savedEmails.filter(email => email !== null);
-    console.log(`Saved ${successfullySavedEmails.length} emails to MongoDB`);
-
-    // ✅ Emit WebSocket notifications for new emails only
-    if (newEmails.length > 0) {
-        // Sort new emails by timestamp (latest first)
-        newEmails.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        newEmails.forEach(notif => {
-            io.emit("newReplyNotification", notif);
-        });
-        console.log(`Sent ${newEmails.length} new notifications via WebSocket.`);
-    } else {
-        console.log("No new notifications to send.");
-    }
+        // Emit WebSocket notifications for new emails only
+        if (newEmails.length > 0) {
+            // Sort new emails by timestamp (latest first)
+            newEmails.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            newEmails.forEach(notif => {
+                io.emit("newReplyNotification", notif);
+            });
+            console.log(`Sent ${newEmails.length} new notifications via WebSocket.`);
+        } else {
+            console.log("No new notifications to send.");
+        }
 
         res.status(200).json({ success: true, emails: successfullySavedEmails });
     } catch (error) {

@@ -43,13 +43,18 @@ app.get("/", (req, res) => {
 });
 
 // ✅ Handle WebSocket Connections
-io.on("connection", (socket) => {
-  console.log("🔗 New WebSocket Connection:", socket.id);
+io.on('connection', (socket) => {
+    console.log('New client connected:', socket.id);
+    
+    // Handle joining lead-specific rooms
+    socket.on('joinLeadRoom', (leadId) => {
+        socket.join(leadId);
+        console.log(`Client joined lead room ${leadId}`);
+    });
 
-  // Listen for custom events (if needed)
-  socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
-  });
+    socket.on('disconnect', () => {
+        console.log('Client disconnected:', socket.id);
+    });
 });
 
 // ✅ Export io so other files can emit events

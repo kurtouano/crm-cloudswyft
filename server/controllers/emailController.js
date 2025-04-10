@@ -465,7 +465,8 @@ export async function fetchReceivedEmails(req, res) {
                         message: plainTextMessage,
                         html: htmlContent,
                         timestamp: new Date(email.receivedDateTime),
-                        attachments
+                        attachments,
+                        emailType: 'revenue',
                     },
                     { upsert: true, new: true }
                 );
