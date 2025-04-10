@@ -1,4 +1,4 @@
-import useMicrosoftAuthentication from "../../utils/AuthMicrosoftAfterSales.js";
+import useMicrosoftAuthenticationSupport from "../../utils/AuthMicrosoftAfterSales.js";
 import { useEffect, useState, useMemo, useCallback, useRef} from "react";
 import { useLocation } from "react-router-dom";
 import Fuse from "fuse.js"; // 🔍 Import Fuse.js
@@ -12,7 +12,7 @@ import DOMPurify from 'dompurify';
 import "../Communications/Communication.css";
 
 export default function CommsAfterSalesPage() {
-  useMicrosoftAuthentication();
+  useMicrosoftAuthenticationSupport();
   localStorage.setItem("currentPage", "customer-support");
   // Basic states
   const location = useLocation();

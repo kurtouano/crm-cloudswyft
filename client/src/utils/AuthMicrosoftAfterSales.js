@@ -1,6 +1,6 @@
 import {useEffect, useRef} from "react";
 
-export default function useMicrosoftAuthentication() {
+export default function useMicrosoftAuthenticationSupport() {
     const intervalRef = useRef(null);
   
     useEffect(() => {
@@ -19,7 +19,7 @@ export default function useMicrosoftAuthentication() {
           clearInterval(intervalRef.current); // Clear the interval before redirecting
         }
     
-        window.location.href = `http://localhost:4000/api/emails/microsoft-login?currentPage=${currentPage}`; // Redirect to your login page
+        window.location.href = `http://localhost:4000/api/emails/support/microsoft-login?currentPage=${currentPage}`; // Redirect to your login page
       };
     
     const checkTokenValidity = () => {

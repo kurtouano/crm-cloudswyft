@@ -14,6 +14,7 @@ import { Extension } from '@tiptap/core';
 import Paragraph from '@tiptap/extension-paragraph'
 import { FaBold, FaItalic, FaUnderline, FaLink, FaPaperclip, FaFilePdf, FaFileWord, FaFileExcel, FaFileAlt, FaListOl, FaListUl, FaHeading, FaFont, FaImage, FaPalette, FaFillDrip, FaTable } from 'react-icons/fa';
 import PropTypes from 'prop-types';
+import Newsletter from '../../../server/models/NewsletterSchema';
 import { useState, useEffect, useRef, useMemo } from "react";
 import Downshift from 'downshift';
 import "./TextEditor.css";
@@ -233,7 +234,6 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange, editorId, c
         }
       ],
 
-
       createEmail: [
         {
           id: 'standard-followup',
@@ -256,7 +256,41 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange, editorId, c
             <p>Let us know what you think!</p><br>
             <p>Best,<br>Marketing Team</p>
           `
-        }
+        },
+        {
+          id: 'promotional-newsletter',
+          name: 'Promotional Newsletter',
+          content: `
+            <p><span style="font-size: 1.5em; font-weight: bold; color:#4a6bdf;">Exciting Promotions This Week!</span></p> <br>
+            <p><span>Hi </span><span style="color:#4a6bdf;">[First Name]</span><span>,</span></p>
+            <p><span>Check out these amazing offers we have for you:</span></p>
+            
+            <!-- Promotion 1 -->
+            <p><span><img src="https://cloudswyft.co/wp-content/uploads/2021/12/marco-fileccia-HE7_hMkqn9A-unsplash-scaled.jpg" alt="Latest Products" style="max-width: 500px;"></span></p>
+            <p><span>Discover our latest collection of innovative products.</span></p>
+            <u><a href="http://localhost:4000/api/newsletters/track/1?redirectUrl=https://cloudswyft.co/education-amidst-the-pandemic-the-role-of-cloud-based-learning-platforms-in-continuing-learning-and-instruction/"><span style="color:#1155cc;">Cloud based Learning Platforms</span></a></u><br>
+            
+            <!-- Promotion 2 -->
+            <p><span><img src="https://cloudswyft.co/wp-content/uploads/2021/11/pexels-photo-5554288.jpeg" alt="Premium Services" style="max-width: 500px;"></span></p>
+            <p><span>Special discounts on our premium services.</span></p>
+            <u><a href="http://localhost:4000/api/newsletters/track/2?redirectUrl=https://cloudswyft.co/how-virtual-computer-labs-are-revolutionising-the-way-universities-teach/"><span style="color:#1155cc;">Virtual Computer Labs</span></a></u><br>
+            
+            <!-- Promotion 3 -->
+            <p><span><img src="https://cloudswyft.co/wp-content/uploads/2018/01/CloudSwyft.jpg" alt="Platform Features" style="max-width: 500px;"></span></p>
+            <p><span>New features now available in our platform.</span></p>
+            <u><a href="http://localhost:4000/api/newsletters/track/3?redirectUrl=https://cloudswyft.co/cloudswyft-the-startup-that-aims-to-change-the-way-companies-do-human-capital-development/"><span style="color:#1155cc;">Our Cloudswyft Team</span></a></u><br>
+            
+            <!-- Promotion 4 -->
+            <p><span><img src="https://cloudswyft.co/wp-content/uploads/2020/10/15May_Card-Holder_992x560.png" alt="Limited Offer" style="max-width: 500px"></span></p>
+            <p><span>Limited time offer - don't miss out!</span></p>
+            <u><a href="http://localhost:4000/api/newsletters/track/4?redirectUrl=https://cloudswyft.co/finding-your-career-amidst-the-pandemic/"><span style="color:#1155cc;">Find your Career</span></a></u><br>
+            
+            <p><span>Thank you for being a valued customer!</span></p><br>
+            <p><span>Best regards,</span></p>
+            <p><span style="color:#4a6bdf; font-weight: bold">Cloudswyft Global Systems, Inc.</span></p>
+          `
+        },
+
       ]
     }), []);
   

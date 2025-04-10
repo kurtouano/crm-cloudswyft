@@ -428,7 +428,7 @@ export default function AccountPage() {
           )}
 
           {/* Pagination */}
-          <div className="pagination-container">
+          <div className="accounts-pagination-container">
             <ReactPaginate
               breakLabel="..."
               nextLabel=">"
@@ -437,7 +437,7 @@ export default function AccountPage() {
               marginPagesDisplayed={1}
               pageCount={Math.ceil(filteredLeads.length / rowsPerPage)}
               previousLabel="<"
-              containerClassName="pagination"
+              containerClassName="accounts-pagination"
               activeClassName="active"
             />
           </div>

@@ -522,8 +522,6 @@ export async function fetchNotifications(req, res) {
     }
   }
   
-
-
 //// LEAD PROFILE PAGE CONTROLLER
 
 export async function fetchSentEmailsForLeadProfile(req, res) {

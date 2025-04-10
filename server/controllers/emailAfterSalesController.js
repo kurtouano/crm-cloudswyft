@@ -14,7 +14,7 @@ const msalConfig = {
         clientId: process.env.AFTER_SALES_CLIENT_ID,               // Your client ID
         clientSecret: process.env.AFTER_SALES_CLIENT_SECRET,       // Your client secret
         authority: "https://login.microsoftonline.com/common",  // Use common for personal accounts
-        redirectUri: process.env.REDIRECT_URI,         // Your redirect URI
+        redirectUri: process.env.REDIRECT_URI_SUPPORT,         // Your redirect URI
     },
 };
 
@@ -26,7 +26,7 @@ export async function handleMicrosoftLogin(req, res) {
         const { currentPage } = req.query;
         const authUrl = await cca.getAuthCodeUrl({
             scopes: ["Mail.ReadWrite", "Mail.Send", "Mail.Read", "openid", "email", "profile"], // Scopes for personal account login
-            redirectUri: process.env.REDIRECT_URI,
+            redirectUri: process.env.REDIRECT_URI_SUPPORT,
             state: currentPage,
             loginHint: process.env.AFTER_SALES_SENDER_EMAIL, // Auto Login using the Microsoft Account
         });
@@ -48,7 +48,7 @@ export async function handleOAuthRedirect(req, res) {
         const tokenResponse = await cca.acquireTokenByCode({
             code,
             scopes: ["Mail.ReadWrite", "Mail.Send", "Mail.Read", "openid", "email", "profile"],
-            redirectUri: process.env.REDIRECT_URI,
+            redirectUri: process.env.REDIRECT_URI_SUPPORT,
         });
 
         const userEmail = tokenResponse.account.username;
@@ -466,7 +466,6 @@ export async function fetchReceivedEmails(req, res) {
                         html: htmlContent,
                         timestamp: new Date(email.receivedDateTime),
                         attachments,
-                        emailType: 'after-sales'
                     },
                     { upsert: true, new: true }
                 );

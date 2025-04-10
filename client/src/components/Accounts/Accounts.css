@@ -303,37 +303,41 @@
     background-color: rgba(0, 0, 0, 0.05);
 }
 
-.pagination-container {
+.accounts-pagination-container {
     display: flex;
     justify-content: flex-end; 
+    margin-top: 20px;
     width: 100%;
-    max-width: 1200px;  
-    margin: -10px 50px 0 auto; 
 }
 
-.pagination {
+.accounts-pagination {
     display: flex;
     list-style-type: none;
     column-gap: 8px;
-    font-family: "Poppins", sans-serif;
+    font-family: "Poppins";
 }
 
-.pagination li.active a {
+.accounts-pagination li {
+    font-size: 12px;
+  }
+
+.accounts-pagination li.active a {
     font-weight: bold;
     background-color: #2196F3;
     color: white;
-    border-radius: 4px;
 }
 
-.pagination a {
+.accounts-pagination a {
     border-radius: 4px;
     padding: 3px 8px;
     cursor: pointer;
     background-color: #F5F5F5;
     border: 1px solid #EEEEEE;
+    
+    transition: 0.25s all;
 }
 
-.pagination a:hover {
+.accounts-pagination a:hover {
     background-color: #e7e5e5;
 }
 

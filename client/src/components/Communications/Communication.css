@@ -344,7 +344,7 @@
 }
 
 .email-received-space {
-    height: 450px;
+    height: 465px;
     padding: 20px 20px;
     overflow-y: scroll;
     background: #fff;
@@ -355,6 +355,7 @@
 }
 
 .email-header {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1045,4 +1046,17 @@ padding-inline-start: 40px;
 /* Background color for sent emails */
 .email-user-icon.sent {
     background-color: rgb(0, 140, 255);
+}
+
+.support-status-dropdown {
+    position: absolute;
+    left: 10px;
+}
+
+.support-status-select {
+    padding: 5px 20px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    font-size: 13px;
+    cursor: pointer;
 }
