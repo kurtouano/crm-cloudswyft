@@ -1,11 +1,39 @@
-const clickThroughData = [
-  { id: 1, service: "Option 1", popularity: 80, sales: 45 },
-  { id: 2, service: "Option 2", popularity: 60, sales: 29 },
-  { id: 3, service: "Option 3", popularity: 50, sales: 18 },
-  { id: 4, service: "Option 4", popularity: 30, sales: 25 },
-];
+import { useEffect, useState } from 'react';
 
 export default function ClickThroughRate() {
+  const [clickThroughData, setClickThroughData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [totalClicks, setTotalClicks] = useState(0);
+
+  useEffect(() => {
+    const fetchClickData = async () => {
+      try {
+        const response = await fetch('http://localhost:4000/api/newsletters/click-data');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Calculate total clicks for display
+        const total = data.reduce((sum, item) => sum + item.clicks, 0);
+        setTotalClicks(total);
+        setClickThroughData(data);
+      } catch (err) {
+        console.error("Error fetching click data:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchClickData();
+  }, []);
+
+  if (loading) return <div>Loading click-through data...</div>;
+  if (error) return <div>Error: {error}</div>;
   return (
     <div className="ctr-container">
       <h3 className="ctr-title">Click-Through Rate</h3>
@@ -14,17 +42,16 @@ export default function ClickThroughRate() {
         <table>
           <thead>
             <tr>
-              <th>#</th>
               <th>Service Advertised</th>
               <th>Popularity</th>
-              <th>Sales</th>
+              <th>Clicks</th>
             </tr>
           </thead>
           <tbody>
             {clickThroughData.map((item) => (
-              <tr key={item.id}>
-                <td>{item.id}</td>
-                <td>{item.service}</td>
+              <tr key={item.serviceNum}>
+                <td>{item.title}</td>
+
                 <td>
                   <div className="ctr-progress">
                     <div
@@ -34,7 +61,7 @@ export default function ClickThroughRate() {
                   </div>
                 </td>
                 <td>
-                  <div className="ctr-sales">{item.sales}</div>
+                  <div className="ctr-sales">{item.clicks}</div>
                 </td>
               </tr>
             ))}
@@ -44,3 +71,6 @@ export default function ClickThroughRate() {
     </div>
   );
 }
+
+
+
