@@ -122,7 +122,15 @@ export default function LeadProfilePage() {
   };
 
   const cardData = [
-    { title: "Lead Status", type: "dropdown", bgColor: "#2196F3", icon: usersIcon },
+    { 
+      title: "Lead Status", 
+      value: leadData.status === "active" ? "Active" : 
+             leadData.status === "successful" ? "Closed - Successful" : 
+             leadData.status === "lost" ? "Closed - Lost" : 
+             leadData.status, // fallback
+      bgColor: "#2196F3", 
+      icon: usersIcon 
+    },
     { title: "Last Contact Date", value: "02/07/25", bgColor: "#1BB9F4", icon: clockIcon },
     { title: "Next Action Needed", value: "Follow Up", bgColor: "#2196F3", icon: hourglassIcon },
     { title: "Lead Score", value: "Priority", bgColor: "#307ADB", icon: highPriorityIcon },
@@ -217,32 +225,7 @@ export default function LeadProfilePage() {
 
                 <div className="account-text">
                   <p className="account-title">{card.title}</p>
-                  {card.type === "dropdown" ? (
-                    <div className="custom-dropdown">
-                      <div
-                        className="dropdown-header"
-                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                      >
-                        {currentLabel} {/* Display the label instead of the value */}
-                        <div className="dropdown-arrow">{isDropdownOpen ? <FiChevronUp /> : <FiChevronDown />}</div>
-                      </div>
-                      {isDropdownOpen && (
-                        <div className="dropdown-options">
-                          {dropdownOptions.map((option) => (
-                            <div
-                              key={option.value}
-                              className={`dropdown-option ${activeOption === option.value ? "active" : ""}`}
-                              onClick={() => handleOptionClick(option.value)}
-                            >
-                              {option.label} {/* Display the label in the dropdown options */}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <p className="account-value">{card.value}</p>
-                  )}
+                  <p className="account-value">{card.value}</p>
                 </div>
 
               </div>
@@ -264,7 +247,7 @@ export default function LeadProfilePage() {
               <div className="profile-body-list">
                 {["company", "industry", "companyAddress", "nameOfPresident", "nameOfHrHead", "temperature"].map((field) => (
                   <p className="profile-body" key={field}>
-                    <span>{field.replace(/([A-Z])/g, " $1")}: </span>
+                    <span className="profile-body-item-title">{field.replace(/([A-Z])/g, " $1")}: </span>
                     {isEditingBasic ? (
                       <input
                         value={editedLead[field] || ""}
@@ -272,7 +255,7 @@ export default function LeadProfilePage() {
                         style={{ border: "1px solid #ccc", borderRadius: "5px", padding: "2px 5px" }}
                       />
                     ) : (
-                      <span>{leadData[field]}</span>
+                      <span className="profile-body-item-value">{leadData[field]}</span>
                     )}
                   </p>
                 ))}
@@ -289,7 +272,7 @@ export default function LeadProfilePage() {
               <div className="profile-body-list">
                 {["leadName", "bestEmail", "phone", "social", "website"].map((field) => (
                   <p className="profile-body" key={field}>
-                    <span>{field.replace(/([A-Z])/g, " $1")}: </span>
+                    <span className="profile-body-item-title">{field.replace(/([A-Z])/g, " $1")}: </span>
                     {isEditingContact ? (
                       <input
                         value={editedLead[field] || ""}
@@ -297,7 +280,7 @@ export default function LeadProfilePage() {
                         style={{ border: "1px solid #ccc", borderRadius: "5px", padding: "2px 5px" }}
                       />
                     ) : (
-                      <span>{leadData[field]}</span>
+                      <span className="profile-body-item-value">{leadData[field]}</span>
                     )}
                   </p>
                 ))}
@@ -305,19 +288,16 @@ export default function LeadProfilePage() {
               </div>
              
             </div>
-
-          
-          </div>
-        </div>
-
-    <div className="editButtons">
+            <div className="editButtons">
             {(isEditingBasic || isEditingContact) && (
               <div className="lead-profile-edit-actions">
                 <button onClick={saveChanges} className="lead-profile-save-btn">Save</button>
                 <button onClick={cancelEdit} className="lead-profile-cancel-btn">Cancel</button>
               </div>
             )}
-    </div>
+          </div>
+          </div>
+        </div>
 
         {/* Interaction History Section */}
         <p className="interaction-header-title">Interaction History</p>

@@ -195,16 +195,27 @@ export const updateLeadStage = async (req, res) => {
       "Provision",
       "Proposal",
       "Negotiation",
-      "On-boarding"
+      "On-boarding",
+      "Lost"
     ];
 
     if (!validStages.includes(stage)) {
       return res.status(400).json({ message: "Invalid stage" });
     }
 
+    // Determine status based on stage
+    let status;
+    if (stage === "On-boarding") {
+      status = "successful";
+    } else if (stage === "Lost") {
+      status = "lost";
+    } else {
+      status = "active"; // Default for other stages
+    }
+
     const updatedLead = await Lead.findByIdAndUpdate(
       id,
-      { stage },
+      { stage, status }, // Update both stage and status
       { new: true }
     );
 

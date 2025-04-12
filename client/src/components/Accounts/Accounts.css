@@ -534,6 +534,7 @@
     border-radius: 5px;
     color: black;
     position: absolute;
+    z-index: 5;
     top: 28px;
     left: -7px;
     background-color: white;
@@ -564,6 +565,7 @@
 }
 
 .lead-profile-details-container {
+    position: relative;
     width: 100%;
     display: flex;
     flex-direction: row;
@@ -634,11 +636,16 @@
     font-family: "Geist";
     font-size: 16px;
     margin-top: 11.5px;
-    color: #818181;
+    color: #a6a6a6;
 }
 
-.profile-body span{
-    color: #c2c2c2;
+.profile-body-item-title {
+    text-transform: capitalize;
+    color: rgb(150, 150, 150);
+}
+
+.profile-body-item-value {
+    color: #c1c1c1;
 }
 
 .interaction-header-title {
@@ -737,13 +744,15 @@
 }
 
 .interaction-history-description {
+    font-size: 14px;
     color: #0000007d;
-    max-width: 520px;
+    max-width: 500px;
     white-space: nowrap; /* Prevents text from wrapping */
     overflow: hidden;
     text-overflow: ellipsis;
     display: flex;
     flex-direction: row;
+    align-items: center;
 }
 
 .interaction-history-description::before {
@@ -818,12 +827,9 @@
   
   
   .editButtons {
-    width: 100%;
-    display: flex;
-    justify-content: flex-end;
-    padding-right: 40px;
-    margin-top: -20px;
-    margin-bottom: 20px;
+    position: absolute;
+    bottom: -60px;
+    right: 0;
   }
   
   .lead-profile-edit-actions {

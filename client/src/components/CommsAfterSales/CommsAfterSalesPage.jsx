@@ -920,8 +920,8 @@ const handleStatusChange = async (newStatus) => {
   // Define allowed status transitions
   const statusFlow = {
     'none': ['open'],                  // Only allow → open
-    'open': ['resolved'], // Can progress or resolve
-    'in-progress': ['resolved'],        // Can only move to resolved (no revert to open)
+    'open': ['resolved', 'in-progress'], // Can progress or resolve
+    'in-progress': ['resolved', 'open'],        // Can only move to resolved (no revert to open)
     'resolved': ['open']                // Allow reopening
   };
 

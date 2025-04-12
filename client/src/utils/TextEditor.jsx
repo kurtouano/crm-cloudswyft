@@ -14,7 +14,6 @@ import { Extension } from '@tiptap/core';
 import Paragraph from '@tiptap/extension-paragraph'
 import { FaBold, FaItalic, FaUnderline, FaLink, FaPaperclip, FaFilePdf, FaFileWord, FaFileExcel, FaFileAlt, FaListOl, FaListUl, FaHeading, FaFont, FaImage, FaPalette, FaFillDrip, FaTable } from 'react-icons/fa';
 import PropTypes from 'prop-types';
-import Newsletter from '../../../server/models/NewsletterSchema';
 import { useState, useEffect, useRef, useMemo } from "react";
 import Downshift from 'downshift';
 import "./TextEditor.css";

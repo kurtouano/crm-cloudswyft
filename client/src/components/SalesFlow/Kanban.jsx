@@ -11,7 +11,8 @@ const COLUMN_ORDER = [
   "Provision",
   "Proposal",
   "Negotiation",
-  "On-boarding"
+  "On-boarding",
+  "Lost"
 ];
 
 export default function Kanban() {
@@ -33,6 +34,7 @@ export default function Kanban() {
           Proposal: "Proposal",
           Negotiation: "Negotiation",
           "On-boarding": "On-boarding",
+          Lost: "Lost",
         };        
 
         // ✅ Generate items dynamically
@@ -78,6 +80,18 @@ export default function Kanban() {
     if (source.droppableId === destination.droppableId && 
         source.index === destination.index) return;
   
+    // Determine new status based on destination stage
+    let newStatus;
+    if (destination.droppableId === "Negotiation" || destination.droppableId === "Proposal") {
+      newStatus = "active";
+    } else if (destination.droppableId === "On-boarding") {
+      newStatus = "successful";
+    } else if (destination.droppableId === "Lost") {
+      newStatus = "lost";
+    } else {
+      newStatus = "active"; // Default for other stages
+    }
+  
     // Create a deep copy of the current data
     const newData = JSON.parse(JSON.stringify(data));
   
@@ -94,6 +108,7 @@ export default function Kanban() {
       // Update backend
       await axios.put(`http://localhost:4000/api/leads/${draggableId}`, {
         stage: destination.droppableId,
+        status: newStatus
       });
     } catch (error) {
       console.error("Error updating lead stage:", error);

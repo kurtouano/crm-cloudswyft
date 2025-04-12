@@ -24,6 +24,7 @@ const LeadSchema = new mongoose.Schema(
         "Proposal",
         "Negotiation",
         "On-boarding",
+        "Lost",
       ],
       default: "Lead", // Automatically sets the default stage
       required: true,
