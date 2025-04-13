@@ -8,6 +8,7 @@ body {
 
 .sidenav {
   width: 17%;
+  min-width: 200px;
   height: 1024px;
   background-color: #ffffff;
   box-shadow: 2px 0 10px rgba(233, 233, 233, 0.1);
@@ -82,20 +83,30 @@ body {
 }
 
 .nav-icon {
-  width: 24px; 
-  height: 24px; 
+  width: 23px; 
+  height: 23px; 
   padding-left: 35px;
   margin-right: 15px; 
 }
 
+.nav-react-icons {
+  stroke-width: 1.6px;
+  width: 23px; 
+  height: 23px; 
+}
+
 .logout-link {
-  width: 250px;
+  width: 200px;
   position: fixed;
   bottom: 50px;
-  left: 25px;
+  padding-left: 60px;
   cursor: pointer;
   margin-top: 500px;
   font-weight: bold;
+}
+
+.logout-icon {
+  margin-right: 15px;
 }
 
 .notification-container {
@@ -130,36 +141,65 @@ body {
   
   .notif-badge {
     position: absolute;
-    top: -5px;
-    right: -5px;
+    top: -8px;
+    right: -8px;
     background: red;
     color: white;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: bold;
-    padding: 2px 6px;
+    padding: 4px 7px;
     border-radius: 50%;
+    z-index: 1500;
   }
+  
   
   .notif-dropdown {
     position: absolute;
-    top: 40px;
+    top: 55px;
     right: 0;
-    width: 250px;
+    width: 340px; /* Slightly wider for text & dots spacing */
+    max-height: 450px;
+    overflow-y: auto;
     background: white;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    border-radius: 10px;
-    padding: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 12px;
+    padding: 12px;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 10px;
+    z-index: 1100;
   }
   
-  .notif-item {
-    padding: 10px;
-    font-size: 14px;
-    border-bottom: 1px solid #ddd;
-    cursor: pointer;
+  
+  .notif-dropdown::-webkit-scrollbar {
+    width: 6px;
   }
+  
+  .notif-dropdown::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+  }
+  
+  .notif-dropdown::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+  
+  
+  .notif-item {
+    position: relative;
+    padding: 16px 40px 16px 16px; /* Right padding increased for the dots */
+    font-size: 15px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.3s ease-in-out;
+    margin-bottom: 10px;
+    background-color: white;
+  }
+  
+  
+  
+  
   
   .notif-item:hover {
     background: #f0f0f0;
@@ -171,4 +211,92 @@ body {
     text-align: center;
     color: #888;
   }
+
+ 
+  .notif-item.unread {
+    background-color: #2196F3;
+    color: white;
+    font-weight: bold;
+  }
+
+  .notif-item.unread div,
+.notif-item.unread span,
+.notif-item.unread .notif-options-icon {
+  color: #fff !important;
+}
+
+
+  .notif-item.read {
+    background-color: white;
+    color: black;
+    font-weight: normal;
+  }
+  
+
+
+  .notif-item.unread:hover {
+    background: #1b6bd4;
+  }
+
+  .notif-item.unread .notif-option-item {
+    background-color: #444444;
+  }
+
+
+  .notif-item.unread .notif-option-item:hover {
+    background-color: #b8b8b8;
+    color: #fff;
+  }
+
+
+  .notif-item.read:hover  {
+    background: #f0f0f0;
+  }
+
+
+.notif-options-icon {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  cursor: pointer;
+  font-size: 24px;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+
+
+.notif-option-menu {
+  position: absolute;
+  top: 30px;
+  right: 10px;
+  background: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  z-index: 999;
+}
+
+.notif-option-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.notif-option-item:hover {
+  background-color: #444444;  
+  color: #fff;
+}
+
+.notif-time {
+  font-size: 13px;
+  color: #888;
+  margin-top: 4px;
+}
+
+.notif-item.unread .notif-time {
+  color: rgba(255, 255, 255, 0.8); /* Light but not too bright */
+}
+
+.notif-item.read .notif-time {
+  color: #6c757d; /* Muted elegant gray */
+}
 

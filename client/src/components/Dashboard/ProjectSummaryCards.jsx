@@ -1,30 +1,7 @@
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
-
-const ActiveProjectIcon = () => (
-  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="/src/assets/proj-summary-main-icon-1.svg">
-    <rect width="24" height="24" rx="3.5" fill="#1BB9F4"/>
-    <path d="M15.5 3H8.5C6.567 3 5 4.567 5 6.5V17.5C5 19.433 6.567 21 8.5 21H15.5C17.433 21 19 19.433 19 17.5V6.5C19 4.567 17.433 3 15.5 3Z" stroke="white" strokeWidth="2"/>
-    <path d="M9 8H15" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-    <path d="M9 12H15" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-    <path d="M9 16H12" stroke="white" strokeWidth="2" strokeLinecap="round"/> 
-  </svg>
-);
-
-const CompleteProjectIcon = () => (
-  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="24" height="24" rx="3.5" fill="#10387B"/>
-    <path d="M12 3C7.59 3 4 6.59 4 11C4 15.41 7.59 19 12 19C16.41 19 20 15.41 20 11C20 6.59 16.41 3 12 3ZM12 17C8.69 17 6 14.31 6 11C6 7.69 8.69 5 12 5C15.31 5 18 7.69 18 11C18 14.31 15.31 17 12 17Z" fill="white"/>
-    <path d="M10 9.5L12 11.5L15 8.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const NetPromoterScoreIcon = () => (
-  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="24" height="24" rx="3.5" fill="#1976D2"/>
-    <path d="M6 18V6H9L12 9L15 6H18V18H6Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M9 14H15" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-  </svg>
-);
+import { FiFileText } from "react-icons/fi";
+import { FiAward } from "react-icons/fi";
+import { AiOutlineCheckCircle } from "react-icons/ai";
 
 // Sample data (Ready for backend integration)
 const projectData = [
@@ -34,7 +11,7 @@ const projectData = [
     total: 5378,
     percentage: 15,
     color: "#1BB9F4",
-    icon: <ActiveProjectIcon />,
+    icon: <FiFileText className="summary-cards-react-icon card-icon-1"/>,
     growth: "3.45%",
     image: "/src/assets/proj-summary-up-icon-1.svg",
   },
@@ -44,7 +21,7 @@ const projectData = [
     total: 3378,
     percentage: 75,
     color: "#10387B",
-    icon: <CompleteProjectIcon />,
+    icon: <AiOutlineCheckCircle className="summary-cards-react-icon card-icon-2"/>,
     growth: "1.3%",
     image: "/src/assets/proj-summary-up-icon-2.svg",
   },
@@ -54,7 +31,7 @@ const projectData = [
     total: 1000,
     percentage: 65,
     color: "#1976D2",
-    icon: <NetPromoterScoreIcon />,
+    icon: <FiAward className="summary-cards-react-icon card-icon-3"/>,
     growth: "1.3%",
     image: "/src/assets/proj-summary-up-icon-3.svg",
   },
@@ -82,7 +59,7 @@ export default function ProjectSummaryCards() {
                 pathColor: project.color, // Darker progress color
                 trailColor: "#E0E0E0", // Lighter background
                 textColor: "#333",
-                textSize: "25px", // Increase text size
+                textSize: "24px", // Increase text size
                 textAlign: "center", // Ensures text is centered
               })}
             />
