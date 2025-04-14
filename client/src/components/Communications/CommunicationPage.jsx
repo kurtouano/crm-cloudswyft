@@ -1,4 +1,3 @@
-import useMicrosoftAuthentication from "../../utils/AuthMicrosoft.js";
 import { useEffect, useState, useMemo, useCallback, useRef} from "react";
 import { useLocation } from "react-router-dom";
 import Fuse from "fuse.js"; // 🔍 Import Fuse.js
@@ -12,7 +11,6 @@ import DOMPurify from 'dompurify';
 import "./Communication.css";
 
 export default function CommunicationPageNEW () {
-  useMicrosoftAuthentication();
   localStorage.setItem("currentPage", "communications");
   // Basic states
   const location = useLocation();
@@ -377,7 +375,7 @@ export default function CommunicationPageNEW () {
     };
 
     fetchEmails();
-    const interval = setInterval(fetchEmails, 12000); // Auto-fetch every 15 seconds
+    const interval = setInterval(fetchEmails, 10000); // Auto-fetch every 10000
     return () => clearInterval(interval);
   }, []);
 

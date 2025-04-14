@@ -1,4 +1,3 @@
-import useMicrosoftAuthenticationSupport from "../../utils/AuthMicrosoftAfterSales.js";
 import { useEffect, useState, useMemo, useCallback, useRef} from "react";
 import { useLocation } from "react-router-dom";
 import Fuse from "fuse.js"; // 🔍 Import Fuse.js
@@ -13,8 +12,6 @@ import "../Communications/Communication.css";
 import { io } from "socket.io-client";
 
 export default function CommsAfterSalesPage() {
-  useMicrosoftAuthenticationSupport();
-  localStorage.setItem("currentPage", "customer-support");
   // Basic states
   const location = useLocation();
   const companyDisplayName = "Cloudswyft Customer Support";

@@ -3,8 +3,11 @@ import TeamsTable from '../components/SalesTeam/TeamsTable';
 import RegisterEmployee from '../components/SalesTeam/RegisterEmployee';
 import ProductivitySpecialist from '../components/SalesTeam/ProductivitySpecialist';
 import SpecialistStatsCards from '../components/SalesTeam/SpecialistStatsCards';
+import useMicrosoftAuthentication from '../utils/AuthMicrosoft';
 
 export default function SalesTeam() {
+  useMicrosoftAuthentication();
+
   return (
     <>
       <div className='salesteam-page-container'>

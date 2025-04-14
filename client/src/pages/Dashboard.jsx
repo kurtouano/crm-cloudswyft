@@ -1,17 +1,19 @@
 import '../components/Dashboard/Dashboard.css';
 import LeadsTable from '../components/Dashboard/LeadsTable';
-import CircularProgressChart from '../components/Dashboard/CircularProgressChart';
+import CircularProgressChart from '../components/Dashboard/CustomerSatisfaction';
 import OnboardedClientsChart from '../components/Dashboard/OnboardedClientsChart';
 import ProjectSummaryCards from '../components/Dashboard/ProjectSummaryCards';
 import ResponseTime from '../components/Dashboard/ResponseTime';
 import ClickThroughRate from '../components/Dashboard/ClickThroughRate';
 import HandlingResponse from '../components/Dashboard/HandlingResponse';
+import useMicrosoftAuthentication from '../utils/AuthMicrosoft';
 
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useEffect, useState } from 'react';
 
 export default function Dashboard() {
+  useMicrosoftAuthentication();
   const [clickData, setClickData] = useState([]);
   const [handlingData, setHandlingData] = useState([]);
 

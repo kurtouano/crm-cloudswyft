@@ -1,4 +1,3 @@
-import useMicrosoftAuthentication from "../../utils/AuthMicrosoft.js";
 import { useState, useEffect, useMemo } from "react";
 import ReactPaginate from "react-paginate";
 import { useNavigate } from "react-router-dom";
@@ -34,8 +33,6 @@ export default function AccountPage() {
   const [userRole, setUserRole] = useState(localStorage.getItem("role"));
 
   const displayedLeads = filteredLeads.slice(page * rowsPerPage, (page + 1) * rowsPerPage);
-
-  useMicrosoftAuthentication(); // Ensure user is authenticated in Microsoft
 
   // Fetch leads from the backend
   useEffect(() => {
