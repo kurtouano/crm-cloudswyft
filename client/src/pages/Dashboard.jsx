@@ -3,6 +3,7 @@ import LeadsTable from '../components/Dashboard/LeadsTable';
 import CircularProgressChart from '../components/Dashboard/CircularProgressChart';
 import OnboardedClientsChart from '../components/Dashboard/OnboardedClientsChart';
 import ProjectSummaryCards from '../components/Dashboard/ProjectSummaryCards';
+import ResponseTime from '../components/Dashboard/ResponseTime';
 import ClickThroughRate from '../components/Dashboard/ClickThroughRate';
 import HandlingResponse from '../components/Dashboard/HandlingResponse';
 
@@ -98,7 +99,7 @@ export default function Dashboard() {
     doc.setFontSize(14);
     doc.text("Handling Time", 14, handlingY);
 
-    const handlingHeaders = ["Handling Time Range (Hours)", "Number of Responses"];
+    const handlingHeaders = ["Handling Time Range (Hours)", "Number of Tickets"];
     const handlingRows = handlingData.map(row => [row.hours, row.responses.toString()]);
 
     autoTable(doc, {
@@ -150,7 +151,7 @@ export default function Dashboard() {
           <OnboardedClientsChart />
         </div>
         <div className="onboarded-dashboard-grid-small">
-          <ProjectSummaryCards />
+          <ResponseTime />
         </div>
       </div>
 

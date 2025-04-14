@@ -1053,6 +1053,11 @@ padding-inline-start: 40px;
     left: 10px;
 }
 
+.support-stats-container {
+    position: absolute;
+    right: 10px;
+}
+
 .support-status-select {
     padding: 5px 20px;
     border-radius: 4px;
