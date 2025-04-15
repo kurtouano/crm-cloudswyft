@@ -1,4 +1,3 @@
-import useMicrosoftAuthentication from "../../utils/AuthMicrosoft.js";
 import { useState, useEffect, useMemo } from "react";
 import ReactPaginate from "react-paginate";
 import { useNavigate } from "react-router-dom";
@@ -35,8 +34,6 @@ export default function AccountPage() {
 
   const displayedLeads = filteredLeads.slice(page * rowsPerPage, (page + 1) * rowsPerPage);
 
-  useMicrosoftAuthentication(); // Ensure user is authenticated in Microsoft
-
   // Fetch leads from the backend
   useEffect(() => {
     const fetchLeads = async () => {
@@ -58,38 +55,48 @@ export default function AccountPage() {
     fetchLeads();
   }, []);
 
-  // Filter leads based on selected filter
   useEffect(() => {
-    let filtered = leads;
-  
-    // Apply status filter
+    let filtered = [...leads];
+    
+    // Apply status filter first
     if (selectedFilter === "new") {
       const today = new Date();
       const sevenDaysAgo = new Date(today.setDate(today.getDate() - 7));
-      filtered = leads.filter((lead) => {
+      filtered = filtered.filter((lead) => {
         const leadDate = new Date(lead.createdAt);
         return leadDate >= sevenDaysAgo;
       });
-    } else if (selectedFilter === "active") {
-      filtered = leads.filter((lead) => lead.status === "active");
-    } else if (selectedFilter === "successful") {
-      filtered = leads.filter((lead) => lead.status === "successful");
-    } else if (selectedFilter === "lost") {
-      filtered = leads.filter((lead) => lead.status === "lost");
+    } 
+    else if (selectedFilter === "active") {
+      filtered = filtered.filter((lead) => lead.status === "active");
+    } 
+    else if (selectedFilter === "successful") {
+      filtered = filtered.filter((lead) => lead.status === "successful");
+    } 
+    else if (selectedFilter === "lost") {
+      filtered = filtered.filter((lead) => lead.status === "lost");
     }
   
-    // Apply search query to the filtered leads
+    // Apply search query
     if (searchQuery) {
       const fuse = new Fuse(filtered, { keys: ["leadName", "company"], threshold: 0.3 });
       const results = fuse.search(searchQuery).map(({ item }) => item);
       filtered = results;
     }
   
-    // Sort the final filtered leads by createdAt in descending order (newest first)
-    filtered = [...filtered].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    // Apply sorting
+    if (selectedFilter === "temperature") {
+      filtered = [...filtered].sort((a, b) => {
+        const order = { hot: 1, warm: 2, cold: 3 };
+        return order[a.temperature] - order[b.temperature];
+      });
+    } else {
+      // Default sort by createdAt (newest first)
+      filtered = [...filtered].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
   
     setFilteredLeads(filtered);
-    setPage(0); // Reset to the first page after filtering
+    setPage(0);
   }, [selectedFilter, searchQuery, leads]);
 
 
@@ -104,15 +111,17 @@ export default function AccountPage() {
 
   const cardData = useMemo(() => {
     const totalLeads = leads.length;
-    const highPriorityLeads = leads.filter((lead) => lead.priority === "High").length;
     const conversionRate = totalLeads > 0 ? ((leads.filter((lead) => lead.status === "successful").length / totalLeads) * 100).toFixed(2) + "%" : "0%";
-    const recentActivity = `${leads.filter((lead) => lead.lastInteraction).length} Interactions`;
+    const activeLeadsCount = leads.filter(lead => lead.status === "active").length;
+    const hotWarmLeadsCount = leads.filter(lead => 
+      ["hot", "warm"].includes(lead.temperature)
+    ).length;
   
     return [
       { title: "Total Number of Leads", value: totalLeads, bgColor: "#2196F3", icon: usersIcon },
-      { title: "Conversion Rate", value: conversionRate, bgColor: "#1BB9F4", icon: clockIcon },
-      { title: "Recent Activity", value: recentActivity, bgColor: "#2196F3", icon: hourglassIcon },
-      { title: "High Priority Leads", value: `${highPriorityLeads} Urgent`, bgColor: "#307ADB", icon: highPriorityIcon },
+      { title: "Conversion Rate", value: conversionRate, bgColor: "#1BB9F4", icon: hourglassIcon },
+      { title: "Active Leads", value: activeLeadsCount, bgColor: "#2196F3", icon: clockIcon },
+      { title: "High-Interest Leads", value: hotWarmLeadsCount, bgColor: "#307ADB", icon: highPriorityIcon },
     ];
   }, [leads]);
 
@@ -120,38 +129,7 @@ export default function AccountPage() {
   const handleSearch = (event) => {
     const query = event.target.value;
     setSearchQuery(query);
-  
-    // Apply the search query to the already filtered leads
-    let filtered = leads;
-  
-    // Apply status filter first
-    if (selectedFilter === "new") {
-      const today = new Date();
-      const sevenDaysAgo = new Date(today.setDate(today.getDate() - 7));
-      filtered = leads.filter((lead) => {
-        const leadDate = new Date(lead.createdAt);
-        return leadDate >= sevenDaysAgo;
-      });
-    } else if (selectedFilter === "active") {
-      filtered = leads.filter((lead) => lead.status === "active");
-    } else if (selectedFilter === "successful") {
-      filtered = leads.filter((lead) => lead.status === "successful");
-    } else if (selectedFilter === "lost") {
-      filtered = leads.filter((lead) => lead.status === "lost");
-    }
-  
-    // Apply search query to the filtered leads
-    if (query) {
-      const fuse = new Fuse(filtered, { keys: ["leadName", "company"], threshold: 0.3 });
-      const results = fuse.search(query).map(({ item }) => item);
-      filtered = results;
-    }
-  
-    // Sort the final filtered leads by createdAt in descending order (newest first)
-    filtered = [...filtered].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  
-    setFilteredLeads(filtered);
-    setPage(0); // Reset to the first page after filtering
+
   };
 
   // Handle filter dropdown change
@@ -317,6 +295,7 @@ export default function AccountPage() {
             >
               <option value="">Select Status</option>
               <option value="new">New (Last 7 Days)</option> {/* Newest for the last 7 Days*/}
+              <option value="temperature">High Interest</option>  
               <option value="active">Active</option>
               <option value="successful">Closed - Successful</option>
               <option value="lost">Closed - Lost</option>

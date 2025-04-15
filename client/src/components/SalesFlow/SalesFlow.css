@@ -18,9 +18,10 @@
     width: 100%;
     min-height: 200px;
     min-width: 300px;
-    max-height: 710px;
+    max-height: 740px;
     padding: 4px;
     padding-right: 15px;
+    overflow-y: scroll;
 }
 
 .kanban-container-inner {
@@ -29,7 +30,6 @@
     row-gap: 20px;
     width: 100%;
     padding-bottom: 20px;
-    overflow-x: scroll;
 }
 
 .kanban-column-title-container {
@@ -86,7 +86,7 @@
 
 .kanban-item-description {
     font-size: 11px;
-    padding-bottom: 40px;
+    padding-bottom: 20px;
 }
 
 .kanban-item-divider {

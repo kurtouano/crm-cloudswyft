@@ -139,7 +139,7 @@ export default function ProductivitySpecialist() {
         </a>
       </div>
 
-      <ResponsiveContainer width="100%" height={400}>
+      <ResponsiveContainer width="100%" height={320}>
         <LineChart
           data={chartData}
           margin={{ top: 10, right: 20, left: 10, bottom: 20 }}

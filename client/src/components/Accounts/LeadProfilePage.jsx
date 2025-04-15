@@ -5,7 +5,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import ReactPaginate from "react-paginate";
 import usersIcon from "../../assets/users.png";
 import clockIcon from "../../assets/clock.png";
-import { FiChevronUp, FiChevronDown} from "react-icons/fi";
 import hourglassIcon from "../../assets/hourglass.png";
 import highPriorityIcon from "../../assets/highpriority.png";
 import leadIcon from "../../assets/lead-profile-icon.svg";
@@ -131,9 +130,9 @@ export default function LeadProfilePage() {
       bgColor: "#2196F3", 
       icon: usersIcon 
     },
-    { title: "Last Contact Date", value: "02/07/25", bgColor: "#1BB9F4", icon: clockIcon },
-    { title: "Next Action Needed", value: "Follow Up", bgColor: "#2196F3", icon: hourglassIcon },
-    { title: "Lead Score", value: "Priority", bgColor: "#307ADB", icon: highPriorityIcon },
+    { title: "Sales Flow Stage", value: leadData.stage, bgColor: "#1BB9F4", icon: hourglassIcon },
+    { title: "Lead Warmth", value: leadData.temperature, bgColor: "#2196F3", icon: highPriorityIcon },
+    { title: "Date Added", value: leadData.importDate, bgColor: "#307ADB", icon: clockIcon },
   ];
 
   const dropdownOptions = [

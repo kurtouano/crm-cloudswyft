@@ -83,11 +83,11 @@ export default function RegisterEmployee() {
           required
         />
 
-        <label className="form-label">Employee ID</label>
+        <label className="form-label ">Employee ID</label>
         <input
           type="text"
           name="employeeId"
-          className="form-input"
+          className="form-input employee-id-input"
           placeholder="CS0085"
           value={formData.employeeId}
           onChange={handleChange}

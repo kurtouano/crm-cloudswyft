@@ -11,7 +11,9 @@ const LeadSchema = new mongoose.Schema(
     leadID: { type: Number, unique: true }, // Auto-incremented number
     importDate: { type: Date, default: Date.now }, 
     status: { type: String, required: true, default: "active" },
-    temperature: { type: String, required: true, default: "warm" },
+    temperature: { type: String, 
+      enum: ["warm", "hot", "cold"], 
+      required: true, default: "warm" },
     starred: {type: Boolean, default: false},
     starredForSupport: {type: Boolean, default: false},
     stage: {

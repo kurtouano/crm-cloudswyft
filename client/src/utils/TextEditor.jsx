@@ -211,13 +211,16 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange, editorId, c
         },
         {
           id: 'issue-resolved',
-          name: 'Issue Resolved',
+          name: 'Resolved Reply',
           content: `
             <p>Hi <span style="color:#1155cc;">[First Name]</span>,</p><br>
-            <p>We're pleased to inform you that your issue with [Product/Service] has been resolved.</p>
-            <p>Resolution details: [Description]</p><br>
-            <p>Please let us know if you need anything else!</p><br>
-            <p>Cheers,<br>Support Team</p>
+            <p>Thank you for reaching out! If there's anything else you need, feel free to let us know — we're always here to help.</p><br>
+            <p>We'd love to hear how we did today. Please rate your experience:</p><br>
+            <p><a href="http://localhost:4000/api/feedback?rating=happy" style="color:#1155cc; text-decoration: none;">😊 Happy</a> – I'm impressed!</p>
+            <p><a href="http://localhost:4000/api/feedback?rating=neutral" style="color:#1155cc; text-decoration: none;">😐 Neutral</a> – You can do better next time.</p>
+            <p><a href="http://localhost:4000/api/feedback?rating=sad" style="color:#1155cc; text-decoration: none;">😞 Sad</a> – I'm quite unhappy with this.</p><br>
+            <p>Your feedback helps us improve and serve you better.</p><br>
+            <p>Best regards,<br>[Your Name / Your Team Name]</p>
           `
         },
         {

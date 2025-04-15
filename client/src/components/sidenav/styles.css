@@ -110,7 +110,6 @@ body {
 }
 
 .notification-container {
-    position: relative;
     background: white;
     z-index: 99;
     box-shadow: 20px 0 10px rgba(190, 190, 190, 0.1);

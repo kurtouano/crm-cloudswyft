@@ -10,6 +10,9 @@ import emailRoutes from "./routes/emailRoutes.js";
 import customerSupport from "./routes/emailAfterSalesRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
 import newsletterRoutes from "./routes/newsletterRoutes.js";
+import ticketRoutes from "./routes/ticketRoutes.js";
+import feedbackRoutes from "./routes/feedbackRoutes.js";
+
 
 dotenv.config();
 const app = express();
@@ -35,6 +38,8 @@ app.use("/api/leads", leadRoutes);
 app.use("/api/emails", emailRoutes);
 app.use("/api/emails/support", customerSupport);
 app.use("/api/newsletters", newsletterRoutes);
+app.use("/api/tickets", ticketRoutes);
+app.use("/api/feedback", feedbackRoutes);
 
 app.set('io', io);
 

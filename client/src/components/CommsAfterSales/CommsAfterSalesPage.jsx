@@ -1,4 +1,3 @@
-import useMicrosoftAuthenticationSupport from "../../utils/AuthMicrosoftAfterSales.js";
 import { useEffect, useState, useMemo, useCallback, useRef} from "react";
 import { useLocation } from "react-router-dom";
 import Fuse from "fuse.js"; // 🔍 Import Fuse.js
@@ -13,8 +12,6 @@ import "../Communications/Communication.css";
 import { io } from "socket.io-client";
 
 export default function CommsAfterSalesPage() {
-  useMicrosoftAuthenticationSupport();
-  localStorage.setItem("currentPage", "customer-support");
   // Basic states
   const location = useLocation();
   const companyDisplayName = "Cloudswyft Customer Support";
@@ -59,7 +56,11 @@ export default function CommsAfterSalesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [attachments, setAttachments] = useState({}); 
   const [replies, setReplies] = useState({});
-  const temperatureUpdates = useRef(new Set());
+
+  //Tickets
+  const [ticketStats, setTicketStats] = useState(null);
+  const [threadStatuses, setThreadStatuses] = useState({});
+  const [statusLoaded, setStatusLoaded] = useState(false);
 
   const allEmails = [ // Merge Received and Sent Emails
     ...filteredEmails.map(email => ({ ...email, type: "received" })), 
@@ -581,7 +582,10 @@ export default function CommsAfterSalesPage() {
         throw new Error(data.error || "Failed to send reply");
       }
 
-      await handleStatusChange("in-progress");
+      if (threadStatuses[formDataReply.threadId] !== 'in-progress') {
+        await handleStatusChange('in-progress');
+      }
+
       alert("Reply sent successfully!");
       setFormDataReply({ messageId: "", text: "", threadId: "" });
       setAttachment(null);
@@ -914,70 +918,226 @@ useEffect(() => {
   };
 }, [activeLead?._id]);
 
-const handleStatusChange = async (newStatus) => {
-  if (!activeLead) return;
+const handleStatusChange = useCallback(async (newStatus, isAutomatic = false) => {
+  if (!activeLead || !formDataReply.threadId) return;
 
-  // Define allowed status transitions
-  const statusFlow = {
-    'none': ['open'],                  // Only allow → open
-    'open': ['resolved', 'in-progress'], // Can progress or resolve
-    'in-progress': ['resolved', 'open'],        // Can only move to resolved (no revert to open)
-    'resolved': ['open']                // Allow reopening
-  };
-
-  // Get current status (default to 'none' if undefined)
-  const currentStatus = activeLead.afterSalesStatus || 'none';
-  
-  // Check if transition is valid
-  if (!statusFlow[currentStatus]?.includes(newStatus)) {
-    alert(`Invalid status transition: ${currentStatus} → ${newStatus}`);
-    return;
-  }
-
-  // Optimistic UI update
-  const updateLeadState = (lead) => 
-    lead._id === activeLead._id 
-      ? { ...lead, afterSalesStatus: newStatus } 
-      : lead;
-
-  setLeads(prev => prev.map(updateLeadState));
-  setFilteredLeads(prev => prev.map(updateLeadState));
-  setSortedLeads(prev => prev.map(updateLeadState));
-  setActiveLead(prev => ({ ...prev, afterSalesStatus: newStatus }));
-
-  // API call to persist the change
   try {
-    const response = await fetch(
-      `http://localhost:4000/api/leads/support/updateSupportStatus/${activeLead._id}`,
-      {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
-      }
-    );
+    // First verify if ticket exists
+    const verifyResponse = await fetch(`http://localhost:4000/api/tickets/${encodeURIComponent(formDataReply.threadId)}`);
+    const ticketExists = verifyResponse.ok;
 
-    if (!response.ok) {
-      throw new Error('Failed to update status');
+    // Get current status - fetch fresh from backend
+    const currentStatus = ticketExists 
+      ? (await verifyResponse.json())?.status || 'none'
+      : 'none';
+
+    console.log(`Status change attempt: ${currentStatus} → ${newStatus} (automatic: ${isAutomatic})`);
+
+    // If we're already in the desired state, do nothing
+    if (currentStatus === newStatus) {
+      console.log(`Already in ${newStatus} state, skipping update`);
+      return;
     }
 
-    // Optional: Fetch fresh data if needed
-    const data = await response.json();
-    console.log('Status updated successfully:', data);
+    // CRITICAL FIX: Never automatically change from resolved or in-progress to open
+    if (isAutomatic) {
+      if (currentStatus === 'resolved') {
+        console.log('Prevented automatic status change from resolved');
+        return;
+      }
+      
+      if (currentStatus === 'in-progress' && newStatus === 'open') {
+        console.log('Prevented automatic status change from in-progress to open');
+        return;
+      }
+    }
 
+    // Define allowed status transitions
+    const statusFlow = {
+      'none': ['open'],
+      'open': ['resolved', 'in-progress'],
+      'in-progress': ['resolved', 'open'],
+      'resolved': ['open']
+    };
+
+    if (!isAutomatic) {
+      if (!statusFlow[currentStatus]?.includes(newStatus)) {
+        if (currentStatus === 'in-progress' && newStatus === 'in-progress') {
+          return;
+        }
+        alert(`Invalid status transition: ${currentStatus} → ${newStatus}`);
+        return;
+      }
+    }
+
+    // Optimistic UI update
+    setThreadStatuses(prev => ({
+      ...prev,
+      [formDataReply.threadId]: newStatus
+    }));
+
+    let endpoint;
+    let method = 'POST';
+    let body;
+    
+    const encodedThreadId = encodeURIComponent(formDataReply.threadId);
+    
+    if (newStatus === 'open') {
+      // Use different endpoint for new tickets vs reopening
+      endpoint = currentStatus === 'none' 
+        ? 'http://localhost:4000/api/tickets/handle-email'
+        : `http://localhost:4000/api/tickets/${encodedThreadId}/reopen`;
+      
+      body = currentStatus === 'none'
+        ? JSON.stringify({ 
+            threadId: formDataReply.threadId,
+            sender: activeLead.bestEmail 
+          })
+        : undefined;
+    } else if (newStatus === 'in-progress') {
+      endpoint = 'http://localhost:4000/api/tickets/handle-reply';
+      body = JSON.stringify({ threadId: formDataReply.threadId });
+    } else if (newStatus === 'resolved') {
+      endpoint = `http://localhost:4000/api/tickets/${encodedThreadId}/resolve`;
+    }
+
+    const response = await fetch(endpoint, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body
+    });
+
+    if (!response.ok) throw new Error(`Failed to update ticket status: ${response.status}`);
+
+    // Verify the update was successful
+    const statusResponse = await fetch(`http://localhost:4000/api/tickets/${encodedThreadId}`);
+    if (statusResponse.ok) {
+      const ticket = await statusResponse.json();
+      console.log(`Verified status update: ${ticket?.status}`);
+      
+      // Ensure frontend matches verified status
+      if (ticket?.status !== newStatus) {
+        setThreadStatuses(prev => ({
+          ...prev,
+          [formDataReply.threadId]: ticket?.status || currentStatus
+        }));
+      }
+    }
+
+    // Update stats
+    const statsResponse = await fetch('http://localhost:4000/api/tickets/stats');
+    if (statsResponse.ok) {
+      const statsData = await statsResponse.json();
+      setTicketStats(statsData);
+    }
+    
   } catch (error) {
     console.error("Error updating status:", error);
-    
-    // Revert UI if update fails
-    const revertLeadState = (lead) => 
-      lead._id === activeLead._id 
-        ? { ...lead, afterSalesStatus: currentStatus } 
-        : lead;
+    // Revert to previous status on error
+    const currentStatus = await fetchThreadStatus(formDataReply.threadId);
+    setThreadStatuses(prev => ({
+      ...prev,
+      [formDataReply.threadId]: currentStatus
+    }));
+  }
+}, [activeLead, formDataReply.threadId, threadStatuses, setThreadStatuses, setTicketStats]);
 
-    setLeads(prev => prev.map(revertLeadState));
-    setFilteredLeads(prev => prev.map(revertLeadState));
-    setSortedLeads(prev => prev.map(revertLeadState));
+useEffect(() => {
+  const fetchTicketStats = async () => {
+    try {
+      const response = await fetch('http://localhost:4000/api/tickets/stats');
+      const data = await response.json();
+      setTicketStats(data);
+    } catch (error) {
+      console.error("Error fetching ticket stats:", error);
+    }
+  };
+  
+  fetchTicketStats();
+}, [activeLead]);
+
+const fetchThreadStatus = async (threadId) => {
+  if (!threadId) return 'none';
+  
+  try {
+    const response = await fetch(`http://localhost:4000/api/tickets/${threadId}`);
+    if (response.ok) {
+      const ticket = await response.json();
+      const status = ticket?.status || 'none';
+      
+      setThreadStatuses(prev => ({
+        ...prev,
+        [threadId]: status
+      }));
+      
+      setStatusLoaded(true); // Mark status as loaded
+      return status;
+    }
+    return 'none';
+  } catch (error) {
+    console.error("Error fetching ticket status:", error);
+    return 'none';
   }
 };
+
+useEffect(() => {
+  const updateCurrentThreadStatus = async () => {
+    if (formDataReply.threadId) {
+      const status = await fetchThreadStatus(formDataReply.threadId);
+      setThreadStatuses(prev => ({
+        ...prev,
+        [formDataReply.threadId]: status
+      }));
+    }
+  };
+  
+  updateCurrentThreadStatus();
+}, [formDataReply.threadId]);
+
+// In your CommsAfterSalesPage component
+useEffect(() => {
+  const checkForNewCustomerEmail = async () => {
+    if (!displayedEmails.length || !formDataReply.threadId || !activeLead) return;
+  
+    const lastEmail = displayedEmails[displayedEmails.length - 1];
+    
+    if (lastEmail.type === "received" && 
+        lastEmail.sender.toLowerCase() === activeLead.bestEmail.toLowerCase()) {
+      
+      try {
+        const currentStatus = await fetchThreadStatus(formDataReply.threadId);
+        
+        // Only create new ticket if status is 'none' and it's a customer email
+        if (currentStatus === 'none') {
+          const response = await fetch('http://localhost:4000/api/tickets/handle-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              threadId: formDataReply.threadId,
+              sender: activeLead.bestEmail
+            })
+          });
+          
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error("Ticket creation failed:", errorData);
+            return;
+          }
+          
+          await fetchThreadStatus(formDataReply.threadId); // Refresh status
+        }
+      } catch (error) {
+        console.error("Error in ticket handling:", error);
+      }
+    }
+  };
+
+  const timer = setTimeout(() => {
+    checkForNewCustomerEmail();
+  }, 2000); // Increased delay to 2 seconds
+  
+  return () => clearTimeout(timer);
+}, [displayedEmails, formDataReply.threadId, activeLead, handleStatusChange]);
 
   return (
     <div className="communications-container">
@@ -1190,14 +1350,16 @@ const handleStatusChange = async (newStatus) => {
           {/* Left Side Icons */}
           <div className="email-header-left">
             <div className="support-status-dropdown">
-              <select className="support-status-select"
-                  value={activeLead?.afterSalesStatus || "none"}
-                  onChange={(e) => handleStatusChange(e.target.value)}
+              <select
+                className="support-status-select"
+                value={formDataReply.threadId ? (threadStatuses[formDataReply.threadId] || 'none') : 'none'}
+                onChange={(e) => handleStatusChange(e.target.value)}
+                disabled={!formDataReply.threadId}
               >
-                  <option value="none">None</option>
-                  <option value="open">Open</option>
-                  <option value="in-progress">In Progress</option>
-                  <option value="resolved">Resolved</option>
+                <option value="none">None</option>
+                <option value="open">Open</option>
+                <option value="in-progress">In Progress</option>
+                <option value="resolved">Resolved</option>
               </select>
             </div>
           </div>

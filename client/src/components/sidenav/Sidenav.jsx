@@ -1,10 +1,11 @@
 import axios from "axios"; // ✅ Make sure this is imported
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import io from "socket.io-client";
 import "./styles.css";
 import { FiGrid, FiCheckSquare, FiUsers, FiBookOpen, FiLogOut } from "react-icons/fi";  // Sidenav Icons
 import { LuMailQuestion, LuMailSearch } from "react-icons/lu";
+import notifSound from '../../assets/Sounds/notif-sound.mp3' 
 
 const socket = io("http://localhost:4000"); // ✅ Connect to backend WebSocket server
 
@@ -23,6 +24,13 @@ const Sidenav = () => {
     const [notifications, setNotifications] = useState([]);
     const unreadCount = notifications.filter((notif) => !notif.viewed).length;
     const [optionsVisible, setOptionsVisible] = useState({});
+
+    const audioRef = useRef(null);
+
+    useEffect(() => {
+        audioRef.current = new Audio(notifSound);
+        audioRef.current.volume = 0.7; // Set volume to 30%
+    }, []);
 
     const formatTimeAgo = (timestamp) => {
         const date = new Date(timestamp);
@@ -47,8 +55,6 @@ const Sidenav = () => {
         return `${years}y ago`;
     };
     
-      
-
     useEffect(() => {
         const fetchStoredNotifications = async () => {
             try {
@@ -77,6 +83,11 @@ const Sidenav = () => {
     useEffect(() => {
         socket.on("newReplyNotification", (data) => {
             console.log("🔔 New real-time notification received:", data);
+
+            if (audioRef.current) {
+                audioRef.current.currentTime = 0; // Rewind to start
+                audioRef.current.play().catch(e => console.log("Audio play failed:", e));
+            }
             
             setNotifications((prev) => {
                 const updatedNotifications = [data, ...prev];
@@ -94,7 +105,7 @@ const Sidenav = () => {
 
     const toggleDropdown = () => setShowDropdown(!showDropdown);
 
-    const handleNotificationClick = async (notifIndex, leadEmail, threadId) => {
+    const handleNotificationClick = async (notifIndex, leadEmail, threadId, emailType) => {
         try {
             await axios.post("http://localhost:4000/api/emails/notifications/viewed", { threadId });
     
@@ -104,8 +115,15 @@ const Sidenav = () => {
                     idx === notifIndex ? { ...notif, viewed: true } : notif
                 )
             );
+
+            console.log(emailType);
     
-            navigate(`/communications?leadEmail=${leadEmail}&threadId=${threadId}`);
+            // Navigate to different routes based on emailType
+            if (emailType === 'revenue') {
+                navigate(`/communications?leadEmail=${leadEmail}&threadId=${threadId}`);
+            } else if (emailType === 'after-sales') {
+                navigate(`/customer-support?leadEmail=${leadEmail}&threadId=${threadId}`);
+            }
         } catch (error) {
             console.error("❌ Failed to mark notification as viewed:", error);
         }
@@ -165,7 +183,7 @@ const Sidenav = () => {
                                   className={`notif-item ${notif.viewed ? "read" : "unread"}`}
                                 >
                                   <div
-                                    onClick={() => handleNotificationClick(index, notif.leadEmail, notif.threadId)}
+                                    onClick={() => handleNotificationClick(index, notif.leadEmail, notif.threadId, notif.emailType)}
                                     style={{ cursor: 'pointer' }}
                                   >
                                     <div>{notif.message}</div>

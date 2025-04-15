@@ -18,7 +18,7 @@
     flex-direction: row;
     align-items: flex-start;
     justify-content: flex-start; 
-    margin-top: 30px;
+    margin-top: 50px;
     gap: 50px; 
   }
   
@@ -34,8 +34,8 @@
   }
   
 .salesteam-page-container .table-container {
+  position: relative;
     width: 70%;
-    margin: 20px 0 0 0;
 }
 
 .salesteam-page-container table {
@@ -65,7 +65,7 @@
   }
 
   .table-body-list-container {
-    height: 45px;
+    height: 43px;
     border-top: 0.45px solid #DADADA;
   }
 
@@ -103,10 +103,9 @@
   }
   
   .pagination-container {
-    display: flex;
-    justify-content: center;
-    padding-top: 15px;
-    width: 100%;
+    position: absolute;
+    bottom: 0;
+
   }
   
   .pagination {
@@ -147,7 +146,7 @@
   .register-employee-container {
     width: 35%;
     background-color: #FFFFFF;
-    padding: 30px;
+    padding: 20px;
     border-radius: 15px;
     box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
     font-family: "Open Sans", sans-serif;
@@ -159,7 +158,7 @@
   .form-title {
     font-size: 20px;
     font-weight: 700;
-    margin-bottom: 25px;
+    margin: 5px 0 25px 10px;
     color: #101357;
     width: 100%;
   }
@@ -180,7 +179,7 @@
   
   .form-input {
     width: 80%;
-    padding: 12px 14px;
+    padding: 8px 18px;
     margin-bottom: 20px;
     border: 2px solid #D1D5DB;
     border-radius: 8px;
@@ -195,6 +194,10 @@
     outline: none;
     border-color: #3b82f6;
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+  }
+
+  .employee-id-input {
+    text-transform: uppercase;
   }
   
   .save-btn {
@@ -253,12 +256,11 @@
 
   
   .productivity-chart-container {
-    width: 58%;
+    width: 60%;
     padding: 30px;
     background-color: white;
     border-radius: 12px;
     box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.05);
-    margin-top: 30px;
     font-family: "Open Sans", sans-serif;
   }
   
@@ -312,9 +314,9 @@
   }
   
   .salescard-box {
-    margin-top: 50px;
-    width: 250px;
-    height: 180px;
+    margin-top: 10px;
+    width: 100%;
+    height: 227px;
     border-radius: 12px;
     display: flex;
     flex-direction: column;
@@ -331,14 +333,15 @@
   }
   
   .salescard-title {
-    font-size: 19px;
+    width: 180px;
+    font-size: 17px;
     font-weight: 600;
     text-align: center;
     margin-bottom: 10px;
   }
   
   .salescard-value {
-    font-size: 32px;
+    font-size: 50px;
     font-weight: 700;
   }
   
@@ -349,23 +352,22 @@
 
 
   .specialist-salescard-container {
+    width: 35%;
     display: grid;
     grid-template-columns: repeat(2, 1fr); /* 2x2 layout */
-    gap: 20px;
-    max-width: 420px;
-    margin-top: 20px;
+    gap: 30px;
   }
 
   .employee-dropdown {
     margin-bottom: 20px;
-    padding: 10px 12px;
+    padding: 2px 12px;
     font-size: 14px;
     font-family: "Open Sans", sans-serif;
     border: 1px solid #ccc;
     border-radius: 8px;
     background-color: #f9f9f9;
     width: 240px;
-    height: 57px;
+    height: 45px;
     outline: none;
     cursor: pointer;
   }

@@ -1,7 +1,7 @@
 import "./SalesTeam.css";
 
 const cards = [
-  { title: "Discovery Calls", value: 10, color: "#4A4A4A", bg: "#F6F6F6" },
+  { title: "Average Lead Finds", value: 10, color: "#4A4A4A", bg: "#F6F6F6" },
   { title: "Provisioning For a Client", value: 11, color: "#1E91FF", bg: "#FFFFFF" },
   { title: "Confirming a Deal", value: 10, color: "#1E91FF", bg: "#FFFFFF" },
   { title: "On-boarding A Client", value: 22, color: "#4A4A4A", bg: "#F6F6F6" },

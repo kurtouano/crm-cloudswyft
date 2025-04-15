@@ -5,17 +5,17 @@ import { useMemo } from "react";
 import PropTypes from 'prop-types';
 
 // Import employee images
-import DefaultAvatar from "../../assets/employees/Default-Avatar.svg";
-import JohnDoeImg from "../../assets/employees/John-Doe.svg";
-import JaneSmithImg from "../../assets/employees/Jane-Smith.svg";
-import AliceJohnsonImg from "../../assets/employees/Alice-Johnson.svg";
+// import DefaultAvatar from "../../assets/employees/Default-Avatar.svg";
+// import JohnDoeImg from "../../assets/employees/John-Doe.svg";
+// import JaneSmithImg from "../../assets/employees/Jane-Smith.svg";
+// import AliceJohnsonImg from "../../assets/employees/Alice-Johnson.svg";
 
-// Employee image mapping
-const employeeImages = {
-  "John Doe": JohnDoeImg,
-  "Jane Smith": JaneSmithImg,
-  "Alice Johnson": AliceJohnsonImg,
-};
+// // Employee image mapping
+// const employeeImages = {
+//   "John Doe": JohnDoeImg,
+//   "Jane Smith": JaneSmithImg,
+//   "Alice Johnson": AliceJohnsonImg,
+// };
 
 const Column = ({ itemsOrder, id, title, ITEMS }) => {
   // Use useMemo to prevent unnecessary re-renders
@@ -49,8 +49,8 @@ const Column = ({ itemsOrder, id, title, ITEMS }) => {
             )}
 
             {memoizedItems.map((item, index) => {
-              const employeeName = item.employee || "Unknown";
-              const employeeImg = employeeImages[employeeName] || DefaultAvatar;
+              {/* const employeeName = item.employee || "Unknown"; */}
+              {/* const employeeImg = employeeImages[employeeName] || DefaultAvatar; */}
 
               return (
                 <Draggable 
@@ -66,11 +66,11 @@ const Column = ({ itemsOrder, id, title, ITEMS }) => {
                       {...provided.dragHandleProps}
                     >
                       <p className="kanban-item-title">{item.title}</p>
-                      <p className="kanban-item-description">{item.description}</p>
-                      <div className="kanban-item-employee-container">
-                        <span className="kanban-item-employee-name">{employeeName}</span>
-                        <img className="kanban-item-employee-avatar" src={employeeImg} alt={employeeName} />
-                      </div>
+                      <p className="kanban-item-description">{item.email}</p>
+                      {/* <div className="kanban-item-employee-container"> */}
+                        {/* <span className="kanban-item-employee-name">{employeeName}</span>
+                        <img className="kanban-item-employee-avatar" src={employeeImg} alt={employeeName} /> */}
+                      {/* </div> */}
                       <div className="kanban-item-divider">
                         <img src={CalendarIcon} alt="Calendar Icon" />
                         <p className="kanban-item-start-time">{item.timeStarted}</p>

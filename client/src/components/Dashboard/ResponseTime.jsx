@@ -8,23 +8,9 @@ export default function HandlingResponse() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("http://localhost:4000/api/tickets/stats");
+        const response = await fetch("http://localhost:4000/api/analytics/handling-time");
         const data = await response.json();
-        
-        // Transform data for your chart
-        const chartData = [
-          { hours: '0-1', tickets: data.find(item => item._id === '0-1 hour')?.count || 0 },
-          { hours: '1-3', tickets: data.find(item => item._id === '1-3 hours')?.count || 0 },
-          { hours: '4-6', tickets: data.find(item => item._id === '4-6 hours')?.count || 0 },
-          { hours: '7-12', tickets: data.find(item => item._id === '7-12 hours')?.count || 0 },
-          { hours: '13-18', tickets: data.find(item => item._id === '13-18 hours')?.count || 0 },
-          { hours: '19-24', tickets: data.find(item => item._id === '19-24 hours')?.count || 0 },
-          { hours: '24-48', tickets: data.find(item => item._id === '24-48 hours')?.count || 0 },
-          { hours: '48-72', tickets: data.find(item => item._id === '48-72 hours')?.count || 0 },
-          { hours: '72+', tickets: data.find(item => item._id === '72+ hours')?.count || 0 }
-        ];
-        
-        setResponseData(chartData);
+        setResponseData(data);
       } catch (error) {
         console.error("Error fetching handling time data:", error);
       }
@@ -40,7 +26,7 @@ export default function HandlingResponse() {
     doc.text("Handling Time Report", 14, 20);
 
     const tableColumn = ["Handling Time Range (Hours)", "Number of Tickets"];
-    const tableRows = responseData.map((item) => [item.hours, item.tickets.toString()]);
+    const tableRows = responseData.map((item) => [item.hours, item.responses.toString()]);
 
     doc.autoTable({
       head: [tableColumn],
@@ -80,22 +66,22 @@ export default function HandlingResponse() {
   };
 
   return (
-    <div className="handling-response-container">
+    <div className="response-time-container">
       <div className="handling-header">
-        <h3 className="handling-title">Handling Time</h3>
+        <h3 className="handling-title">Response Time</h3>
         <button className="download-chart-btn" onClick={generatePdfReport}>
           DOWNLOAD DATA
         </button>
       </div>
 
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={375}>
         <BarChart data={responseData} margin={{ top: 30, right: 20, left: 0, bottom: 38 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis
             dataKey="hours"
             tick={{ fontSize: 12, fill: "#4F4F4F", dy: 7 }}
             label={{
-              value: "Total Handling Time (Hours)",
+              value: "Total Time Before Response (Hours)",
               position: "bottom",
               dy: 8,
               fontSize: 12,
@@ -106,7 +92,7 @@ export default function HandlingResponse() {
             allowDecimals={false}
             tick={{ fontSize: 12, fill: "#4F4F4F", dx: -7 }}
             label={{
-              value: "Number of Tickets",
+              value: "Number of Responses",
               angle: -90,
               position: "insideLeft",
               dy: 65,
@@ -116,7 +102,7 @@ export default function HandlingResponse() {
             }}
           />
           <Tooltip cursor={{ fill: "transparent" }} />
-          <Bar dataKey="tickets" fill="#00A3FF" barSize={30} radius={[4, 4, 0, 0]} />
+          <Bar dataKey="responses" fill="#1976D2" barSize={30} radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>
