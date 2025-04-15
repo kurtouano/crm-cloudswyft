@@ -34,7 +34,7 @@ export default function LeadsTable() {
             <th className='table-header-list lead-table'>Lead Name</th>
             <th className='table-header-list font-geist'>Email</th>
             <th className='table-header-list'>Stage</th>
-            <th className='table-header-list date-table'>Import Date</th>
+            <th className='table-header-list date-table'>Date Added</th>
           </tr>
         </thead>
         <tbody>

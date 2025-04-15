@@ -111,15 +111,17 @@ export default function AccountPage() {
 
   const cardData = useMemo(() => {
     const totalLeads = leads.length;
-    const highPriorityLeads = leads.filter((lead) => lead.priority === "High").length;
     const conversionRate = totalLeads > 0 ? ((leads.filter((lead) => lead.status === "successful").length / totalLeads) * 100).toFixed(2) + "%" : "0%";
-    const recentActivity = `${leads.filter((lead) => lead.lastInteraction).length} Interactions`;
+    const activeLeadsCount = leads.filter(lead => lead.status === "active").length;
+    const hotWarmLeadsCount = leads.filter(lead => 
+      ["hot", "warm"].includes(lead.temperature)
+    ).length;
   
     return [
       { title: "Total Number of Leads", value: totalLeads, bgColor: "#2196F3", icon: usersIcon },
-      { title: "Conversion Rate", value: conversionRate, bgColor: "#1BB9F4", icon: clockIcon },
-      { title: "Recent Activity", value: recentActivity, bgColor: "#2196F3", icon: hourglassIcon },
-      { title: "High Priority Leads", value: `${highPriorityLeads} Urgent`, bgColor: "#307ADB", icon: highPriorityIcon },
+      { title: "Conversion Rate", value: conversionRate, bgColor: "#1BB9F4", icon: hourglassIcon },
+      { title: "Active Leads", value: activeLeadsCount, bgColor: "#2196F3", icon: clockIcon },
+      { title: "High-Interest Leads", value: hotWarmLeadsCount, bgColor: "#307ADB", icon: highPriorityIcon },
     ];
   }, [leads]);
 
@@ -293,7 +295,7 @@ export default function AccountPage() {
             >
               <option value="">Select Status</option>
               <option value="new">New (Last 7 Days)</option> {/* Newest for the last 7 Days*/}
-              <option value="temperature">Hot Leads</option>  
+              <option value="temperature">High Interest</option>  
               <option value="active">Active</option>
               <option value="successful">Closed - Successful</option>
               <option value="lost">Closed - Lost</option>

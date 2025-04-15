@@ -59,6 +59,7 @@
     font-weight: 400;
     color: white;
     margin: 4px 0 0 0;
+    text-transform: capitalize;
 }
 
 .search-container-row {

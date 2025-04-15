@@ -31,7 +31,7 @@ export default function TeamsTable() {
       <table aria-label="leads table">
         <thead>
           <tr className="table-header-container">
-            <th className='table-header-list lead-table'>Name </th>
+            <th className='table-header-list lead-table'>Employee Name </th>
             <th className='table-header-list font-geist'>Email</th>
             <th className='table-header-list'>Employee ID</th>
             <th className='table-header-list date-table'>Last Login Date</th>
