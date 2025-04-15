@@ -30,15 +30,17 @@ export default function LeadsTable() {
       <table aria-label="leads table">
         <thead>
           <tr className="table-header-container">
-            <th className='table-header-list lead-table'>Lead</th>
+            <th className='table-header-list lead-table'>Company</th>
+            <th className='table-header-list lead-table'>Lead Name</th>
             <th className='table-header-list font-geist'>Email</th>
             <th className='table-header-list'>Stage</th>
-            <th className='table-header-list date-table'>Date Contacted</th>
+            <th className='table-header-list date-table'>Import Date</th>
           </tr>
         </thead>
         <tbody>
           {leads.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((lead, index) => (
             <tr className='table-body-list-container' key={index}>
+              <td className='table-body-list'>{lead.company}</td>
               <td className='table-body-list'>{lead.leadName}</td>
               <td className='table-body-list font-geist'>{lead.bestEmail}</td>
               <td className='table-body-list lead-stage'>{lead.stage}</td>

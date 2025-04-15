@@ -512,6 +512,7 @@ export async function fetchNotifications(req, res) {
             message: `New reply from ${email.senderName || "Unknown"} – Click to view the conversation!`,
             leadEmail: email.sender,
             threadId: email.threadId,
+            emailType: email.emailType,
             viewed: email.viewed,
             timestamp: email.timestamp,
         }));

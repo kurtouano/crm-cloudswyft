@@ -42,9 +42,10 @@ export default function Kanban() {
         leads.forEach((lead) => {
           fetchedItems[lead._id] = {
             id: lead._id, 
-            title: lead.leadName, 
-            description: "Description placeholder",
-            employee: "John Doe",
+            title: lead.company, 
+            description: lead.leadName,
+            email: lead.bestEmail,
+            temperature: lead.temperature,
             timeStarted: lead.importDate,
           };
         });
