@@ -4,7 +4,7 @@ import { Toaster } from "react-hot-toast";
 import Sidenav from "./components/sidenav/Sidenav.jsx";
 import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
-import Salesflow from "./pages/Salesflow.jsx";
+import Salesflow from "./pages/SalesFlow.jsx";
 import SalesTeam from "./pages/SalesTeam.jsx";
 import Accounts from "./pages/Accounts.jsx";
 import Communications from "./pages/Communications.jsx";
