@@ -163,6 +163,16 @@ const Sidenav = () => {
     };
     
 
+    const userRole = localStorage.getItem("role");
+
+        // Dynamically filter nav items based on role
+        const filteredNavItems = navItems.filter(item => {
+        if (item.path === "/sales-team" && userRole !== "admin") {
+            return false; // ❌ Hide Sales Team if not admin
+        }
+        return true;
+        });
+
     return (
         <>
               <div className="notification-container">
@@ -227,19 +237,19 @@ const Sidenav = () => {
                     <span className="logo-text">Cloudswyft</span>
                 </div>
                 <div className="nav-links">
-                    {navItems.map((item) => (
-                        <NavLink
-                            key={item.path}
-                            to={item.path}
-                            className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}
-                        >
-                            {typeof item.icon === "string" ? (
-                                <img src={item.icon} alt={item.name} className="nav-react-icons" />
-                            ) : (
-                                <div className="nav-icon">{item.icon}</div>
-                            )}
-                            {item.name}
-                        </NavLink>
+                {filteredNavItems.map((item) => (
+                    <NavLink
+                        key={item.path}
+                        to={item.path}
+                        className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}
+                    >
+                        {typeof item.icon === "string" ? (
+                        <img src={item.icon} alt={item.name} className="nav-react-icons" />
+                        ) : (
+                        <div className="nav-icon">{item.icon}</div>
+                        )}
+                        {item.name}
+                    </NavLink>
                     ))}
                     <div className="nav-link logout-link" onClick={handleLogout}>
                       <FiLogOut className="nav-react-icons logout-icon" />
