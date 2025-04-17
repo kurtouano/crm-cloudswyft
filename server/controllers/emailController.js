@@ -59,13 +59,15 @@ export async function handleOAuthRedirect(req, res) {
         }
 
         if (tokenResponse?.accessToken) {
-            global.MICROSOFT_ACCESS_TOKEN = tokenResponse.accessToken; // Save globally!
-            const expiryTimestamp = new Date(tokenResponse.expiresOn).getTime(); // Convert ISO to ms
+            const expiryTimestamp = new Date(tokenResponse.expiresOn).getTime();
             
             return res.redirect(
-                `${process.env.DEPLOYMENT_FRONTEND_URL}/${currentPage}?accessToken=${tokenResponse.accessToken}&expiry=${expiryTimestamp}`
+                `${process.env.FRONTEND_URL}/auth-callback#` + 
+                `token=${tokenResponse.accessToken}&` +
+                `expiry=${expiryTimestamp}&` +
+                `page=${currentPage || 'dashboard'}`
             );
-        }        
+        }     
 
         else {
             return res.status(400).json({ error: "Token response is invalid or empty" });
