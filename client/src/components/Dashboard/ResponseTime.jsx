@@ -23,9 +23,9 @@ export default function HandlingResponse() {
     const doc = new jsPDF();
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
-    doc.text("Handling Time Report", 14, 20);
+    doc.text("Response Time", 14, 20);
 
-    const tableColumn = ["Handling Time Range (Hours)", "Number of Tickets"];
+    const tableColumn = ["Response Time Range (Hours)", "Number of Responses"];
     const tableRows = responseData.map((item) => [item.hours, item.responses.toString()]);
 
     doc.autoTable({
@@ -62,7 +62,7 @@ export default function HandlingResponse() {
       }
     });
     
-    doc.save("HandlingTimeReport.pdf");
+    doc.save("ResponseTimeReport.pdf");
   };
 
   return (
@@ -74,7 +74,7 @@ export default function HandlingResponse() {
         </button>
       </div>
 
-      <ResponsiveContainer width="100%" height={375}>
+      <ResponsiveContainer width="100%" height={350}>
         <BarChart data={responseData} margin={{ top: 30, right: 20, left: 0, bottom: 38 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis
@@ -83,7 +83,7 @@ export default function HandlingResponse() {
             label={{
               value: "Total Time Before Response (Hours)",
               position: "bottom",
-              dy: 8,
+              dy: 15,
               fontSize: 12,
               fill: "#4F4F4F",
             }}
@@ -96,7 +96,7 @@ export default function HandlingResponse() {
               angle: -90,
               position: "insideLeft",
               dy: 65,
-              dx: 8,
+              dx: 5,
               fontSize: 12,
               fill: "#4F4F4F",
             }}
