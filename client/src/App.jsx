@@ -11,6 +11,7 @@ import Communications from "./pages/Communications";
 import CommsAfterSales from "./pages/CommsAfterSales.jsx";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import LeadProfile from "./pages/LeadProfile"
+import ThankYouPage from "./utils/thankyouPage.jsx";
 
 export default function App() {
   return (
@@ -33,10 +34,12 @@ function MainLayout() {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
+  const showSidebar = isAuthenticated && location.pathname !== "/thank-you";
+
   return (
     <div className="app-container">
       {/* ✅ Sidebar only appears when authenticated */}
-      {isAuthenticated && <Sidenav />}
+      {showSidebar && isAuthenticated && <Sidenav />}
 
       <div className={`content ${isAuthenticated ? "with-sidebar" : "full-width"}`}>
         <Routes>
@@ -52,6 +55,8 @@ function MainLayout() {
           <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
           <Route path="/customer-support" element={<ProtectedRoute><CommsAfterSales /></ProtectedRoute>} />
           <Route path="/lead-profile" element={<ProtectedRoute><LeadProfile /></ProtectedRoute>} />
+
+          <Route path="/thank-you" element={<ThankYouPage />} />
 
           {/* Redirect unknown routes to login */}
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -211,7 +211,7 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange, editorId, c
         },
         {
           id: 'issue-resolved',
-          name: 'Resolved Reply',
+          name: 'Resolved with Satisfaction Survey',
           content: `
             <p>Hi <span style="color:#1155cc;">[First Name]</span>,</p><br>
             <p>Thank you for reaching out! If there's anything else you need, feel free to let us know — we're always here to help.</p><br>
@@ -220,7 +220,7 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange, editorId, c
             <p><a href="http://localhost:4000/api/feedback?rating=neutral" style="color:#1155cc; text-decoration: none;">😐 Neutral</a> – You can do better next time.</p>
             <p><a href="http://localhost:4000/api/feedback?rating=sad" style="color:#1155cc; text-decoration: none;">😞 Sad</a> – I'm quite unhappy with this.</p><br>
             <p>Your feedback helps us improve and serve you better.</p><br>
-            <p>Best regards,<br>[Your Name / Your Team Name]</p>
+            <p>Best regards,<br>Cloudswyft Global Systems, Inc.</p>
           `
         },
         {

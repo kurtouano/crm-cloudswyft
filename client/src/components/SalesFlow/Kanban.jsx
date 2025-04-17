@@ -73,50 +73,54 @@ export default function Kanban() {
     fetchLeads();
   }, []);
 
-  const handleDragDrop = async (results) => {
-    const { source, destination, draggableId } = results;
-    
-    // Early return for invalid drops
-    if (!destination) return;
-    if (source.droppableId === destination.droppableId && 
-        source.index === destination.index) return;
+const handleDragDrop = async (results) => {
+  const { source, destination, draggableId } = results;
   
+  // Early return for invalid drops
+  if (!destination) return;
+  if (source.droppableId === destination.droppableId && 
+      source.index === destination.index) return;
+
+  // Create a deep copy of the current data
+  const newData = JSON.parse(JSON.stringify(data));
+
+  // Remove from source
+  const [removedItem] = newData[source.droppableId].itemsOrder.splice(source.index, 1);
+  
+  // Insert into destination
+  newData[destination.droppableId].itemsOrder.splice(destination.index, 0, removedItem);
+
+  // Optimistic UI update
+  setData(newData);
+
+  try {
     // Determine new status based on destination stage
     let newStatus;
     if (destination.droppableId === "Negotiation" || destination.droppableId === "Proposal") {
       newStatus = "active";
     } else if (destination.droppableId === "On-boarding") {
       newStatus = "successful";
+      // Automatically add to onboarded clients when dropped in On-boarding
+      await axios.post("http://localhost:4000/api/onboarded", {
+        leadId: draggableId
+      });
     } else if (destination.droppableId === "Lost") {
       newStatus = "lost";
     } else {
       newStatus = "active"; // Default for other stages
     }
-  
-    // Create a deep copy of the current data
-    const newData = JSON.parse(JSON.stringify(data));
-  
-    // Remove from source
-    const [removedItem] = newData[source.droppableId].itemsOrder.splice(source.index, 1);
-    
-    // Insert into destination
-    newData[destination.droppableId].itemsOrder.splice(destination.index, 0, removedItem);
-  
-    // Optimistic UI update
-    setData(newData);
-  
-    try {
-      // Update backend
-      await axios.put(`http://localhost:4000/api/leads/${draggableId}`, {
-        stage: destination.droppableId,
-        status: newStatus
-      });
-    } catch (error) {
-      console.error("Error updating lead stage:", error);
-      // Revert on error
-      setData(prevData => ({ ...prevData }));
-    }
-  };
+
+    // Update backend
+    await axios.put(`http://localhost:4000/api/leads/${draggableId}`, {
+      stage: destination.droppableId,
+      status: newStatus
+    });
+  } catch (error) {
+    console.error("Error updating lead stage:", error);
+    // Revert on error
+    setData(prevData => ({ ...prevData }));
+  }
+};
 
   return (
     <div className="kanban-container">

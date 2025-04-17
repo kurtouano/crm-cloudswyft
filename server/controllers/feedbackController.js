@@ -14,12 +14,14 @@ export const submitFeedback = async (req, res) => {
       { upsert: true, new: true }
     );
 
+    // Redirect to frontend thank you page
+    res.redirect('http://localhost:3000/thank-you');
+
   } catch (error) {
     console.error('Feedback error:', error);
     res.status(500).send('Failed to submit feedback');
   }
 };
-
 // Get total stats
 export const getFeedbackStats = async (req, res) => {
     try {

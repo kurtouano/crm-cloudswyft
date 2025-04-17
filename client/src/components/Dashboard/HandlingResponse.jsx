@@ -97,7 +97,7 @@ export default function HandlingResponse() {
             label={{
               value: "Total Handling Time (Hours)",
               position: "bottom",
-              dy: 8,
+              dy: 15,
               fontSize: 12,
               fill: "#4F4F4F",
             }}
