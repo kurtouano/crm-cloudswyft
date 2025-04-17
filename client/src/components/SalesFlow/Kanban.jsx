@@ -1,3 +1,5 @@
+const API_URL = import.meta.env.VITE_BACKEND_URL;
+
 import { useState, useEffect } from "react";
 import { DragDropContext } from "@hello-pangea/dnd";
 import axios from "axios";
@@ -22,7 +24,7 @@ export default function Kanban() {
   useEffect(() => {
     const fetchLeads = async () => {
       try {
-        const response = await axios.get("http://localhost:4000/api/leads");
+        const response = await axios.get(`${API_URL}/api/leads`);
         const leads = response.data;
 
         // ✅ Map stage names to column IDs
@@ -101,7 +103,7 @@ const handleDragDrop = async (results) => {
     } else if (destination.droppableId === "On-boarding") {
       newStatus = "successful";
       // Automatically add to onboarded clients when dropped in On-boarding
-      await axios.post("http://localhost:4000/api/onboarded", {
+      await axios.post(`${API_URL}/api/onboarded`, {
         leadId: draggableId
       });
     } else if (destination.droppableId === "Lost") {
@@ -111,7 +113,7 @@ const handleDragDrop = async (results) => {
     }
 
     // Update backend
-    await axios.put(`http://localhost:4000/api/leads/${draggableId}`, {
+    await axios.put(`${API_URL}/api/leads/${draggableId}`, {
       stage: destination.droppableId,
       status: newStatus
     });

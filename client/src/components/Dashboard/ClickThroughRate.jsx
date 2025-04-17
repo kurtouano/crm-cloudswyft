@@ -1,3 +1,5 @@
+const API_URL = import.meta.env.VITE_BACKEND_URL; 
+
 import { useEffect, useState } from 'react';
 import io from 'socket.io-client';
 import jsPDF from 'jspdf';
@@ -12,7 +14,7 @@ export default function ClickThroughRate() {
 
   // Set up WebSocket connection
   useEffect(() => {
-    const newSocket = io('http://localhost:4000');
+    const newSocket = io(`${API_URL}`);
     setSocket(newSocket);
     
     console.log('WebSocket connection initialized');
@@ -29,7 +31,7 @@ export default function ClickThroughRate() {
     const fetchClickData = async () => {
       try {
         console.log('Fetching initial click data...');
-        const response = await fetch('http://localhost:4000/api/newsletters/click-data');
+        const response = await fetch(`${API_URL}/api/newsletters/click-data`);
         
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);

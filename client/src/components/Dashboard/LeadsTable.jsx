@@ -1,3 +1,5 @@
+const API_URL = import.meta.env.VITE_BACKEND_URL; 
+
 import { useState, useEffect } from "react";
 import ReactPaginate from "react-paginate";
 import axios from "axios";
@@ -13,7 +15,7 @@ export default function LeadsTable() {
   useEffect(() => {
     const fetchLeads = async () => {
       try {
-        const response = await axios.get("http://localhost:4000/api/leads");
+        const response = await axios.get(`${API_URL}/api/leads`);
         setLeads(response.data);
       } catch (error) {
         console.error("Error fetching leads:", error);

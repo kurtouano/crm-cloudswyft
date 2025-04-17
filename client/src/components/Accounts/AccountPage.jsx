@@ -1,3 +1,5 @@
+const API_URL = import.meta.env.VITE_BACKEND_URL; 
+
 import { useState, useEffect, useMemo } from "react";
 import ReactPaginate from "react-paginate";
 import { useNavigate } from "react-router-dom";
@@ -17,8 +19,6 @@ import chatIcon from "../../assets/bubble-chat.png";
 import userIcon from "../../assets/user-circle.png";
 import { FiDownload } from "react-icons/fi";
 
-const rowsPerPage = 10;
-
 export default function AccountPage() {
   const navigate = useNavigate();
   const [leads, setLeads] = useState([]);
@@ -31,14 +31,15 @@ export default function AccountPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState(""); // State for selected filter
   const [userRole, setUserRole] = useState(localStorage.getItem("role"));
-
+  
+  const rowsPerPage = 10;
   const displayedLeads = filteredLeads.slice(page * rowsPerPage, (page + 1) * rowsPerPage);
 
   // Fetch leads from the backend
   useEffect(() => {
     const fetchLeads = async () => {
       try {
-        const response = await axios.get("http://localhost:4000/api/leads"); 
+        const response = await axios.get(`${API_URL}/api/leads`); 
         // Sort leads by createdAt in descending order (newest first)
         const sortedLeads = response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         setLeads(sortedLeads);
@@ -150,7 +151,7 @@ export default function AccountPage() {
 
     try {
       const leadIdNumber = parseInt(deleteModal.leadID.replace("LID-", ""), 10);
-      await axios.delete(`http://localhost:4000/api/leads/leadID/${leadIdNumber}`);
+      await axios.delete(`${API_URL}/api/leads/leadID/${leadIdNumber}`);
 
       // ✅ Remove lead from UI instantly
       setLeads((prevLeads) => prevLeads.filter((lead) => lead.leadID !== deleteModal.leadID));
@@ -233,7 +234,7 @@ export default function AccountPage() {
       }
   
       const response = await axios.post(
-        "http://localhost:4000/api/leads/upload",
+        `${API_URL}/api/leads/upload`,
         { leads: formattedData },
         { headers: { Authorization: `Bearer ${microsoftAccessToken}` } }  // ✅ Include token here
       );
@@ -243,7 +244,7 @@ export default function AccountPage() {
   
       alert(`${insertedCount} new leads added! ${skippedCount} duplicates skipped.`);
   
-      const updatedLeads = await axios.get("http://localhost:4000/api/leads");
+      const updatedLeads = await axios.get(`${API_URL}/api/leads`);
       setLeads(updatedLeads.data);
       setFilteredLeads(updatedLeads.data);
   

@@ -1,4 +1,8 @@
 import CustomerFeedback from '../models/FeedbackSchema.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
+const FRONTEND_URL = process.env.DEPLOYMENT_FRONTEND_URL || 'http://localhost:3000';
 
 export const submitFeedback = async (req, res) => {
   try {
@@ -15,7 +19,7 @@ export const submitFeedback = async (req, res) => {
     );
 
     // Redirect to frontend thank you page
-    res.redirect('http://localhost:3000/thank-you');
+    res.redirect(`${FRONTEND_URL}/thank-you`);
 
   } catch (error) {
     console.error('Feedback error:', error);

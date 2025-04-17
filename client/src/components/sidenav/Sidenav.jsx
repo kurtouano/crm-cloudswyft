@@ -1,3 +1,5 @@
+const API_URL = import.meta.env.VITE_BACKEND_URL;
+
 import axios from "axios"; // ✅ Make sure this is imported
 import { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -7,7 +9,7 @@ import { FiGrid, FiCheckSquare, FiUsers, FiBookOpen, FiLogOut } from "react-icon
 import { LuMailQuestion, LuMailSearch } from "react-icons/lu";
 import notifSound from '../../assets/Sounds/notif-sound.mp3' 
 
-const socket = io("http://localhost:4000"); // ✅ Connect to backend WebSocket server
+const socket = io(`${API_URL}`); // ✅ Connect to backend WebSocket server
 
 const navItems = [
     { path: "/dashboard", name: "Dashboard", icon: <FiGrid className="nav-react-icons"/>},
@@ -58,7 +60,7 @@ const Sidenav = () => {
     useEffect(() => {
         const fetchStoredNotifications = async () => {
             try {
-                const { data } = await axios.get("http://localhost:4000/api/emails/notifications");
+                const { data } = await axios.get(`${API_URL}/api/emails/notifications`);
     
                 if (data.success && data.notifications.length > 0) {
                     console.log(`✅ Loaded ${data.notifications.length} stored notifications.`);
@@ -107,7 +109,7 @@ const Sidenav = () => {
 
     const handleNotificationClick = async (notifIndex, leadEmail, threadId, emailType) => {
         try {
-            await axios.post("http://localhost:4000/api/emails/notifications/viewed", { threadId });
+            await axios.post(`${API_URL}/api/emails/notifications/viewed`, { threadId });
     
             // Update local state so that color changes immediately
             setNotifications((prev) =>
@@ -138,7 +140,7 @@ const Sidenav = () => {
 
       const handleDeleteNotification = async (notifIndex, threadId) => {
         try {
-          await axios.post("http://localhost:4000/api/emails/notifications/delete", { threadId });
+          await axios.post(`${API_URL}/api/emails/notifications/delete`, { threadId });
       
           setNotifications((prev) => prev.filter((_, idx) => idx !== notifIndex));
       

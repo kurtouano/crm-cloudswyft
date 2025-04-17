@@ -1,3 +1,5 @@
+const API_URL = import.meta.env.VITE_BACKEND_URL; 
+
 import './Dashboard.css';
 import { RadialBarChart, RadialBar, Legend, PolarAngleAxis } from "recharts";
 import { useEffect, useState } from 'react';
@@ -13,7 +15,7 @@ const CustomerSatisfactionChart = () => {
   useEffect(() => {
     const fetchFeedbackData = async () => {
       try {
-        const response = await axios.get('http://localhost:4000/api/feedback/stats');
+        const response = await axios.get(`${API_URL}/api/feedback/stats`);
         const feedbackStats = response.data;
         
         // Transform MongoDB data to chart format

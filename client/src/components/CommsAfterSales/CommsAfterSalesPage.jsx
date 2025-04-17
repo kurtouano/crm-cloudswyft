@@ -1,4 +1,6 @@
-import { useEffect, useState, useMemo, useCallback, useRef} from "react";
+const API_URL = import.meta.env.VITE_BACKEND_URL; 
+
+import { useEffect, useState, useMemo, useCallback} from "react";
 import { useLocation } from "react-router-dom";
 import Fuse from "fuse.js"; // 🔍 Import Fuse.js
 import { FiSearch, FiEdit, FiUser } from "react-icons/fi";
@@ -130,7 +132,7 @@ export default function CommsAfterSalesPage() {
   useEffect(() => {
     const fetchLeads = async () => {
       try {
-        const response = await fetch("http://localhost:4000/api/leads/onboarding-leads");
+        const response = await fetch(`${API_URL}/api/leads/onboarding-leads`);
         if (!response.ok) throw new Error("Failed to fetch leads");
   
         const data = await response.json();
@@ -173,7 +175,7 @@ export default function CommsAfterSalesPage() {
     try {
         while (totalEmailsFetched < totalEmailsToFetch) {
             const response = await fetch(
-                `http://localhost:4000/api/emails/support/sent?to=${activeLead.bestEmail}&page=${page}&limit=${sentEmailsPerPage}&emailType=after-sales`
+                `${API_URL}/api/emails/support/sent?to=${activeLead.bestEmail}&page=${page}&limit=${sentEmailsPerPage}&emailType=after-sales`
             );
             const data = await response.json();
   
@@ -228,7 +230,7 @@ export default function CommsAfterSalesPage() {
                       } else {
                           try {
                               const response = await fetch(
-                                  `http://localhost:4000/api/emails/support/attachments/${email._id}`
+                                  `${API_URL}/api/emails/support/attachments/${email._id}`
                               );
                               const data = await response.json();
 
@@ -265,7 +267,7 @@ export default function CommsAfterSalesPage() {
 
   const fetchReplyEmails = async (threadId) => {
     try {
-      const response = await fetch(`http://localhost:4000/api/emails/support/fetch-reply-emails?threadId=${threadId}`);
+      const response = await fetch(`${API_URL}/api/emails/support/fetch-reply-emails?threadId=${threadId}`);
       const data = await response.json();
   
       if (response.ok) {
@@ -283,7 +285,7 @@ export default function CommsAfterSalesPage() {
   
             // Fetch from backend if not cached
             const attachmentsResponse = await fetch(
-              `http://localhost:4000/api/emails/support/attachments/reply/${reply._id}`
+              `${API_URL}/api/emails/support/attachments/reply/${reply._id}`
             );
   
             if (!attachmentsResponse.ok) {
@@ -329,7 +331,7 @@ export default function CommsAfterSalesPage() {
         const token = localStorage.getItem("microsoftAccessTokenAfterSales");
         if (!token) throw new Error("Access token is missing from localStorage.");
 
-        const response = await fetch("http://localhost:4000/api/emails/support/received", {
+        const response = await fetch(`${API_URL}/api/emails/support/received`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -516,7 +518,7 @@ export default function CommsAfterSalesPage() {
     setLoading(true);
   
     try {
-      const res = await fetch("http://localhost:4000/api/emails/support/send-email", {
+      const res = await fetch(`${API_URL}/api/emails/support/send-email`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -564,7 +566,7 @@ export default function CommsAfterSalesPage() {
       // Ensure attachments is always an array
       const attachments = attachment ? [attachment] : [];
       
-      const res = await fetch("http://localhost:4000/api/emails/support/reply-email", {
+      const res = await fetch(`${API_URL}/api/emails/support/reply-email`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -702,7 +704,7 @@ export default function CommsAfterSalesPage() {
     updateLeadStates(newStarredStatus);
   
     try {
-      const response = await fetch(`http://localhost:4000/api/leads/support/toggleStar/${leadId}`, {
+      const response = await fetch(`${API_URL}/api/leads/support/toggleStar/${leadId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -881,7 +883,7 @@ const handleSelectEmail = (email, fieldName) => {
 
 // Add to your CommsAfterSalesPage component
 useEffect(() => {
-  const socket = io('http://localhost:4000');
+  const socket = io(`${API_URL}`);
   
   // Join room for the current lead
   if (activeLead?._id) {
@@ -923,7 +925,7 @@ const handleStatusChange = useCallback(async (newStatus, isAutomatic = false) =>
 
   try {
     // First verify if ticket exists
-    const verifyResponse = await fetch(`http://localhost:4000/api/tickets/${encodeURIComponent(formDataReply.threadId)}`);
+    const verifyResponse = await fetch(`${API_URL}/api/tickets/${encodeURIComponent(formDataReply.threadId)}`);
     const ticketExists = verifyResponse.ok;
 
     // Get current status - fetch fresh from backend
@@ -985,8 +987,8 @@ const handleStatusChange = useCallback(async (newStatus, isAutomatic = false) =>
     if (newStatus === 'open') {
       // Use different endpoint for new tickets vs reopening
       endpoint = currentStatus === 'none' 
-        ? 'http://localhost:4000/api/tickets/handle-email'
-        : `http://localhost:4000/api/tickets/${encodedThreadId}/reopen`;
+        ? `${API_URL}/api/tickets/handle-email`
+        : `${API_URL}/api/tickets/${encodedThreadId}/reopen`;
       
       body = currentStatus === 'none'
         ? JSON.stringify({ 
@@ -995,10 +997,10 @@ const handleStatusChange = useCallback(async (newStatus, isAutomatic = false) =>
           })
         : undefined;
     } else if (newStatus === 'in-progress') {
-      endpoint = 'http://localhost:4000/api/tickets/handle-reply';
+      endpoint = `${API_URL}/api/tickets/handle-reply`;
       body = JSON.stringify({ threadId: formDataReply.threadId });
     } else if (newStatus === 'resolved') {
-      endpoint = `http://localhost:4000/api/tickets/${encodedThreadId}/resolve`;
+      endpoint = `${API_URL}/api/tickets/${encodedThreadId}/resolve`;
     }
 
     const response = await fetch(endpoint, {
@@ -1010,7 +1012,7 @@ const handleStatusChange = useCallback(async (newStatus, isAutomatic = false) =>
     if (!response.ok) throw new Error(`Failed to update ticket status: ${response.status}`);
 
     // Verify the update was successful
-    const statusResponse = await fetch(`http://localhost:4000/api/tickets/${encodedThreadId}`);
+    const statusResponse = await fetch(`${API_URL}/api/tickets/${encodedThreadId}`);
     if (statusResponse.ok) {
       const ticket = await statusResponse.json();
       console.log(`Verified status update: ${ticket?.status}`);
@@ -1025,7 +1027,7 @@ const handleStatusChange = useCallback(async (newStatus, isAutomatic = false) =>
     }
 
     // Update stats
-    const statsResponse = await fetch('http://localhost:4000/api/tickets/stats');
+    const statsResponse = await fetch(`${API_URL}/api/tickets/stats`);
     if (statsResponse.ok) {
       const statsData = await statsResponse.json();
       setTicketStats(statsData);
@@ -1045,7 +1047,7 @@ const handleStatusChange = useCallback(async (newStatus, isAutomatic = false) =>
 useEffect(() => {
   const fetchTicketStats = async () => {
     try {
-      const response = await fetch('http://localhost:4000/api/tickets/stats');
+      const response = await fetch(`${API_URL}/api/tickets/stats`);
       const data = await response.json();
       setTicketStats(data);
     } catch (error) {
@@ -1060,7 +1062,7 @@ const fetchThreadStatus = async (threadId) => {
   if (!threadId) return 'none';
   
   try {
-    const response = await fetch(`http://localhost:4000/api/tickets/${threadId}`);
+    const response = await fetch(`${API_URL}/api/tickets/${threadId}`);
     if (response.ok) {
       const ticket = await response.json();
       const status = ticket?.status || 'none';
@@ -1109,7 +1111,7 @@ useEffect(() => {
         
         // Only create new ticket if status is 'none' and it's a customer email
         if (currentStatus === 'none') {
-          const response = await fetch('http://localhost:4000/api/tickets/handle-email', {
+          const response = await fetch(`${API_URL}/api/tickets/handle-email`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

@@ -1,3 +1,5 @@
+const API_URL = import.meta.env.VITE_BACKEND_URL; 
+
 import { useEffect, useState, useMemo, useCallback, useRef} from "react";
 import { useLocation } from "react-router-dom";
 import Fuse from "fuse.js"; // 🔍 Import Fuse.js
@@ -128,7 +130,7 @@ export default function CommunicationPageNEW () {
   useEffect(() => {
     const fetchLeads = async () => {
       try {
-        const response = await fetch("http://localhost:4000/api/leads/revenue-leads");
+        const response = await fetch(`${API_URL}/api/leads/revenue-leads`);
         if (!response.ok) throw new Error("Failed to fetch leads");
   
         const data = await response.json();
@@ -171,7 +173,7 @@ export default function CommunicationPageNEW () {
     try {
         while (totalEmailsFetched < totalEmailsToFetch) {
             const response = await fetch(
-                `http://localhost:4000/api/emails/sent?to=${activeLead.bestEmail}&page=${page}&limit=${sentEmailsPerPage}&emailType=revenue`
+                `${API_URL}/api/emails/sent?to=${activeLead.bestEmail}&page=${page}&limit=${sentEmailsPerPage}&emailType=revenue`
             );
             const data = await response.json();
   
@@ -226,7 +228,7 @@ export default function CommunicationPageNEW () {
                       } else {
                           try {
                               const response = await fetch(
-                                  `http://localhost:4000/api/emails/attachments/${email._id}`
+                                  `${API_URL}/api/emails/attachments/${email._id}`
                               );
                               const data = await response.json();
 
@@ -263,7 +265,7 @@ export default function CommunicationPageNEW () {
 
   const fetchReplyEmails = async (threadId) => {
     try {
-      const response = await fetch(`http://localhost:4000/api/emails/fetch-reply-emails?threadId=${threadId}`);
+      const response = await fetch(`${API_URL}/api/emails/fetch-reply-emails?threadId=${threadId}`);
       const data = await response.json();
   
       if (response.ok) {
@@ -281,7 +283,7 @@ export default function CommunicationPageNEW () {
   
             // Fetch from backend if not cached
             const attachmentsResponse = await fetch(
-              `http://localhost:4000/api/emails/attachments/reply/${reply._id}`
+              `${API_URL}/api/emails/attachments/reply/${reply._id}`
             );
   
             if (!attachmentsResponse.ok) {
@@ -327,7 +329,7 @@ export default function CommunicationPageNEW () {
         const token = localStorage.getItem("microsoftAccessToken");
         if (!token) throw new Error("Access token is missing from localStorage.");
 
-        const response = await fetch("http://localhost:4000/api/emails/received", {
+        const response = await fetch(`${API_URL}/api/emails/received`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -514,7 +516,7 @@ export default function CommunicationPageNEW () {
     setLoading(true);
   
     try {
-      const res = await fetch("http://localhost:4000/api/emails/send-email", {
+      const res = await fetch(`${API_URL}/api/emails/send-email`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -562,7 +564,7 @@ export default function CommunicationPageNEW () {
       // Ensure attachments is always an array
       const attachments = attachment ? [attachment] : [];
       
-      const res = await fetch("http://localhost:4000/api/emails/reply-email", {
+      const res = await fetch(`${API_URL}/api/emails/reply-email`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -685,7 +687,7 @@ export default function CommunicationPageNEW () {
         return;
       }
   
-      const response = await fetch(`http://localhost:4000/api/leads/updateLeadTemp/${leadId}`, {
+      const response = await fetch(`${API_URL}/api/leads/updateLeadTemp/${leadId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ temperature })
@@ -758,7 +760,7 @@ export default function CommunicationPageNEW () {
     updateLeadStates(newStarredStatus);
   
     try {
-      const response = await fetch(`http://localhost:4000/api/leads/toggleStar/${leadId}`, {
+      const response = await fetch(`${API_URL}/api/leads/toggleStar/${leadId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' }
       });

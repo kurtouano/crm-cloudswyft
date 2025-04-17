@@ -1,3 +1,5 @@
+const API_URL = import.meta.env.VITE_BACKEND_URL; 
+
 import {useEffect, useRef} from "react";
 
 export default function useMicrosoftAuthenticationSupport() {
@@ -19,7 +21,7 @@ export default function useMicrosoftAuthenticationSupport() {
           clearInterval(intervalRef.current); // Clear the interval before redirecting
         }
     
-        window.location.href = `http://localhost:4000/api/emails/support/microsoft-login?currentPage=${currentPage}`; // Redirect to your login page
+        window.location.href = `${API_URL}/api/emails/support/microsoft-login?currentPage=${currentPage}`; // Redirect to your login page
       };
     
     const checkTokenValidity = () => {
