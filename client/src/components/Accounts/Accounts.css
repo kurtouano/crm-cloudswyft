@@ -201,6 +201,11 @@
     transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
+.lead-card.status-successful, .lead-card.status-lost {
+    opacity: 0.70;
+    background: #fbfbfb;
+}
+
 .lead-card:hover {
     transform: translateY(-5px); /* Slight lift effect */
     box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.1);

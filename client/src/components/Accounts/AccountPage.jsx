@@ -324,7 +324,7 @@ export default function AccountPage() {
         <>
           <div className="lead-cards-container">
             {displayedLeads.map((lead, index) => (
-              <div key={index} className="lead-card">
+              <div key={index} className={`lead-card ${lead.status === 'successful' ? 'status-successful' : ''} ${lead.status === 'lost' ? 'status-lost' : ''}`}>
                 {/* Three-dot menu */}
                 <div 
                   className="options-icon clickable"
