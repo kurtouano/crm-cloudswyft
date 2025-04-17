@@ -7,12 +7,12 @@ import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
 import leadRoutes from "./routes/leadRoutes.js";
 import emailRoutes from "./routes/emailRoutes.js";
-import customerSupport from "./routes/emailAfterSalesRoutes.js";
+import customerSupportRoutes from "./routes/emailAfterSalesRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
 import newsletterRoutes from "./routes/newsletterRoutes.js";
 import ticketRoutes from "./routes/ticketRoutes.js";
 import feedbackRoutes from "./routes/feedbackRoutes.js";
-
+import onboardedRoutes from "./routes/onboardedRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -36,10 +36,11 @@ app.use("/api/auth", authRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/leads", leadRoutes);
 app.use("/api/emails", emailRoutes);
-app.use("/api/emails/support", customerSupport);
+app.use("/api/emails/support", customerSupportRoutes);
 app.use("/api/newsletters", newsletterRoutes);
 app.use("/api/tickets", ticketRoutes);
 app.use("/api/feedback", feedbackRoutes);
+app.use("/api/onboarded", onboardedRoutes);
 
 app.set('io', io);
 
