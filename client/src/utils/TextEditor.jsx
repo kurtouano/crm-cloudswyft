@@ -1,3 +1,5 @@
+const API_URL = import.meta.env.VITE_BACKEND_URL; 
+
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
@@ -216,9 +218,9 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange, editorId, c
             <p>Hi <span style="color:#1155cc;">[First Name]</span>,</p><br>
             <p>Thank you for reaching out! If there's anything else you need, feel free to let us know — we're always here to help.</p><br>
             <p>We'd love to hear how we did today. Please rate your experience:</p><br>
-            <p><a href="http://localhost:4000/api/feedback?rating=happy" style="color:#1155cc; text-decoration: none;">😊 Happy</a> – I'm impressed!</p>
-            <p><a href="http://localhost:4000/api/feedback?rating=neutral" style="color:#1155cc; text-decoration: none;">😐 Neutral</a> – You can do better next time.</p>
-            <p><a href="http://localhost:4000/api/feedback?rating=sad" style="color:#1155cc; text-decoration: none;">😞 Sad</a> – I'm quite unhappy with this.</p><br>
+            <p><a href="${API_URL}/api/feedback?rating=happy" style="color:#1155cc; text-decoration: none;">😊 Happy</a> – I'm impressed!</p>
+            <p><a href="${API_URL}/api/feedback?rating=neutral" style="color:#1155cc; text-decoration: none;">😐 Neutral</a> – You can do better next time.</p>
+            <p><a href="${API_URL}/api/feedback?rating=sad" style="color:#1155cc; text-decoration: none;">😞 Sad</a> – I'm quite unhappy with this.</p><br>
             <p>Your feedback helps us improve and serve you better.</p><br>
             <p>Best regards,<br>Cloudswyft Global Systems, Inc.</p>
           `
@@ -270,22 +272,22 @@ const TipTap = ({ content, onUpdate, resetTrigger, handleFileChange, editorId, c
             <!-- Promotion 1 -->
             <p><span><img src="https://cloudswyft.co/wp-content/uploads/2021/12/marco-fileccia-HE7_hMkqn9A-unsplash-scaled.jpg" alt="Latest Products" style="max-width: 500px;"></span></p>
             <p><span>Discover our latest collection of innovative products.</span></p>
-            <u><a href="http://localhost:4000/api/newsletters/track/1?redirectUrl=https://cloudswyft.co/education-amidst-the-pandemic-the-role-of-cloud-based-learning-platforms-in-continuing-learning-and-instruction/"><span style="color:#1155cc;">Cloud based Learning Platforms</span></a></u><br>
+            <u><a href="${API_URL}/api/newsletters/track/1?redirectUrl=https://cloudswyft.co/education-amidst-the-pandemic-the-role-of-cloud-based-learning-platforms-in-continuing-learning-and-instruction/"><span style="color:#1155cc;">Cloud based Learning Platforms</span></a></u><br>
             
             <!-- Promotion 2 -->
             <p><span><img src="https://cloudswyft.co/wp-content/uploads/2021/11/pexels-photo-5554288.jpeg" alt="Premium Services" style="max-width: 500px;"></span></p>
             <p><span>Special discounts on our premium services.</span></p>
-            <u><a href="http://localhost:4000/api/newsletters/track/2?redirectUrl=https://cloudswyft.co/how-virtual-computer-labs-are-revolutionising-the-way-universities-teach/"><span style="color:#1155cc;">Virtual Computer Labs</span></a></u><br>
+            <u><a href="${API_URL}/api/newsletters/track/2?redirectUrl=https://cloudswyft.co/how-virtual-computer-labs-are-revolutionising-the-way-universities-teach/"><span style="color:#1155cc;">Virtual Computer Labs</span></a></u><br>
             
             <!-- Promotion 3 -->
             <p><span><img src="https://cloudswyft.co/wp-content/uploads/2018/01/CloudSwyft.jpg" alt="Platform Features" style="max-width: 500px;"></span></p>
             <p><span>New features now available in our platform.</span></p>
-            <u><a href="http://localhost:4000/api/newsletters/track/3?redirectUrl=https://cloudswyft.co/cloudswyft-the-startup-that-aims-to-change-the-way-companies-do-human-capital-development/"><span style="color:#1155cc;">Our Cloudswyft Team</span></a></u><br>
+            <u><a href="${API_URL}/api/newsletters/track/3?redirectUrl=https://cloudswyft.co/cloudswyft-the-startup-that-aims-to-change-the-way-companies-do-human-capital-development/"><span style="color:#1155cc;">Our Cloudswyft Team</span></a></u><br>
             
             <!-- Promotion 4 -->
             <p><span><img src="https://cloudswyft.co/wp-content/uploads/2020/10/15May_Card-Holder_992x560.png" alt="Limited Offer" style="max-width: 500px"></span></p>
             <p><span>Limited time offer - don't miss out!</span></p>
-            <u><a href="http://localhost:4000/api/newsletters/track/4?redirectUrl=https://cloudswyft.co/finding-your-career-amidst-the-pandemic/"><span style="color:#1155cc;">Find your Career</span></a></u><br>
+            <u><a href="${API_URL}/api/newsletters/track/4?redirectUrl=https://cloudswyft.co/finding-your-career-amidst-the-pandemic/"><span style="color:#1155cc;">Find your Career</span></a></u><br>
             
             <p><span>Thank you for being a valued customer!</span></p><br>
             <p><span>Best regards,</span></p>

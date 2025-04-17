@@ -1,3 +1,5 @@
+const API_URL = import.meta.env.VITE_BACKEND_URL; 
+
 import useMicrosoftAuthentication from "../../utils/AuthMicrosoft.js";
 import { toast } from "react-hot-toast";
 import { useEffect, useState } from "react";
@@ -61,7 +63,7 @@ export default function LeadProfilePage() {
         delete sanitizedLead.leadID;
       }
   
-      const response = await fetch(`http://localhost:4000/api/leads/update/${lead._id}`, {
+      const response = await fetch(`${API_URL}/api/leads/update/${lead._id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -101,7 +103,7 @@ export default function LeadProfilePage() {
         return;
       }
 
-      const response = await fetch(`http://localhost:4000/api/leads/status/${leadNumericID}`, {
+      const response = await fetch(`${API_URL}/api/leads/status/${leadNumericID}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -162,11 +164,11 @@ export default function LeadProfilePage() {
 
         console.log("Fetching emails for:", lead.bestEmail);
 
-        const sentResponse = await fetch(`http://localhost:4000/api/emails/fetch-sent-email-raw?leadEmail=${lead.bestEmail}`);
+        const sentResponse = await fetch(`${API_URL}/api/emails/fetch-sent-email-raw?leadEmail=${lead.bestEmail}`);
         const sentData = await sentResponse.json();
         console.log("Sent Emails Data:", sentData);
 
-        const receivedResponse = await fetch(`http://localhost:4000/api/emails/fetch-reply-emails-raw?leadEmail=${lead.bestEmail}`);
+        const receivedResponse = await fetch(`${API_URL}/api/emails/fetch-reply-emails-raw?leadEmail=${lead.bestEmail}`);
         const receivedData = await receivedResponse.json();
         console.log("Received Emails Data:", receivedData);
 

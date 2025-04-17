@@ -1,3 +1,5 @@
+const API_URL = import.meta.env.VITE_BACKEND_URL;
+
 import { useState, useEffect } from "react";
 import axios from "axios";
 import "./SalesTeam.css";
@@ -29,7 +31,7 @@ export default function RegisterEmployee() {
     }
 
     try {
-      await axios.post("http://localhost:4000/api/auth/register-employee", formData);
+      await axios.post(`${API_URL}/api/auth/register-employee`, formData);
       setSuccess("Registered successfully!");
       setFormData({ name: "", email: "", employeeId: "" });
     } catch (error) {

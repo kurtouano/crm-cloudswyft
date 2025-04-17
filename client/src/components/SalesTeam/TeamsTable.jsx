@@ -1,3 +1,5 @@
+const API_URL = import.meta.env.VITE_BACKEND_URL;
+
 import { useState, useEffect } from "react";
 import ReactPaginate from "react-paginate";
 import axios from "axios";
@@ -11,7 +13,7 @@ export default function TeamsTable() {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const response = await axios.get("http://localhost:4000/api/auth/employees");
+        const response = await axios.get(`${API_URL}/api/auth/employees`);
         setLeads(response.data);
       } catch (error) {
         console.error("Error fetching employees:", error);

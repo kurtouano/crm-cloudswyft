@@ -1,3 +1,5 @@
+const API_URL = import.meta.env.VITE_BACKEND_URL;
+
 import {
   LineChart,
   Line,
@@ -102,7 +104,7 @@ export default function ProductivitySpecialist() {
   const [selectedEmployee, setSelectedEmployee] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:4000/api/auth/employees")
+    fetch(`${API_URL}/api/auth/employees`)
       .then((res) => res.json())
       .then(setEmployees)
       .catch((err) => console.error("Error loading employees", err));

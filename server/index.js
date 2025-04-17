@@ -15,15 +15,19 @@ import feedbackRoutes from "./routes/feedbackRoutes.js";
 import onboardedRoutes from "./routes/onboardedRoutes.js";
 
 dotenv.config();
+
+const FRONTEND_URL = process.env.DEPLOYMENT_FRONTEND_URL || "http://localhost:3000";
+const PORT = process.env.PORT || 4000;
+
 const app = express();
 const server = http.createServer(app); // ✅ Create an HTTP server
 
 // ✅ Initialize Socket.IO
 const io = new Server(server, {
-  cors: { origin: "http://localhost:3000", credentials: true }, // Allow frontend
+  cors: { origin: FRONTEND_URL, credentials: true }, // Allow frontend
 });
 
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+app.use(cors({ origin: FRONTEND_URL, credentials: true }));
 app.use(express.json({ limit: "3mb" }));
 app.use(express.urlencoded({ limit: "3mb", extended: true }));
 
@@ -66,5 +70,5 @@ io.on('connection', (socket) => {
 // ✅ Export io so other files can emit events
 export { io };
 
-const PORT = process.env.PORT || 4000;
-server.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+//server.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+server.listen(PORT, () => console.log(`Server running on ${FRONTEND_URL}`));

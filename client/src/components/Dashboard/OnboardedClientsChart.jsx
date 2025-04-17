@@ -1,3 +1,5 @@
+const API_URL = import.meta.env.VITE_BACKEND_URL; 
+
 import { useState, useEffect } from 'react';
 import {
   LineChart,
@@ -33,7 +35,7 @@ export default function OnboardedClientsChart() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get('http://localhost:4000/api/onboarded/stats');
+        const response = await axios.get(`${API_URL}/api/onboarded/stats`);
         const { currentYear, lastYear } = response.data;
 
         const allValues = [...currentYear, ...lastYear];

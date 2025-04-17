@@ -1,3 +1,5 @@
+const API_URL = import.meta.env.VITE_BACKEND_URL; 
+
 import { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import jsPDF from "jspdf";
@@ -8,7 +10,7 @@ export default function HandlingResponse() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("http://localhost:4000/api/analytics/handling-time");
+        const response = await fetch(`${API_URL}/api/analytics/handling-time`);
         const data = await response.json();
         setResponseData(data);
       } catch (error) {
