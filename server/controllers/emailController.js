@@ -63,7 +63,7 @@ export async function handleOAuthRedirect(req, res) {
             const expiryTimestamp = new Date(tokenResponse.expiresOn).getTime(); // Convert ISO to ms
             
             return res.redirect(
-                `${process.env.FRONTEND_URL}/${currentPage}?accessToken=${tokenResponse.accessToken}&expiry=${expiryTimestamp}`
+                `${process.env.DEPLOYMENT_FRONTEND_URL}/${currentPage}?accessToken=${tokenResponse.accessToken}&expiry=${expiryTimestamp}`
             );
         }        
 
