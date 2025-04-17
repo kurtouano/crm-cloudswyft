@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-import Sidenav from "./components/sidenav/Sidenav";
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import Salesflow from "./pages/Salesflow";
-import SalesTeam from "./pages/SalesTeam";
-import Accounts from "./pages/Accounts";
-import Communications from "./pages/Communications";
+import Sidenav from "./components/sidenav/Sidenav.jsx";
+import Login from "./pages/Login.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
+import Salesflow from "./pages/Salesflow.jsx";
+import SalesTeam from "./pages/SalesTeam.jsx";
+import Accounts from "./pages/Accounts.jsx";
+import Communications from "./pages/Communications.jsx";
 import CommsAfterSales from "./pages/CommsAfterSales.jsx";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
-import LeadProfile from "./pages/LeadProfile"
+import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
+import LeadProfile from "./pages/LeadProfile.jsx"
 import ThankYouPage from "./utils/thankyouPage.jsx";
 
 export default function App() {
