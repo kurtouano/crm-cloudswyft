@@ -2,7 +2,6 @@ import '../components/Dashboard/Dashboard.css';
 import LeadsTable from '../components/Dashboard/LeadsTable';
 import CircularProgressChart from '../components/Dashboard/CustomerSatisfaction';
 import OnboardedClientsChart from '../components/Dashboard/OnboardedClientsChart';
-import ProjectSummaryCards from '../components/Dashboard/ProjectSummaryCards';
 import ResponseTime from '../components/Dashboard/ResponseTime';
 import ClickThroughRate from '../components/Dashboard/ClickThroughRate';
 import HandlingResponse from '../components/Dashboard/HandlingResponse';
