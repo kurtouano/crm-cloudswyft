@@ -2,10 +2,10 @@ const API_URL = import.meta.env.VITE_BACKEND_URL;
 
 import { useState, useEffect } from "react";
 import "./LoginPage.css";
-import logo from "../../assets/Cloudswyft.png";
-import waveImage from "../../assets/Wave.png";
-import ellipseImage from "../../assets/Ellipse.png";
-import ellipseWhiteImage from "../../assets/Ellipse white.png";
+import logo from "@/assets/Cloudswyft.png";
+import waveImage from "@/assets/Wave.png";
+import ellipseImage from "@/assets/Ellipse.png";
+import ellipseWhiteImage from "@/assets/Ellipse white.png";
 import { useNavigate } from "react-router-dom";
 
 export default function LoginPage() {

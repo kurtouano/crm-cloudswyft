@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import SpecificAccount from "../components/Accounts/LeadProfilePage";
 import "../components/Accounts/Accounts.css";
-import BackButtonIcon from "../assets/back-button-icon.svg";
+import BackButtonIcon from "@/assets/back-button-icon.svg";
 import useMicrosoftAuthentication from "../utils/AuthMicrosoft";
 
 export default function LeadProfile() {

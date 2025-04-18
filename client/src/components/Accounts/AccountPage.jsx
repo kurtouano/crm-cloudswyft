@@ -10,13 +10,13 @@ import "./Accounts.css";
 import * as XLSX from "xlsx";
 
 // Import icons
-import usersIcon from "../../assets/users.png";
-import clockIcon from "../../assets/clock.png";
-import hourglassIcon from "../../assets/hourglass.png";
-import highPriorityIcon from "../../assets/highpriority.png";
-import arrowRightIcon from "../../assets/arrow-right.png";
-import chatIcon from "../../assets/bubble-chat.png"; 
-import userIcon from "../../assets/user-circle.png";
+import usersIcon from "@/assets/users.png";
+import clockIcon from "@/assets/clock.png";
+import hourglassIcon from "@/assets/hourglass.png";
+import highPriorityIcon from "@/assets/highpriority.png";
+import arrowRightIcon from "@/assets/arrow-right.png";
+import chatIcon from "@/assets/bubble-chat.png"; 
+import userIcon from "@/assets/user-circle.png";
 import { FiDownload } from "react-icons/fi";
 
 export default function AccountPage() {

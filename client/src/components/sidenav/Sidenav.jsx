@@ -7,7 +7,8 @@ import io from "socket.io-client";
 import "./styles.css";
 import { FiGrid, FiCheckSquare, FiUsers, FiBookOpen, FiLogOut } from "react-icons/fi";  // Sidenav Icons
 import { LuMailQuestion, LuMailSearch } from "react-icons/lu";
-import notifSound from '../../assets/Sounds/notif-sound.mp3' 
+import notifSound from '@/assets/Sounds/notif-sound.mp3' 
+import cloudswyftLogo from '@/assets/Cloudswyft.png';
 
 const socket = io(`${API_URL}`); // ✅ Connect to backend WebSocket server
 
@@ -235,7 +236,7 @@ const Sidenav = () => {
 
             <div className="sidenav">
                 <div className="logo-container">
-                    <img src="/src/assets/Cloudswyft.png" alt="Cloudswyft Logo" className="logo" />
+                    <img src={cloudswyftLogo} alt="Cloudswyft Logo" className="logo" />
                     <span className="logo-text">Cloudswyft</span>
                 </div>
                 <div className="nav-links">

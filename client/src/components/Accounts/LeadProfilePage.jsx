@@ -5,12 +5,12 @@ import { toast } from "react-hot-toast";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import ReactPaginate from "react-paginate";
-import usersIcon from "../../assets/users.png";
-import clockIcon from "../../assets/clock.png";
-import hourglassIcon from "../../assets/hourglass.png";
-import highPriorityIcon from "../../assets/highpriority.png";
-import leadIcon from "../../assets/lead-profile-icon.svg";
-import InteractionArrowIcon from "../../assets/interaction-history-arrow.svg";
+import usersIcon from "@/assets/users.png";
+import clockIcon from "@/assets/clock.png";
+import hourglassIcon from "@/assets/hourglass.png";
+import highPriorityIcon from "@/assets/highpriority.png";
+import leadIcon from "@/assets/lead-profile-icon.svg";
+import InteractionArrowIcon from "@/assets/interaction-history-arrow.svg";
 import { MdEdit } from "react-icons/md";
 
 export default function LeadProfilePage() {

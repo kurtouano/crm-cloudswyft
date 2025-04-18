@@ -1,21 +1,8 @@
 import { Droppable, Draggable } from "@hello-pangea/dnd";
-import CalendarIcon from "../../assets/kanban-item-calendar-icon.svg";
+import CalendarIcon from "@/assets/kanban-item-calendar-icon.svg";
 import "./SalesFlow.css";
 import { useMemo } from "react";
 import PropTypes from 'prop-types';
-
-// Import employee images
-// import DefaultAvatar from "../../assets/employees/Default-Avatar.svg";
-// import JohnDoeImg from "../../assets/employees/John-Doe.svg";
-// import JaneSmithImg from "../../assets/employees/Jane-Smith.svg";
-// import AliceJohnsonImg from "../../assets/employees/Alice-Johnson.svg";
-
-// // Employee image mapping
-// const employeeImages = {
-//   "John Doe": JohnDoeImg,
-//   "Jane Smith": JaneSmithImg,
-//   "Alice Johnson": AliceJohnsonImg,
-// };
 
 const Column = ({ itemsOrder, id, title, ITEMS }) => {
   // Use useMemo to prevent unnecessary re-renders
