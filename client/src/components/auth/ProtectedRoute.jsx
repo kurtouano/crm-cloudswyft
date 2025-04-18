@@ -1,10 +1,19 @@
+import  { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 
 export default function ProtectedRoute({ children }) {
-  const token = localStorage.getItem("token");
+  const [verified, setVerified] = useState(false);
 
-  // ✅ Prevent navigating to unauthorized pages if not logged in
-  if (!token) {
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      // Clear any invalid residual tokens
+      localStorage.removeItem("token");
+    }
+    setVerified(!!token);
+  }, []);
+
+  if (verified === false) {
     return <Navigate to="/" replace />;
   }
 
