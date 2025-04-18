@@ -13,8 +13,4 @@ export default defineConfig({
     host: '0.0.0.0',  // Makes the app accessible from your local network
     port: 3000,        // Change to your desired port
   },
-  build: {
-    outDir: 'dist',
-    manifest: true // Helps with asset tracking
-  }
 })
