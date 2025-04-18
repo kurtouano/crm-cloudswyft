@@ -71,4 +71,4 @@ io.on('connection', (socket) => {
 export { io };
 
 //server.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
-server.listen(PORT, () => console.log(`Server running on ${FRONTEND_URL}`));
+server.listen(PORT, () => console.log(`Server running on ${process.env.DEPLOYMENT_BACKEND_URL}`));

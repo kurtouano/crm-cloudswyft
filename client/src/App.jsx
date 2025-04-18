@@ -23,9 +23,12 @@ export default function App() {
 }
 
 function MainLayout() {
-  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem("token"));
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsAuthenticated(!!token);
+
     const handleStorageChange = () => {
       setIsAuthenticated(!!localStorage.getItem("token"));
     };
