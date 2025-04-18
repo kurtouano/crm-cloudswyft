@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import SpecificAccount from "../components/Accounts/LeadProfilePage";
 import "../components/Accounts/Accounts.css";
-import BackButtonIcon from "@/assets/back-button-icon.svg";
+import { ReactComponent as BackButtonIcon } from "@/assets/back-button-icon.svg";
 import useMicrosoftAuthentication from "../utils/AuthMicrosoft";
 
 export default function LeadProfile() {
@@ -13,16 +13,14 @@ export default function LeadProfile() {
       <div className="dashboard-page-container">
         <div className="lead-profile-header">
           <div className="lead-profile-header-text">
-            <img
-              src={BackButtonIcon}
+            <BackButtonIcon 
               className="lead-profile-back-button"
               onClick={() => navigate("/accounts")}
-              alt="Back"
+              aria-label="Back"
             />
             Lead Profile
           </div>
         </div>
-
         <div className="dashboard-horizontal-alignment">
           <SpecificAccount />
         </div>
