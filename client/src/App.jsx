@@ -12,7 +12,6 @@ import CommsAfterSales from "./pages/CommsAfterSales.jsx";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
 import LeadProfile from "./pages/LeadProfile.jsx"
 import ThankYouPage from "./utils/thankyouPage.jsx";
-import AuthCallback from "./components/auth/AuthCallback.jsx";
 
 export default function App() {
   return (
@@ -58,7 +57,6 @@ function MainLayout() {
           <Route path="/lead-profile" element={<ProtectedRoute><LeadProfile /></ProtectedRoute>} />
 
           <Route path="/thank-you" element={<ThankYouPage />} />
-          <Route path="/auth-callback" element={<AuthCallback />} />
 
           {/* Redirect unknown routes to login */}
           <Route path="*" element={<Navigate to="/" replace />} />
