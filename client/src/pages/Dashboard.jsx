@@ -1,3 +1,5 @@
+const API_URL = import.meta.env.VITE_BACKEND_URL; 
+
 import '../components/Dashboard/Dashboard.css';
 import LeadsTable from '../components/Dashboard/LeadsTable';
 import CircularProgressChart from '../components/Dashboard/CustomerSatisfaction';
@@ -22,7 +24,7 @@ export default function Dashboard() {
 
 
 useEffect(() => {
-  fetch('http://localhost:4000/api/onboarded/stats')
+  fetch(`${API_URL}/api/onboarded/stats`)
     .then(res => res.json())
     .then(data => setOnboardedData(data))
     .catch(err => console.error('Onboarded Data Error:', err));
@@ -30,27 +32,27 @@ useEffect(() => {
 
   // Fetch data
   useEffect(() => {
-    fetch('http://localhost:4000/api/newsletters/click-data')
+    fetch(`${API_URL}/api/newsletters/click-data`)
       .then(res => res.json())
       .then(setClickData)
       .catch(err => console.error('Click Data Error:', err));
 
-    fetch('http://localhost:4000/api/onboarded/stats')
+    fetch(`${API_URL}/api/onboarded/stats`)
     .then(res => res.json())
     .then(data => setOnboardedData(data))
     .catch(err => console.error('Onboarded Data Error:', err));
 
-    fetch('http://localhost:4000/api/analytics/handling-time')
+    fetch(`${API_URL}/api/analytics/handling-time`)
       .then(res => res.json())
       .then(setHandlingData)
       .catch(err => console.error('Handling Time Error:', err));
 
-    fetch('http://localhost:4000/api/leads')
+    fetch(`${API_URL}/api/leads`)
       .then(res => res.json())
       .then(setLeads)
       .catch(err => console.error('Leads Data Error:', err));
 
-    fetch('http://localhost:4000/api/feedback/stats')
+    fetch(`${API_URL}/api/feedback/stats`)
       .then(res => res.json())
       .then(setFeedbackStats)
       .catch(err => console.error('Feedback Stats Error:', err));
