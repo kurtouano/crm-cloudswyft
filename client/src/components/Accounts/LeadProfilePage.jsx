@@ -27,9 +27,6 @@ export default function LeadProfilePage() {
   const [sentEmails, setSentEmails] = useState([]);
   const [receivedEmails, setReceivedEmails] = useState([]);
   const [status, setStatus] = useState(lead.status);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State for dropdown visibility
-  const [activeOption, setActiveOption] = useState("");
-
 
   // 🆕 Editing states
   const [leadData, setLeadData] = useState({ ...lead });
@@ -86,41 +83,6 @@ export default function LeadProfilePage() {
       toast.error("⚠️ An error occurred while saving.");
     }
   };
-  
-  
-  
-
-  // Change Status of Lead in DB
-  const handleStatusChange = async (newStatus) => {
-    setStatus(newStatus);
-
-    try {
-      // Extract numeric part from formatted leadID
-      const leadNumericID = parseInt(lead.leadID.replace("LID-", ""), 10);
-
-      if (isNaN(leadNumericID)) {
-        console.error("Invalid lead ID format:", lead.leadID);
-        return;
-      }
-
-      const response = await fetch(`${API_URL}/api/leads/status/${leadNumericID}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
-
-      const data = await response.json();
-      if (response.ok) {
-        console.log("Status updated:", data);
-      } else {
-        console.error("Error updating status:", data.error);
-      }
-    } catch (error) {
-      console.error("Request failed:", error);
-    }
-  };
 
   const cardData = [
     { 
@@ -136,22 +98,6 @@ export default function LeadProfilePage() {
     { title: "Lead Warmth", value: leadData.temperature, bgColor: "#2196F3", icon: highPriorityIcon },
     { title: "Date Added", value: leadData.importDate, bgColor: "#307ADB", icon: clockIcon },
   ];
-
-  const dropdownOptions = [
-    { value: "active", label: "Active" },
-    { value: "successful", label: "Closed - Successful" },
-    { value: "lost", label: "Closed - Lost" },
-  ];
-
-  const currentLabel = dropdownOptions.find((option) => option.value === status)?.label || status;
-
-  // Handle dropdown option click
-  const handleOptionClick = (optionValue) => {
-    setStatus(optionValue); // Update the status
-    handleStatusChange(optionValue); // Send the update to the backend
-    setActiveOption(optionValue); // Update the active option
-    setIsDropdownOpen(false); // Close the dropdown
-  };
 
   useEffect(() => {
     setStatus(leadData.status); // Update status if lead.status changes (e.g., after refresh)

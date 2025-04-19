@@ -109,6 +109,62 @@ export default function AccountPage() {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
+  const downloadTemplate = () => {
+    // Define the headers we want to include (in the exact order specified)
+    const headers = [
+      "leadName",
+      "nameOfPresident",
+      "nameOfHrHead",
+      "industry",
+      "company",
+      "companyAddress",
+      "phone",
+      "website",
+      "social",
+      "bestEmail"
+    ];
+  
+    // Prepare the data with only the specified headers
+    let templateData = [];
+    
+    if (leads.length > 0) {
+      // If we have existing leads, map them to only include our specified fields
+      templateData = leads.map(lead => ({
+        leadName: lead.leadName || "",
+        nameOfPresident: lead.nameOfPresident || "",
+        nameOfHrHead: lead.nameOfHrHead || "",
+        industry: lead.industry || "",
+        company: lead.company || "",
+        companyAddress: lead.companyAddress || "",
+        phone: lead.phone || "",
+        website: lead.website || "",
+        social: lead.social || "",
+        bestEmail: lead.bestEmail || ""
+      }));
+    } else {
+      // If no leads exist, create template with just headers and empty row
+      const emptyRow = headers.reduce((obj, header) => {
+        obj[header] = "";
+        return obj;
+      }, {});
+      templateData = [emptyRow];
+    }
+  
+    // Create worksheet with our data
+    const ws = XLSX.utils.json_to_sheet(templateData, { header: headers });
+  
+    // Auto-size columns for better Excel display
+    const wscols = headers.map(() => ({ width: 20 }));
+    ws['!cols'] = wscols;
+  
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Leads Export");
+    
+    // Generate file and trigger download
+    XLSX.writeFile(wb, `Leads_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
 
   const cardData = useMemo(() => {
     const totalLeads = leads.length;
@@ -308,12 +364,19 @@ export default function AccountPage() {
         <p className="import-error-display"></p>
 
          {userRole === "admin" && (
-            <label className="accounts-import-btn">
-              <p>Import Leads</p>
-              <FiDownload className="accounts-import-btn-icon"/>
-              <input type="file" accept=".csv, .xlsx" onChange={handleFileUpload} style={{ display: "none" }} />
-            </label>
-          )}
+          <>
+              <label className="accounts-import-btn">
+                <p>Import Leads</p>
+                <FiDownload className="accounts-import-btn-icon"/>
+                <input type="file" accept=".csv, .xlsx" onChange={handleFileUpload} style={{ display: "none" }} />
+              </label>
+
+              <button className="accounts-import-btn" onClick={downloadTemplate}>
+                <p>Download Import Template</p>
+              </button>
+          </>
+         )}
+         
       </div>
 
       {/* Loading & Error Handling */}
