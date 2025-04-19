@@ -153,6 +153,9 @@
 }
 
 .accounts-import-btn {  
+    display: flex;
+    flex-direction: row;
+    align-items: center;
     padding: 9px 15px;
     background-color: white;
     border: 1px solid rgba(187, 187, 187, 0.506);
