@@ -365,15 +365,14 @@ export default function AccountPage() {
 
          {userRole === "admin" && (
             <div className="accounts-import-btn-container">
+              <button className="accounts-import-btn" onClick={downloadTemplate}>
+                <p>Get Import CSV</p>
+              </button>
               <label className="accounts-import-btn">
                 <p>Import Leads</p>
                 <FiDownload className="accounts-import-btn-icon"/>
                 <input type="file" accept=".csv, .xlsx" onChange={handleFileUpload} style={{ display: "none" }} />
               </label>
-
-              <button className="accounts-import-btn" onClick={downloadTemplate}>
-                <p>Download Import Template</p>
-              </button>
             </div>
          )}
 
