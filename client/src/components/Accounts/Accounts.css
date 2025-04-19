@@ -145,10 +145,14 @@
     color: rgba(220, 40, 40, 0.917);
 }
 
-.accounts-import-btn {  
+.accounts-import-btn-container {
     display: flex;
     flex-direction: row;
     align-items: center;
+    gap: 10px;
+}
+
+.accounts-import-btn {  
     padding: 9px 15px;
     background-color: white;
     border: 1px solid rgba(187, 187, 187, 0.506);

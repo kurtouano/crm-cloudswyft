@@ -364,7 +364,7 @@ export default function AccountPage() {
         <p className="import-error-display"></p>
 
          {userRole === "admin" && (
-          <>
+            <div className="accounts-import-btn-container">
               <label className="accounts-import-btn">
                 <p>Import Leads</p>
                 <FiDownload className="accounts-import-btn-icon"/>
@@ -374,9 +374,9 @@ export default function AccountPage() {
               <button className="accounts-import-btn" onClick={downloadTemplate}>
                 <p>Download Import Template</p>
               </button>
-          </>
+            </div>
          )}
-         
+
       </div>
 
       {/* Loading & Error Handling */}
